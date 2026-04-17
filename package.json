@@ -1,7 +1,7 @@
 {
 	"name": "@rasvanjaya21/bfb",
 	"description": "Bot for billy",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"type": "module",
 	"files": [
 		"dist",
