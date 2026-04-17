@@ -20,10 +20,11 @@ jobs:
               with:
                   fetch-depth: 0
 
-            - name: Setup Node
+            - name: Setup Node for npm
               uses: actions/setup-node@v6
               with:
                   node-version: '24'
+                  registry-url: 'https://registry.npmjs.org'
 
             - name: Setup Bun
               uses: oven-sh/setup-bun@v2
@@ -58,12 +59,16 @@ jobs:
               run: bun pm pack
 
             - name: Publish packages to npm
-              run: npm publish ./*.tgz --access public  --registry=https://registry.npmjs.org
+              run: npm publish ./*.tgz --access public
 
-            - name: Setup github registry
-              run: echo "@rasvanjaya21:registry=https://npm.pkg.github.com" >> ~/.npmrc
+            - name: Setup Node for github packages
+              uses: actions/setup-node@v6
+              with:
+                  node-version: '24'
+                  registry-url: 'https://npm.pkg.github.com'
+                  scope: '@rasvanjaya21'
 
             - name: Publish to github packages
-              run: npm publish ./*.tgz --registry=https://npm.pkg.github.com
+              run: npm publish ./*.tgz
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
