@@ -8,6 +8,7 @@ on:
 permissions:
     contents: write
     id-token: write
+    packages: write
 
 jobs:
     release:
@@ -54,5 +55,22 @@ jobs:
             - name: Update npm
               run: npm install -g npm@latest
 
-            - name: Publish packages to npm
-              run: bun pm pack && npm publish ./*.tgz --access public
+            - name: Pack package
+              run: bun pm pack
+
+            - name: Publish to npm
+              run: npm publish ./*.tgz --access public
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Configure GitHub Packages registry
+              run: |
+                  echo "@rasvanjaya21:registry=https://npm.pkg.github.com" >> ~/.npmrc
+                  echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Publish to GitHub Packages
+              run: npm publish ./*.tgz --registry=https://npm.pkg.github.com
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
