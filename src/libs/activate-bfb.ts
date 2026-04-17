@@ -14,6 +14,7 @@ async function activateBfb(readlineInterface: readline.Interface): Promise<void>
 			console.log('Token kosong, aktifasi gagal\n');
 			await applyDelay(1000);
 			readlineInterface.resume();
+			return;
 		}
 
 		const res = await fetch('https://bfb.blackfriday.my.id/api/v1/check', {
@@ -30,15 +31,18 @@ async function activateBfb(readlineInterface: readline.Interface): Promise<void>
 			console.log('Response error, aktifasi gagal\n');
 			await applyDelay(1000);
 			readlineInterface.resume();
+			return;
 		}
 
 		const json = await res.json();
+
 		if (json?.state !== true) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Token tidak valid, aktifasi gagal\n');
 			await applyDelay(1000);
 			readlineInterface.resume();
+			return;
 		}
 
 		const iv = crypto.randomBytes(16);
@@ -65,12 +69,14 @@ async function activateBfb(readlineInterface: readline.Interface): Promise<void>
 		console.log('Token valid, aktifasi berhasil\n');
 		await applyDelay(1000);
 		readlineInterface.resume();
+		return;
 	} catch {
 		readlineInterface.pause();
 		console.clear();
 		console.log('Server error, aktifasi gagal\n');
 		await applyDelay(1000);
 		readlineInterface.resume();
+		return;
 	}
 }
 
