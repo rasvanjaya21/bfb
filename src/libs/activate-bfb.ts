@@ -16,7 +16,7 @@ async function activateBfb(readlineInterface: readline.Interface): Promise<void>
 			readlineInterface.resume();
 		}
 
-		const res = await fetch('http://localhost:3000/api/v1/check', {
+		const res = await fetch('https://bfb.blackfriday.my.id/api/v1/check', {
 			method: 'GET',
 			headers: {
 				Authorization: `Bearer ${token}`,

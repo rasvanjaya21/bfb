@@ -32,7 +32,7 @@ async function checkActivation(): Promise<boolean> {
 		const token = decrypted.toString('utf-8');
 		if (!token) return false;
 
-		const res = await fetch('http://localhost:3000/api/v1/check', {
+		const res = await fetch('https://bfb.blackfriday.my.id/api/v1/check', {
 			method: 'GET',
 			headers: {
 				Authorization: `Bearer ${token}`,
