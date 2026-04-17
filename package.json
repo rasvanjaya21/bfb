@@ -1,7 +1,7 @@
 {
 	"name": "@rasvanjaya21/bfb",
 	"description": "Bot for billy",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"type": "module",
 	"files": [
 		"dist",
@@ -22,10 +22,10 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/rasvanjaya21/bfb"
+		"url": "git+https://github.com/rasvanjaya21/bfb.git"
 	},
 	"bin": {
-		"bfb": "./dist/index.js"
+		"bfb": "dist/index.js"
 	},
 	"scripts": {
 		"build": "bunup && bunx javascript-obfuscator dist/index.js --output dist/index.js --compact true --control-flow-flattening true --dead-code-injection true --string-array true --string-array-encoding base64 --string-array-threshold 1",
