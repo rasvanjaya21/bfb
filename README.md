@@ -5,13 +5,13 @@ Bot for billy
 ## Installation
 
 ```bash
-bun add --global bfb
+bun add --global @rasvanjaya21/bfb
 ```
 
 ## Usage
 
 ```typescript
-bfb;
+bfb
 ```
 
 ## Contributing
