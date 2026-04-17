@@ -10,7 +10,7 @@ bun add --global @rasvanjaya21/bfb
 
 ## Usage
 
-```typescript
+```bash
 bfb
 ```
 
