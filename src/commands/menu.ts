@@ -1,3 +1,4 @@
+import { cookies } from '@/core/cookie';
 import { facebook } from '@/core/facebook';
 import { activateBfb } from '@/libs/activate-bfb';
 import { applyDelay } from '@/libs/apply-delay';
@@ -33,25 +34,27 @@ async function menu(): Promise<void> {
 		console.info(`Timezone: ${chalk.dim(timezone)}`);
 		console.info(`Folder saat ini: ${chalk.dim(cwd)}`);
 		console.info(`Status init project: ${isInitilized ? chalk.dim(chalk.green('Siap')) : chalk.dim(chalk.red('Belum siap'))}`);
-		console.info(`Workspace project: ${chalk.dim(isInitilized ? 'accounts/, assets/, credentials/' : '-')}`);
+		console.info(`Workspace project: ${chalk.dim(isInitilized ? 'datas/, credentials/' : '-')}`);
 		console.info(`Status driver: ${isDriverInstalled ? chalk.dim(chalk.green('Terpasang')) : chalk.dim(chalk.red('Belum terpasang'))}`);
-		console.info(`Lokasi driver: ${chalk.dim(isDriverInstalled ? isDriverInstalled.executablePath : '-')}`);
+		console.info(`Lokasi driver: ${chalk.dim(isDriverInstalled ? isDriverInstalled.path : '-')}`);
 		console.info(`Status aktifasi: ${isActivated ? chalk.dim(chalk.green('Aktif')) : chalk.dim(chalk.red('Belum aktif'))}`);
 		console.info(`Masa aktif: ${chalk.dim(isActivated ? 'Kiamat' : '-')}\n`);
 
 		console.log('Silakan pilih menu:\n');
-		console.log('0. Init project');
-		console.log('1. Rawat facebook');
-		console.log('2. Follow instagram');
-		console.log('3. Tap tiktok');
-		console.log('4. Racun shopee');
-		console.log('7. Pasang driver');
-		console.log('8. Aktifasi bfb');
-		console.log('9. Keluar\n');
+		console.log(' 0. Init project');
+		console.log(' 1. Rawat facebook');
+		console.log(' 2. Follow instagram');
+		console.log(' 3. Tap tiktok');
+		console.log(' 4. Racun shopee');
+		console.log('95. Sinkronisasi cookies');
+		console.log('96. Pasang driver');
+		console.log('97. Aktifasi bfb');
+		console.log('98. Pengaturan');
+		console.log('99. Keluar\n');
 
-		const answer = await readlineInterface.question('Masukkan pilihan anda: ');
+		const choice = await readlineInterface.question('Masukkan pilihan anda: ');
 
-		if (answer === '0' && !isInitilized) {
+		if (choice === '0' && !isInitilized) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Initialize project\n');
@@ -59,62 +62,85 @@ async function menu(): Promise<void> {
 			await initProject();
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '0' && isInitilized) {
+		} else if (choice === '0' && isInitilized) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Init project sudah siap, platform bisa digunakan\n');
 			await applyDelay(1000);
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '1' && (!isInitilized || !isDriverInstalled || !isActivated)) {
+		} else if (choice === '1' && (!isInitilized || !isDriverInstalled || !isActivated)) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Fitur masih terkunci, setup terlebih dahulu\n');
 			await applyDelay(1000);
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '1' && (isInitilized || isDriverInstalled || isActivated)) {
-			readlineInterface.close();
+		} else if (choice === '1' && (isInitilized || isDriverInstalled || isActivated)) {
+			readlineInterface.pause();
 			console.clear();
-			console.log('Rawat facebook sedang berjalan\n');
+			console.log('Rawat facebook\n');
 			await facebook();
-			break;
-		} else if (answer === '2' || answer === '3' || answer === '4') {
+			console.clear();
+			readlineInterface.resume();
+			continue;
+		} else if (choice === '2' || choice === '3' || choice === '4') {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Belum tersedia, stay tuned\n');
 			await applyDelay(1000);
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '7' && !isDriverInstalled) {
+		} else if (choice === '95' && (!isInitilized || !isDriverInstalled || !isActivated)) {
+			readlineInterface.pause();
+			console.clear();
+			console.log('Fitur masih terkunci, setup terlebih dahulu\n');
+			await applyDelay(1000);
+			console.clear();
+			readlineInterface.resume();
+		} else if (choice === '95' && (isInitilized || isDriverInstalled || isActivated)) {
+			readlineInterface.pause();
+			console.clear();
+			console.log('Sinkronisasi cookies\n');
+			await cookies(readlineInterface);
+			console.clear();
+			readlineInterface.resume();
+		} else if (choice === '96' && !isDriverInstalled) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Proses instalasi driver\n');
 			await downloadDriver();
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '7' && isDriverInstalled) {
+		} else if (choice === '96' && isDriverInstalled) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Driver sudah terpasang, platform siap digunakan\n');
 			await applyDelay(1000);
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '8' && !isActivated) {
+		} else if (choice === '97' && !isActivated) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Proses aktifasi bfb\n');
 			await activateBfb(readlineInterface);
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '8' && isActivated) {
+		} else if (choice === '97' && isActivated) {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Bfb sudah aktif, platform siap digunakan\n');
 			await applyDelay(1000);
 			console.clear();
 			readlineInterface.resume();
-		} else if (answer === '9') {
+		} else if (choice === '98') {
+			readlineInterface.pause();
+			console.clear();
+			console.log('Belum tersedia, stay tuned\n');
+			await applyDelay(1000);
+			console.clear();
+			readlineInterface.resume();
+		} else if (choice === '99') {
 			readlineInterface.close();
 			console.clear();
 			console.log('Good bye\n');
