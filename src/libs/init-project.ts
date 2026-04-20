@@ -3,22 +3,26 @@ import path from 'path';
 
 async function initProject(): Promise<void> {
 	const cwd = process.cwd();
+	const datasDir = path.join(cwd, 'datas');
+	const credentialsDir = path.join(cwd, 'credentials');
 
-	const accountsDir = path.join(cwd, 'accounts');
-	const datasFile = path.join(accountsDir, 'datas.csv');
+	const accountsFile = path.join(datasDir, 'accounts.csv');
+	const contentsFile = path.join(datasDir, 'contents.csv');
+	const cookiesFile = path.join(credentialsDir, 'cookies.json');
 
-	await fs.mkdir(accountsDir, { recursive: true });
+	await fs.mkdir(datasDir, { recursive: true });
 	try {
-		await fs.access(datasFile);
+		await fs.access(accountsFile);
 	} catch {
-		await fs.writeFile(datasFile, '', 'utf-8');
+		await fs.writeFile(accountsFile, 'NO,UID,PASSWORD', 'utf-8');
 	}
 
-	const assetsDir = path.join(cwd, 'assets');
-	await fs.mkdir(assetsDir, { recursive: true });
-
-	const credentialsDir = path.join(cwd, 'credentials');
-	const cookiesFile = path.join(credentialsDir, 'cookies.json');
+	await fs.mkdir(datasDir, { recursive: true });
+	try {
+		await fs.access(contentsFile);
+	} catch {
+		await fs.writeFile(contentsFile, 'NO,COOKIE,IDFANSPAGE,PATH,CAPTION', 'utf-8');
+	}
 
 	await fs.mkdir(credentialsDir, { recursive: true });
 	try {
