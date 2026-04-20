@@ -9,5 +9,5 @@ export default defineConfig({
 	sourcemap: false,
 	minify: true,
 	banner: '#!/usr/bin/env node',
-	external: ['puppeteer-core', 'chalk', '@puppeteer/browsers', './src/ignore'],
+	external: ['puppeteer-core', 'chalk', '@puppeteer/browsers', 'puppeteer-extra', 'puppeteer-extra-plugin-stealth', './src/ignore'],
 });
