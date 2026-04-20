@@ -1,9 +1,15 @@
-interface Data {
+interface Account {
 	NO: string;
+	UID: string;
+	PASSWORD: string;
+}
+
+interface Content {
+	NO: string;
+	COOKIE: string;
 	IDFANSPAGE: string;
 	PATH: string;
 	CAPTION: string;
-	DATE: string;
 }
 
-export { type Data };
+export { type Account, type Content };
