@@ -1,113 +1,152 @@
 import { isFacebookPublishButtonEnable } from '@/ignore';
 import { applyDelay } from '@/libs/apply-delay';
+import { assetChecker } from '@/libs/asset-checker';
 import { checkDriver } from '@/libs/check-driver';
 import { csvToJson } from '@/libs/csv-parser';
 import { formatDuration } from '@/libs/format-duration';
 import { readCookies } from '@/libs/read-cookies';
-import { type Data } from '@/types/global';
-import { Browser, type CookieData, launch } from 'puppeteer-core';
+import { type Content } from '@/types/global';
+import puppeteerCore, { Browser, type CookieData } from 'puppeteer-core';
+import { addExtra } from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
+const cwd = process.cwd();
 
 export async function facebook(): Promise<void> {
-	const cwd = process.cwd();
+	const contentsPath = `${cwd}/datas/contents.csv`;
+	const contents = await csvToJson<Content>(contentsPath);
 
-	const browserPath = await checkDriver();
-
-	const datasPath = `${cwd}/accounts/datas.csv`;
-	const cookiesPath = `${cwd}/credentials/cookies.json`;
-
-	const cookies = await readCookies<CookieData>(cookiesPath);
-
-	if (cookies.length === 0) {
+	if (contents.length === 0) {
+		console.clear();
+		console.log('Data content(s) kosong\n');
 		await applyDelay(1000);
 		console.clear();
-		console.log('Gagal, cookies tidak valid');
-		await applyDelay(1000);
-		console.clear();
-		process.exit(1);
+		return;
 	}
 
-	const datas = await csvToJson<Data>(datasPath);
-
-	if (datas.length === 0) {
-		await applyDelay(1000);
-		console.clear();
-		console.log('Gagal, data(s) tidak valid');
-		await applyDelay(1000);
-		console.clear();
-		process.exit(1);
-	}
-
-	console.log('Menjalankan browser');
-	const browser = await launch({ headless: false, args: ['--start-maximized'], defaultViewport: null, executablePath: browserPath!.executablePath });
-
-	console.log('Menginject cookies');
-	await browser.setCookie(...cookies);
-
-	console.log('Mengakses facebook\n');
 	const start = Date.now();
 
-	for (const item of datas) await postFeed(browser, item);
+	const puppeteer = addExtra(puppeteerCore);
+	puppeteer.use(StealthPlugin());
+	const browserPath = await checkDriver();
+	const browser: Browser = await puppeteer.launch({ headless: false, args: ['--start-maximized'], defaultViewport: null, executablePath: browserPath!.executablePath });
+
+	for (const content of contents) await postFeed(browser, content);
 
 	const duration = Date.now() - start;
 
-	console.log('===============================\n');
-	console.log('Postingan(s) berhasil di upload');
+	console.log('===============================');
 	console.log(`Estimasi durasi: ${formatDuration(duration)}`);
+	console.log('===============================\n');
 
-	await browser.close();
-	process.exit(1);
+	process.exit(0);
 }
 
-async function postFeed(browser: Browser, data: Data): Promise<void> {
-	const cwd = process.cwd();
+async function postFeed(browser: Browser, content: Content): Promise<void> {
+	console.log('===============================');
+	console.log(`Data konten nomor ${content.NO}`);
+
 	const page = await browser.newPage();
 	const pages = await browser.pages();
-
-	console.log('===============================');
-	console.log('Membuka meta business');
-	await page.goto(`https://business.facebook.com/latest/composer/?asset_id=${data.IDFANSPAGE}&ref=biz_web_home_create_post`, { waitUntil: 'domcontentloaded' });
 	const initialPage = pages[0];
 	await initialPage?.close();
 
-	console.log(`Membuat postingan nomor ${data.NO}`);
+	console.log('Menginject cookies');
+	const cookiesPath = `${cwd}/credentials/cookies.json`;
+	const cookies = await readCookies<CookieData>(cookiesPath, content.COOKIE);
+	await browser.setCookie(...cookies);
 
-	const loginTextSelector = 'xpath=//*[contains(text(), "Log in with a managed Meta account")]';
-	const isInvalidCookies = await page.waitForSelector(loginTextSelector, { visible: true, timeout: 3000 }).catch(() => null);
+	console.log('Membuka meta business');
+	const pageOpener = await page.goto(`https://business.facebook.com/latest/composer/?asset_id=${content.IDFANSPAGE}&ref=biz_web_home_create_post`, { waitUntil: 'domcontentloaded' }).catch(() => null);
+
+	if (!pageOpener) {
+		console.log('Meta business tidak terbuka');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
+	}
+	console.log('Meta business terbuka');
+
+	console.log('Memvalidasi cookie');
+	const isInvalidCookies = page.url().includes('loginpage');
 
 	if (isInvalidCookies) {
-		console.log('Gagal, cookies tidak valid');
-		process.exit(1);
+		console.log('Cookie tidak valid');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
 	}
+	console.log('Cookie valid');
 
-	const [fileChooser] = await Promise.all([
-		page.waitForFileChooser(),
+	console.log('Mulai memposting konten');
+
+	console.log('Mencari tombol upload');
+	const fileSelector = 'text=Add photo/video';
+	const [fileTrigger] = await Promise.all([
+		page.waitForFileChooser().catch(() => null),
 		page
-			.locator('text/Add photo/video')
+			.locator(fileSelector)
 			.click()
 			.catch(() => null),
 	]);
+
+	if (!fileTrigger) {
+		console.log('Tombol upload tidak ditemukan');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
+	}
+	console.log('Tombol upload ditemukan');
+
 	console.log('Mengupload asset(s)');
-	await fileChooser.accept([`${cwd}/assets/${data.PATH}`]);
+	const isValidAsset = await assetChecker(content.PATH);
+	if (!isValidAsset) {
+		console.log('Asset(s) bermasalah');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
+	}
+	await fileTrigger.accept([content.PATH]);
+	console.log('Asset(s) diupload');
 
 	console.log('Menulis caption');
-	const captionTrigger = page.locator('text/Text');
+	const captionSelector = 'text=Text';
+	const captionTrigger = page.locator(captionSelector);
 	await captionTrigger.click();
 	await page.keyboard.press('Tab');
-	await page.keyboard.type(data.CAPTION);
+	await page.keyboard.type(content.CAPTION);
 
-	console.log('Menunggu tombol publish aktif');
+	console.log('Mencari tombol publish');
+	const publishSelector = 'xpath=//div[@role="button" and .//div[text()="Publish"]]';
+	const publishTrigger = page.locator(publishSelector);
 
-	const publishButtonSelector = 'xpath=//div[@role="button" and .//div[text()="Publish"]]';
-	const button = await page.waitForSelector(publishButtonSelector, { visible: true }).catch(() => null);
+	if (!publishTrigger) {
+		console.log('Tombol publish tidak ditemukan');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
+	}
+	console.log('Tombol publish ditemukan');
 
-	const postButton = await page.$(publishButtonSelector);
+	console.log('Memvalidasi publish');
+	const isPublishValid = await isFacebookPublishButtonEnable(page, publishSelector);
 
-	if (postButton && (await isFacebookPublishButtonEnable(button))) {
-		console.log('Tombol publish valid');
-		await postButton.click();
+	if (!isPublishValid) {
+		console.log('Publish tidak valid');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
+	}
+	await publishTrigger.click();
+	console.log('Publish valid');
+
+	console.log('Sedang memposting konten');
+	const postedSelector = 'text=Your post is published';
+	const postedTrigger = await page.locator(postedSelector).waitHandle();
+	const isPosted = await postedTrigger.isVisible().catch(() => null);
+
+	if (!isPosted) {
+		console.log('Gagal mempublish');
+		await browser.deleteMatchingCookies(...cookies);
+		return;
 	}
 
-	console.log('Berhasil diposting');
+	console.log('Selesai memposting konten');
+	await browser.deleteMatchingCookies(...cookies);
 }
 
 export { postFeed };
