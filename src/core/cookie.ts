@@ -71,8 +71,10 @@ async function syncCookies(browser: Browser, readlineInterface: readline.Interfa
 
 	console.log('Mengecek status cookie');
 	if (isInvalidCookies) {
-		const isCookiesExpired = cookies.length !== 0;
+		let isCookiesExpired;
 		let loginSelector;
+
+		isCookiesExpired = cookies.length !== 0;
 
 		if (isCookiesExpired) {
 			console.log('Cookie sudah kadaluarsa');
@@ -84,30 +86,38 @@ async function syncCookies(browser: Browser, readlineInterface: readline.Interfa
 
 		console.log('Login manual');
 
-		const loginTrigger = page.locator(loginSelector);
-		await loginTrigger.click();
+		const loginTrigger = await page
+			.locator(loginSelector)
+			.waitHandle()
+			.catch(() => null);
+
+		if (!loginTrigger) {
+			isCookiesExpired = false;
+			console.log('Login bermasalah');
+		} else {
+			await loginTrigger.click();
+		}
 
 		if (isCookiesExpired) {
 			const typePasswordSelector = 'text=Forgotten password?';
 			await page.locator(typePasswordSelector).wait();
-			console.log('Menulis password');
 			await page.keyboard.type(account.PASSWORD);
 		} else {
 			await page.keyboard.press('Tab');
-
-			console.log('Menulis uid');
 			await page.keyboard.type(account.UID);
 			await page.keyboard.press('Tab');
-
-			console.log('Menulis password');
 			await page.keyboard.type(account.PASSWORD);
 		}
 
-		await readlineInterface.question('Tekan enter jika sudah login');
+		const answer = await readlineInterface.question('Simpan cookie? (y/N) ');
 
-		const newCookies = await browser.cookies();
-		await saveCookies(cookiesPath, account.UID, newCookies);
-		console.log('Menyimpan cookie baru');
+		if (answer !== 'y') {
+			console.log('Cookie tidak di simpan');
+		} else {
+			const currentCookies = await browser.cookies();
+			await saveCookies(cookiesPath, account.UID, currentCookies);
+			console.log('Menyimpan cookie baru');
+		}
 	} else {
 		console.log('Cookie valid');
 	}
