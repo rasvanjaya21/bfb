@@ -29,7 +29,7 @@ Thank you for your interest in contributing to our project! This guide will help
 
 ## Commit Message Conventions
 
-We follow [Conventional Commits](https://www.conventionalcommits.org/) for clear and structured commit messages:
+We follow [Conventional Commits](https://conventionalcommits.org/) for clear and structured commit messages:
 
 - `feat:` New features
 - `fix:` Bug fixes
