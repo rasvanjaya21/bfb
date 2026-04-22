@@ -17,7 +17,7 @@ async function index(): Promise<void> {
 	}
 
 	for (const arg of args) {
-		if (!knownFlags.has(arg) && isNaN(Number(arg))) {
+		if (!knownFlags.has(arg)) {
 			console.log(`Unknown flag: '${arg}'`);
 			console.log("Try 'bfb help' for usage information");
 			return;
