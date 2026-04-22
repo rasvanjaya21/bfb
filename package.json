@@ -2,6 +2,13 @@
 	"name": "@rasvanjaya21/bfb",
 	"description": "Bot for billy",
 	"version": "0.3.0",
+	"keywords": [
+		"automation",
+		"typescript",
+		"bun",
+		"puppeteer",
+		"bunup"
+	],
 	"type": "module",
 	"files": [
 		"dist",
