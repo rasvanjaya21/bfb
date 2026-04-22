@@ -57,7 +57,7 @@ async function syncCookies(browser: Browser, readlineInterface: readline.Interfa
 	await browser.setCookie(...cookies);
 
 	console.log('Membuka facebook');
-	const pageOpener = await page.goto('https://www.facebook.com/settings/', { waitUntil: 'domcontentloaded' }).catch(() => null);
+	const pageOpener = await page.goto('https://web.facebook.com/settings/', { waitUntil: 'domcontentloaded' }).catch(() => null);
 
 	if (!pageOpener) {
 		console.log('Facebook tidak terbuka');
@@ -67,31 +67,47 @@ async function syncCookies(browser: Browser, readlineInterface: readline.Interfa
 	console.log('Facebook terbuka');
 
 	console.log('Mulai menyinkronkan cookie');
-	const isInvalidCookies = page.url().includes('login');
+	const isInvalidCookies = page.url().includes('next');
 
+	console.log('Mengecek status cookie');
 	if (isInvalidCookies) {
-		console.log('Cookie tidak valid');
+		const isCookiesExpired = cookies.length !== 0;
+		let loginSelector;
+
+		if (isCookiesExpired) {
+			console.log('Cookie sudah kadaluarsa');
+			loginSelector = 'text=Continue';
+		} else {
+			console.log('Cookie tidak ditemukan');
+			loginSelector = 'text=Log in to Facebook';
+		}
+
 		console.log('Login manual');
 
-		const loginSelector = 'text=Log in to Facebook';
 		const loginTrigger = page.locator(loginSelector);
-
 		await loginTrigger.click();
-		await page.keyboard.press('Tab');
 
-		console.log('Menulis uid');
-		await page.keyboard.type(account.UID);
-		await page.keyboard.press('Tab');
+		if (isCookiesExpired) {
+			const typePasswordSelector = 'text=Forgotten password?';
+			await page.locator(typePasswordSelector).wait();
+			console.log('Menulis password');
+			await page.keyboard.type(account.PASSWORD);
+		} else {
+			await page.keyboard.press('Tab');
 
-		console.log('Menulis password');
-		await page.keyboard.type(account.PASSWORD);
+			console.log('Menulis uid');
+			await page.keyboard.type(account.UID);
+			await page.keyboard.press('Tab');
+
+			console.log('Menulis password');
+			await page.keyboard.type(account.PASSWORD);
+		}
 
 		await readlineInterface.question('Tekan enter jika sudah login');
 
-		console.log('Sedang menyinkronkan cookie');
-		const cookie = await browser.cookies();
-		await saveCookies(cookiesPath, account.UID, cookie);
-		console.log('Cookie selesai di sinkronkan');
+		const newCookies = await browser.cookies();
+		await saveCookies(cookiesPath, account.UID, newCookies);
+		console.log('Menyimpan cookie baru');
 	} else {
 		console.log('Cookie valid');
 	}
