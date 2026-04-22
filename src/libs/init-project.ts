@@ -21,7 +21,7 @@ async function initProject(): Promise<void> {
 	try {
 		await fs.access(contentsFile);
 	} catch {
-		await fs.writeFile(contentsFile, 'NO,COOKIE,IDFANSPAGE,PATH,CAPTION', 'utf-8');
+		await fs.writeFile(contentsFile, 'NO,COOKIE,ROUTE,TYPE,IDFANSPAGE,PATH,CAPTION,TAG,SCHEDULE', 'utf-8');
 	}
 
 	await fs.mkdir(credentialsDir, { recursive: true });
