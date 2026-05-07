@@ -10,7 +10,7 @@ function walk(dir: string, files: string[] = []) {
 		const full = join(dir, entry);
 
 		if (statSync(full).isDirectory()) {
-			if (['node_modules', '.next', 'dist', 'build'].includes(entry)) continue;
+			if (['node_modules', 'dist'].includes(entry)) continue;
 			walk(full, files);
 		} else {
 			if (/\.(ts|tsx)$/.test(entry)) {
