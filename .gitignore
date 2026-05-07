@@ -20,3 +20,5 @@ yarn-error.log*
 .turbo
 workspaces
 mock
+backups
+temp
