@@ -5,6 +5,7 @@ import { formatDuration } from '@/libs/format-duration';
 import { readCookies } from '@/libs/read-cookies';
 import { saveCookies } from '@/libs/save-cookies';
 import type { Account } from '@/types/global';
+import chalk from 'chalk';
 import puppeteerCore, { Browser, type CookieData } from 'puppeteer-core';
 import { addExtra } from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -43,88 +44,101 @@ async function cookies(readlineInterface: readline.Interface): Promise<void> {
 }
 
 async function syncCookies(browser: Browser, readlineInterface: readline.Interface, account: Account): Promise<void> {
-	console.log('===============================');
-	console.log(`Data akun nomor ${account.NO}`);
+	try {
+		console.log('===============================');
+		console.log(`Data akun nomor ${account.NO}`);
 
-	const page = await browser.newPage();
-	const pages = await browser.pages();
-	const initialPage = pages[0];
-	await initialPage?.close();
+		const page = await browser.newPage();
+		const pages = await browser.pages();
+		const initialPage = pages[0];
+		await initialPage?.close();
 
-	console.log('Menginject cookies');
-	const cookiesPath = `${cwd}/credentials/cookies.json`;
-	const cookies = await readCookies<CookieData>(cookiesPath, account.UID);
-	await browser.setCookie(...cookies);
+		console.log('Menginject cookies');
+		const cookiesPath = `${cwd}/credentials/cookies.json`;
+		const cookies = await readCookies<CookieData>(cookiesPath, account.UID);
+		await browser.setCookie(...cookies);
 
-	console.log('Membuka facebook');
-	const pageOpener = await page.goto('https://web.facebook.com/settings/', { waitUntil: 'domcontentloaded' }).catch(() => null);
+		console.log('Membuka facebook');
+		const pageOpener = await page.goto('https://web.facebook.com/settings/', { waitUntil: 'domcontentloaded' }).catch(() => null);
 
-	if (!pageOpener) {
-		console.log('Facebook tidak terbuka');
-		await browser.deleteMatchingCookies(...cookies);
+		if (!pageOpener) {
+			await browser.deleteMatchingCookies(...cookies);
+			throw new Error('Facebook tidak terbuka');
+		}
+		console.log('Facebook terbuka');
+
+		console.log('Mulai menyinkronkan cookie');
+		const isInvalidCookies = page.url().includes('next');
+
+		console.log('Mengecek status cookie');
+		if (isInvalidCookies) {
+			let isCookiesExpired;
+			let loginSelector;
+
+			isCookiesExpired = cookies.length !== 0;
+
+			if (isCookiesExpired) {
+				console.log('Cookie sudah kadaluarsa');
+				loginSelector = 'text=Continue';
+			} else {
+				console.log('Cookie tidak ditemukan');
+				loginSelector = 'text=Log in to Facebook';
+			}
+
+			console.log('Login manual');
+
+			const loginTrigger = await page
+				.locator(loginSelector)
+				.waitHandle()
+				.catch(() => null);
+
+			if (!loginTrigger) {
+				isCookiesExpired = false;
+				console.log('Login bermasalah');
+			} else {
+				await loginTrigger.click();
+			}
+
+			if (isCookiesExpired) {
+				const typePasswordSelector = 'text=Forgotten password?';
+				await page.locator(typePasswordSelector).wait();
+				await page.keyboard.type(account.PASSWORD);
+			} else {
+				await page.keyboard.press('Tab');
+				await page.keyboard.type(account.UID);
+				await page.keyboard.press('Tab');
+				await page.keyboard.type(account.PASSWORD);
+			}
+
+			const answer = await readlineInterface.question('Simpan cookie? (y/N) ');
+
+			if (answer !== 'y') {
+				console.log('Cookie tidak di simpan');
+			} else {
+				const currentCookies = await browser.cookies();
+				await saveCookies(cookiesPath, account.UID, currentCookies);
+				console.log('Menyimpan cookie baru');
+			}
+		} else {
+			console.log('Cookie valid');
+		}
+
+		console.log(chalk.green('Selesai menyinkronkan cookie'));
+		const cookie = await browser.cookies();
+		await browser.deleteMatchingCookies(...cookie);
+	} catch (error) {
+		const message = (error as Error).message;
+		if (message.includes('closed')) {
+			console.log('Koneksi tertutup');
+			console.log(chalk.red('Gagal menyinkronkan cookie'));
+			console.log('===============================\n');
+			process.exit(0);
+		}
+
+		console.log(message);
+		console.log(chalk.red('Gagal menyinkronkan cookie'));
 		return;
 	}
-	console.log('Facebook terbuka');
-
-	console.log('Mulai menyinkronkan cookie');
-	const isInvalidCookies = page.url().includes('next');
-
-	console.log('Mengecek status cookie');
-	if (isInvalidCookies) {
-		let isCookiesExpired;
-		let loginSelector;
-
-		isCookiesExpired = cookies.length !== 0;
-
-		if (isCookiesExpired) {
-			console.log('Cookie sudah kadaluarsa');
-			loginSelector = 'text=Continue';
-		} else {
-			console.log('Cookie tidak ditemukan');
-			loginSelector = 'text=Log in to Facebook';
-		}
-
-		console.log('Login manual');
-
-		const loginTrigger = await page
-			.locator(loginSelector)
-			.waitHandle()
-			.catch(() => null);
-
-		if (!loginTrigger) {
-			isCookiesExpired = false;
-			console.log('Login bermasalah');
-		} else {
-			await loginTrigger.click();
-		}
-
-		if (isCookiesExpired) {
-			const typePasswordSelector = 'text=Forgotten password?';
-			await page.locator(typePasswordSelector).wait();
-			await page.keyboard.type(account.PASSWORD);
-		} else {
-			await page.keyboard.press('Tab');
-			await page.keyboard.type(account.UID);
-			await page.keyboard.press('Tab');
-			await page.keyboard.type(account.PASSWORD);
-		}
-
-		const answer = await readlineInterface.question('Simpan cookie? (y/N) ');
-
-		if (answer !== 'y') {
-			console.log('Cookie tidak di simpan');
-		} else {
-			const currentCookies = await browser.cookies();
-			await saveCookies(cookiesPath, account.UID, currentCookies);
-			console.log('Menyimpan cookie baru');
-		}
-	} else {
-		console.log('Cookie valid');
-	}
-
-	console.log('Selesai menyinkronkan cookie');
-	const cookie = await browser.cookies();
-	await browser.deleteMatchingCookies(...cookie);
 }
 
 export { cookies };
