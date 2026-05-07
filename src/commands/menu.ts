@@ -123,7 +123,7 @@ async function menu(): Promise<void> {
 			readlineInterface.pause();
 			console.clear();
 			console.log('Proses aktifasi bfb\n');
-			await activateBfb(readlineInterface);
+			await activateBfb();
 			console.clear();
 			readlineInterface.resume();
 		} else if (choice === '97' && isActivated) {
@@ -146,7 +146,7 @@ async function menu(): Promise<void> {
 			console.log('Good bye\n');
 			await applyDelay(1000);
 			console.clear();
-			process.exit(1);
+			process.exit(0);
 		} else {
 			readlineInterface.pause();
 			console.clear();
