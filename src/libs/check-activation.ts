@@ -1,6 +1,7 @@
-import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
+
+const BACKEND_URL_API = 'https://bfb.blackfriday.my.id/api/v1/check';
 
 async function checkActivation(): Promise<boolean> {
 	try {
@@ -13,40 +14,22 @@ async function checkActivation(): Promise<boolean> {
 			return false;
 		}
 
-		const encrypted = (await fs.readFile(filePath, 'utf-8')).trim();
-		if (!encrypted) return false;
-
-		const [ivBase64, contentBase64] = encrypted.split(':');
-		if (!ivBase64 || !contentBase64) return false;
-
-		const iv = Buffer.from(ivBase64, 'base64');
-		const content = Buffer.from(contentBase64, 'base64');
-
-		const key = crypto.createHash('sha256').update('belly-sedang-memancing').digest();
-
-		const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-
-		let decrypted = decipher.update(content);
-		decrypted = Buffer.concat([decrypted, decipher.final()]);
-
-		const token = decrypted.toString('utf-8');
+		const token = (await fs.readFile(filePath, 'utf-8')).trim();
 		if (!token) return false;
 
-		const res = await fetch('https://bfb.blackfriday.my.id/api/v1/check', {
+		const response = await fetch(BACKEND_URL_API, {
 			method: 'GET',
 			headers: {
-				Authorization: `Bearer ${token}`,
 				'Content-Type': 'application/json',
+				Authorization: `Bearer ${token}`,
 			},
 		});
 
-		if (!res.ok) return false;
+		const data = (await response.json()) as { state: boolean };
 
-		const json = await res.json();
+		if (!data.state) return false;
 
-		if (json?.state === true) return true;
-
-		return false;
+		return true;
 	} catch {
 		return false;
 	}
