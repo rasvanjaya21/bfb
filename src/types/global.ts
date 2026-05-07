@@ -7,12 +7,12 @@ interface Account {
 interface Content {
 	NO: string;
 	COOKIE: string;
-	ROUTE: 'PERSONAL' | 'BM' | '';
-	TYPE: 'POST' | 'PHOTO' | 'VIDEO' | '';
+	ROUTE: 'BM' | 'PERSONAL'; // DEFAULT TO 'PERSONAL'
+	TYPE: 'POST' | 'FEED' | 'STORY' | 'REEL'; // DEFAULT TO 'POST'
 	IDFANSPAGE: string;
 	PATH: string;
 	CAPTION: string;
-	TAG: 'YES' | 'NO';
+	TAG: 'YES' | 'NO'; // DEFAULT TO 'NO'
 	SCHEDULE: string;
 }
 
