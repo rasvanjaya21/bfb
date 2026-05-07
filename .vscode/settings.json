@@ -2,5 +2,6 @@
 	"js/ts.tsdk.path": "node_modules/@typescript/native-preview-linux-x64/lib",
 	"js/ts.tsdk.promptToUseWorkspaceVersion": true,
 	"js/ts.preferences.importModuleSpecifier": "non-relative",
-	"js/ts.experimental.useTsgo": true
+	"js/ts.experimental.useTsgo": true,
+	"typescript.native-preview.tsdk": "node_modules/@typescript/native-preview"
 }
