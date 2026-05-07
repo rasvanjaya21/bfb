@@ -14,14 +14,14 @@ async function initProject(): Promise<void> {
 	try {
 		await fs.access(accountsFile);
 	} catch {
-		await fs.writeFile(accountsFile, 'NO,UID,PASSWORD', 'utf-8');
+		await fs.writeFile(accountsFile, 'NO;UID;PASSWORD', 'utf-8');
 	}
 
 	await fs.mkdir(datasDir, { recursive: true });
 	try {
 		await fs.access(contentsFile);
 	} catch {
-		await fs.writeFile(contentsFile, 'NO,COOKIE,ROUTE,TYPE,IDFANSPAGE,PATH,CAPTION,TAG,SCHEDULE', 'utf-8');
+		await fs.writeFile(contentsFile, 'NO;COOKIE;ROUTE;TYPE;IDFANSPAGE;PATH;CAPTION;TAG;SCHEDULE', 'utf-8');
 	}
 
 	await fs.mkdir(credentialsDir, { recursive: true });
