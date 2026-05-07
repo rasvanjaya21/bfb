@@ -25,7 +25,7 @@ async function csvToJson<T>(csvPath: string): Promise<T[]> {
 				} else {
 					inQuotes = !inQuotes;
 				}
-			} else if (char === ',' && !inQuotes) {
+			} else if (char === ';' && !inQuotes) {
 				result.push(current.trim());
 				current = '';
 			} else {
