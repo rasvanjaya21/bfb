@@ -1,31 +1,15 @@
+import { isReservedKey } from '@/libs/is-reserved-key';
+import { parseCookieStore } from '@/libs/parse-cookie-store';
 import fs from 'fs/promises';
 
 async function readCookies<T = any>(cookiePath: string, idCookie: string): Promise<T[]> {
-	const raw = await fs.readFile(cookiePath, 'utf-8');
+	if (isReservedKey(idCookie)) return [];
 
-	if (!raw.trim()) {
-		return [];
-	}
+	const store = parseCookieStore(await fs.readFile(cookiePath, 'utf-8'));
 
-	let parsed: Record<string, unknown>;
+	const cookies = store.get(idCookie);
 
-	try {
-		parsed = JSON.parse(raw);
-	} catch {
-		return [];
-	}
-
-	if (typeof parsed !== 'object' || parsed === null) {
-		return [];
-	}
-
-	const cookies = (parsed as Record<string, unknown>)[idCookie];
-
-	if (!Array.isArray(cookies)) {
-		return [];
-	}
-
-	return cookies as T[];
+	return (Array.isArray(cookies) ? cookies : []) as T[];
 }
 
 export { readCookies };

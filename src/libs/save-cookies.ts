@@ -1,23 +1,24 @@
+import { isReservedKey } from '@/libs/is-reserved-key';
+import { parseCookieStore } from '@/libs/parse-cookie-store';
+import { writeSecretFile } from '@/libs/write-secret-file';
 import fs from 'fs/promises';
 
-async function saveCookies<T = any>(cookiePath: string, idCookie: string, cookies: T[]): Promise<void> {
-	let existing: Record<string, unknown> = {};
-
+async function readStore(cookiePath: string): Promise<Map<string, unknown>> {
 	try {
-		const raw = await fs.readFile(cookiePath, 'utf-8');
+		return parseCookieStore(await fs.readFile(cookiePath, 'utf-8'));
+	} catch (error) {
+		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return new Map();
+		throw error;
+	}
+}
 
-		if (raw.trim()) {
-			const parsed = JSON.parse(raw);
+async function saveCookies<T = any>(cookiePath: string, idCookie: string, cookies: T[]): Promise<void> {
+	if (isReservedKey(idCookie)) throw new Error(`UID tidak valid: ${idCookie}`);
 
-			if (typeof parsed === 'object' && parsed !== null) {
-				existing = parsed;
-			}
-		}
-	} catch {}
+	const store = await readStore(cookiePath);
+	store.set(idCookie, cookies);
 
-	existing[idCookie] = cookies;
-
-	await fs.writeFile(cookiePath, JSON.stringify(existing, null, 2), 'utf-8');
+	await writeSecretFile(cookiePath, JSON.stringify(Object.fromEntries(store), null, 2));
 }
 
 export { saveCookies };
