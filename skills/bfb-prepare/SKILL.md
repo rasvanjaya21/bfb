@@ -96,9 +96,10 @@ bun run build
 
 ## 9. Graphify update dan label
 
-1. Jalankan `graphify update .` untuk mengekstrak ulang kode ke `graphify-out/graph.json`.
-2. Beri label komunitas: baca daftar komunitas di `graphify-out/GRAPH_REPORT.md`, beri tiap komunitas nama 2–5 kata yang menjelaskan isinya (misalnya "Menu dan Otomasi Browser"), lalu tulis ulang report dan `graph.json` dengan label itu. Ikuti langkah "Label communities" di skill `graphify`. Kalau skill itu tidak tersedia di agent ini, jalankan `graphify cluster-only .` supaya graphify memberi nama sendiri.
-3. Pastikan nama komunitas di `GRAPH_REPORT.md` bukan lagi `Community N` atau sekadar nama file.
+1. Jalankan `graphify update .` untuk mengekstrak ulang kode ke `graphify-out/graph.json`. Perintah ini mengembalikan nama komunitas ke nama default.
+2. Beri label komunitas dengan `graphify label . --backend=claude-cli`, yang memakai Claude CLI untuk menamai setiap komunitas dan menulis ulang `GRAPH_REPORT.md` serta `graph.json`. Jangan menulis label dengan tangan.
+3. Pastikan nama komunitas di `GRAPH_REPORT.md` bukan lagi `Community N` atau sekadar nama file. Kalau masih ada, jalankan lagi dengan `--missing-only`.
+4. Jalankan `bun run format` sesudahnya, supaya output graphify ikut dirapikan.
 
 ## 10. Ringkasan
 
