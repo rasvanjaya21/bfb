@@ -40,7 +40,7 @@
 		"format": "prettier --write --ignore-path .gitignore .",
 		"lint": "oxlint",
 		"prepare": "git config core.hooksPath .githooks || true",
-		"release": "bumpp --commit --push --tag",
+		"release": "bumpp package.json src/utils/constant.ts --commit --push --tag",
 		"test": "bun test",
 		"test:coverage": "bun test --coverage",
 		"test:watch": "bun test --watch",
