@@ -19,7 +19,7 @@ Baca `architecture/SPEC.md` bila ada, `AGENTS.md`, dan kode yang relevan (mulai 
 
 Simpan rencana dan daftar task-nya di `architecture/PLAN.md`. Pisahkan dari `TODO.md` di root, yang mencatat temuan audit dan keputusan terbuka, bukan rencana kerja. Kalau `architecture/PLAN.md` masih punya task yang belum selesai untuk pekerjaan lain, berhenti dan tanya sebelum menimpanya.
 
-Langkah verifikasi setiap task harus berupa perintah yang benar-benar ada di repo ini: `bun run test`, `bun run type-check`, `bun run lint`, `bun run check`. Task yang menyentuh `core/*` (butuh Chrome dan akun sungguhan) harus menyebut langkah cek manualnya secara eksplisit, dan logika murninya sebisa mungkin dipindah ke `libs/` supaya bisa dites.
+Langkah verifikasi setiap task harus berupa perintah yang benar-benar ada di repo ini: `bun run test` (`bun run test:coverage` untuk ambang 100%), `bun run type-check`, `bun run lint`, `bun run check`. Task yang menyentuh `core/*` (butuh Chrome dan akun sungguhan) harus menyebut langkah cek manualnya secara eksplisit, dan logika murninya sebisa mungkin dipindah ke `libs/` supaya bisa dites.
 
 ---
 

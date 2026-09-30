@@ -26,6 +26,7 @@ Untuk perbaikan bug, pola Prove-It:
 - Struktur: `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file system, beberapa modul dengan fake), `tests/endpoint/` (kontrak API aktivasi); nama file `NNN-nama.test.ts`, nomor mulai `001` di setiap folder. Pilih folder dari jenis test-nya, lalu pakai nomor berikutnya di folder itu. Jangan pernah menulis test yang lolos tanpa assertion.
 - Logika keputusan diletakkan di `src/libs/` supaya bisa dites. Pola yang sudah ada: folder temp + `process.chdir` untuk file (`init-project`, `cookies`), `fetch` palsu untuk API aktivasi, stream palsu untuk `hideQuestion`, dan browser palsu untuk `runBrowserRows`. Test yang bergantung pada mode file POSIX pakai `test.skipIf(process.platform === 'win32')`.
 - Alur browser di `src/core/` butuh Chrome dan akun sungguhan, jadi tidak bisa dites otomatis. Pindahkan logika keputusan ke `libs/` supaya bisa dites, dan tulis langkah cek manualnya.
+- `bunfig.toml` mewajibkan coverage 100% baris dan fungsi untuk setiap file yang di-import test. Kode baru di file yang sudah dites wajib ikut dites, termasuk cabang error; `process.exit` dan sejenisnya di-mock (`spyOn(process, 'exit')`). Coverage hanya menghitung file yang di-import di proses test, jadi test lewat `Bun.spawn` tidak menambah angka.
 - Buktikan test-nya, bukan hanya perbaikannya: jalankan test regresi terhadap kode lama dan lihat gagal karena alasan yang benar.
 - `TODO.md` bagian "Testing" berisi daftar test yang sudah diprioritaskan dari audit.
 

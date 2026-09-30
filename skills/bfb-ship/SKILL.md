@@ -30,7 +30,7 @@ Keluarkan `GO` atau `NO-GO` dengan blocker, perbaikan yang disarankan, risiko ya
 
 ## Realitas bfb yang harus dicek sebelum GO
 
-- `bun run type-check`, `bun run lint`, `bun run check`, `bun run test`, dan `bun run build` semuanya lolos.
+- `bun run type-check`, `bun run lint`, `bun run check`, `bun run test:coverage` (ambang 100%), dan `bun run build` semuanya lolos.
 - `VERSION` di `src/utils/constant.ts` sama dengan versi yang akan di-bump; bumpp hanya mengubah `package.json`.
 - Isi tarball dicek dengan `bun pm pack --dry-run` atau `npm pack --dry-run`: hanya `dist`, `README.md`, `LICENSE`, dan semua JS yang dipublikasikan sudah di-obfuscate.
 - Tidak ada isi `datas/`, `credentials/`, cookie, atau token yang ikut ter-commit atau ter-pack.

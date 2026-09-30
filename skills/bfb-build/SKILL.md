@@ -19,7 +19,7 @@ Tahap **BUILD** dalam siklus bfb (`/bfb-spec` → `/bfb-plan` → `/bfb-build` �
 2. Muat konteks: kode, pola, dan tipe yang sudah ada. Mulai dari `graphify query`, bukan grep.
 3. Tulis test yang gagal untuk perilaku yang diharapkan (lihat `/bfb-test`).
 4. Implementasikan kode minimum sampai test lolos.
-5. Jalankan `bun run test`, `bun run type-check`, `bun run lint`, `bun run check`, lalu `bun run format`. `bun run build` (bunup + obfuscate) hanya dijalankan kalau task menyentuh `bunup.config.ts`, dependency, atau entry point.
+5. Jalankan `bun run test:coverage` (ambang 100%, sama dengan CI), `bun run type-check`, `bun run lint`, `bun run check`, lalu `bun run format`. `bun run build` (bunup + obfuscate) hanya dijalankan kalau task menyentuh `bunup.config.ts`, dependency, atau entry point.
 6. Tandai task selesai di `architecture/PLAN.md`.
 7. Commit hanya kalau user memintanya. Persetujuan `/bfb-build auto` dihitung sebagai izin commit per task; stage hanya file yang disentuh task itu.
 
