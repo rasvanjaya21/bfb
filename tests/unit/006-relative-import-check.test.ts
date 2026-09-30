@@ -26,4 +26,16 @@ describe('hasRelativeImport', () => {
 			expect(hasRelativeImport(source)).toBe(false);
 		}
 	});
+
+	test('parses generic arrow functions in .ts files, which TSX would read as JSX', () => {
+		const source = `import { a } from '@/libs/a';\nconst run = async <T>(task: () => Promise<T>): Promise<T> => task();`;
+		expect(hasRelativeImport(source)).toBe(false);
+		expect(hasRelativeImport(`${source}\nimport b from './b';`)).toBe(true);
+	});
+
+	test('parses JSX when the file is .tsx', () => {
+		const source = `import { a } from '@/libs/a';\nconst view = <div>{a}</div>;`;
+		expect(hasRelativeImport(source, 'tsx')).toBe(false);
+		expect(hasRelativeImport(`${source}\nimport b from '../b';`, 'tsx')).toBe(true);
+	});
 });
