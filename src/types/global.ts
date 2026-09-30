@@ -16,4 +16,10 @@ interface Content {
 	SCHEDULE: string;
 }
 
-export { type Account, type Content };
+// What a menu task reports back: the same message the operator saw on screen.
+interface Outcome {
+	ok: boolean;
+	message: string;
+}
+
+export { type Account, type Content, type Outcome };

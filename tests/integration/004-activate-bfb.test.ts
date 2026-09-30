@@ -110,6 +110,28 @@ describe('activateBfb', () => {
 		expect(messages).toEqual(['Token valid, aktifasi berhasil\n']);
 	});
 
+	test('returns every outcome with the message shown on screen, never the token', async () => {
+		const cases: [string, () => void, { ok: boolean; message: string }][] = [
+			['typed-token', () => respond(JSON.stringify({ token: 'server-token-123' })), { ok: true, message: 'Token valid, aktifasi berhasil' }],
+			['', () => {}, { ok: false, message: 'Token kosong, aktifasi gagal' }],
+			['wrong-token', () => respond(JSON.stringify({ state: false }), 500), { ok: false, message: 'Token tidak valid, aktifasi gagal' }],
+			['typed-token', () => respond('<html>Bad Gateway</html>', 502), { ok: false, message: 'Server error, aktifasi gagal' }],
+		];
+		for (const [input, setup, expected] of cases) {
+			setup();
+			const outcome = await activateBfb(async () => input);
+			expect(outcome).toEqual(expected);
+			expect(JSON.stringify(outcome)).not.toContain('token-123');
+			expect(JSON.stringify(outcome)).not.toContain(input || 'never-empty');
+		}
+	});
+
+	test('returns a failed outcome when a valid token cannot be saved', async () => {
+		await writeFile(join(dir, 'credentials'), 'not a folder');
+		respond(JSON.stringify({ token: 'server-token-123' }));
+		expect(await activateBfb(async () => 'typed-token')).toEqual({ ok: false, message: 'Token valid, tapi gagal disimpan' });
+	});
+
 	test('writes nothing when the server fails', async () => {
 		respond('<html>Bad Gateway</html>', 502);
 		await activateBfb(async () => 'typed-token');

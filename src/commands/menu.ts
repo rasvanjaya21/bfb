@@ -28,7 +28,7 @@ async function menu(): Promise<void> {
 	};
 
 	// holdResult keeps a run's summary on screen until Enter, instead of clearing it straight away.
-	const runTask = async (title: string, task: () => Promise<void>, holdResult = false): Promise<void> => {
+	const runTask = async (title: string, task: () => Promise<unknown>, holdResult = false): Promise<void> => {
 		readlineInterface.pause();
 		console.clear();
 		console.log(`${title}\n`);

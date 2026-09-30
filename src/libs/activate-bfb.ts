@@ -2,24 +2,26 @@ import { applyDelay } from '@/libs/apply-delay';
 import { hideQuestion } from '@/libs/hide-question';
 import { requestActivation } from '@/libs/request-activation';
 import { writeSecretFile } from '@/libs/write-secret-file';
+import type { Outcome } from '@/types/global';
 import fs from 'fs/promises';
 import path from 'path';
 
-async function showResult(message: string): Promise<void> {
+async function showResult(ok: boolean, message: string): Promise<Outcome> {
 	console.clear();
 	console.log(`${message}\n`);
 	await applyDelay(1000);
+	return { ok, message };
 }
 
-async function activateBfb(readToken: () => Promise<string> = () => hideQuestion('Masukkan token: ')): Promise<void> {
+async function activateBfb(readToken: () => Promise<string> = () => hideQuestion('Masukkan token: ')): Promise<Outcome> {
 	const input = (await readToken()).trim();
 
-	if (!input) return showResult('Token kosong, aktifasi gagal');
+	if (!input) return showResult(false, 'Token kosong, aktifasi gagal');
 
 	const result = await requestActivation(input);
 
-	if (result.status === 'error') return showResult('Server error, aktifasi gagal');
-	if (result.status === 'invalid') return showResult('Token tidak valid, aktifasi gagal');
+	if (result.status === 'error') return showResult(false, 'Server error, aktifasi gagal');
+	if (result.status === 'invalid') return showResult(false, 'Token tidak valid, aktifasi gagal');
 
 	try {
 		const dirPath = path.join(process.cwd(), 'credentials');
@@ -28,10 +30,10 @@ async function activateBfb(readToken: () => Promise<string> = () => hideQuestion
 		await fs.chmod(dirPath, 0o700);
 		await writeSecretFile(filePath, result.token);
 	} catch {
-		return showResult('Token valid, tapi gagal disimpan');
+		return showResult(false, 'Token valid, tapi gagal disimpan');
 	}
 
-	return showResult('Token valid, aktifasi berhasil');
+	return showResult(true, 'Token valid, aktifasi berhasil');
 }
 
 export { activateBfb };
