@@ -51,7 +51,6 @@ src/
   libs/           satu fungsi kecil per file (nama file kebab-case, export camelCase)
   types/global.ts Account dan Content (bentuk baris file CSV)
   utils/constant.ts VERSION, DRIVER_VERSION, MOTIVATIONS
-  ignore/         tidak dipakai dan tidak ikut di-build
 tests/            unit/, integration/, endpoint/; file NNN-nama.test.ts, nomor mulai 001 per folder
 .githooks/        pre-commit hook (dipasang oleh script prepare lewat core.hooksPath)
 check.ts          pengecek import relatif (src/, tests/, script root); memakai Bun.Transpiler.scanImports
@@ -116,6 +115,7 @@ Siklus proyek, satu skill per tahap:
 - **Teks untuk user dalam Bahasa Indonesia**, singkat, huruf kecil setelah kata pertama (mis. `'Cookie tidak valid'`, `'Masih dalam tahap pengembangan'`). Layar menu memakai pola `readlineInterface.pause()` → `console.clear()` → pesan → `applyDelay(1000)` → `console.clear()` → `resume()`. Jeda 1 detik itu disengaja oleh user; jangan dihapus atau dipercepat.
 - Log per baris di `core/*` dibungkus separator `'==============================='`; sukses/gagal memakai `chalk.green` / `chalk.red`.
 - Selector puppeteer memakai locator: `page.locator('text=...')` atau `xpath=//...`, `.waitHandle().catch(() => null)`, lalu cek null dan lempar `Error` dengan pesan Bahasa Indonesia. Default timeout di `facebook.ts` 5000 ms, navigasi 30000 ms.
+- **Jangan kirim fungsi ke browser** (`page.evaluate(fn)`, `page.waitForFunction(fn)`, `$eval`, `ElementHandle.evaluate`). Build rilis di-obfuscate, dan obfuscator mengganti string di dalam fungsi itu dengan pemanggilan dekoder yang hanya ada di proses Bun, jadi di browser gagal dengan `ReferenceError` (dulu alasan `src/ignore/` dikeluarkan dari obfuscate). Taruh kondisinya di selector (XPath `not(@aria-disabled="true")` + locator), atau kalau terpaksa kirim kodenya sebagai string.
 - Input tersembunyi (token/password) memakai `hideQuestion()`, bukan readline. Tombol Esc sendirian tidak boleh menelan Enter atau karakter berikutnya; hanya `ESC [` / `ESC O` yang dianggap awal escape sequence. Handler `data` harus memproses setiap potongan input **per karakter**: Bun bisa menggabungkan beberapa tombol (ketikan cepat, paste) ke satu potongan, dan membandingkan potongan utuh dengan `'\r'` membuat prompt menggantung.
 - Dependency baru yang dipakai saat runtime juga harus ditambahkan ke `external` di `bunup.config.ts`.
 - Data sensitif (`cookies.json`, `token.bfb`) ditulis lewat `writeSecretFile()`: file temp baru `0600` (`wx`) lalu rename, jadi tidak pernah terbaca pihak lain walau sesaat; folder `0700`. File yang rusak dilaporkan sebagai error, tidak pernah ditimpa diam-diam.
@@ -127,6 +127,7 @@ Siklus proyek, satu skill per tahap:
 - `bun run release` menjalankan `bumpp package.json src/utils/constant.ts`, jadi `VERSION` di `constant.ts` ikut naik bersama `package.json` dalam commit `chore: release vX.Y.Z` yang sama. Tidak perlu commit terpisah untuk `constant.ts`.
 - Push tag `v*` memicu `.github/workflows/release.yml` (type-check, lint, test, build, changelogithub, publish).
 - Publish ke npmjs sengaja tetap memakai `npm publish` di `release.yml` (satu-satunya tempat Node masih dipakai). npm memakai trusted publishing (OIDC) dengan provenance, terbukti di registry untuk 0.3.0–0.4.0, tanpa token tersimpan. `bun publish` 1.3.9 tidak mendukung OIDC, hanya `NPM_CONFIG_TOKEN`, jadi jangan dipindah ke Bun sampai Bun mendukungnya.
+- `release.yml` dan `ci.yml` memakai action yang di-pin ke SHA commit (komentar menyebut versinya), Bun dari `.bumrc`, npm dan changelogithub versi pasti. Hanya job `release` yang punya `id-token: write`; changelog berjalan di job terpisah dengan `contents: write` saja. Saat menaikkan versi action atau tool, ganti SHA/versinya secara eksplisit, jangan kembali ke tag bergerak atau `latest`.
 - `DRIVER_VERSION` mengunci build Chrome; mengubahnya memaksa user memasang ulang driver (menu 96).
 
 ## Pesan commit
@@ -141,4 +142,4 @@ Test ada di `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file 
 
 - Jangan pernah commit isi `datas/`, `credentials/`, cookie, atau token.
 - `dist/` sudah di-obfuscate; debug dari `src/` atau pakai `bunup` tanpa langkah obfuscate.
-- `src/ignore/index.ts` dan `src/libs/asset-checker.ts` tidak dipakai dan tidak ikut di-build; lihat `TODO.md`.
+- `src/libs/asset-checker.ts` tidak dipakai; lihat `TODO.md`.
