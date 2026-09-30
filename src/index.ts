@@ -9,8 +9,8 @@ async function index(): Promise<void> {
 	if (parsed.command === 'version') return showVersion();
 	if (parsed.command === 'help') return showHelp();
 	if (parsed.command === 'unknown') {
-		console.log(`Unknown flag: '${parsed.flag}'`);
-		console.log("Try 'bfb help' for usage information");
+		console.log(`Flag tidak dikenal: '${parsed.flag}'`);
+		console.log("Coba 'bfb help' untuk panduan pemakaian");
 		return;
 	}
 

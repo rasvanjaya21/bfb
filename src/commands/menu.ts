@@ -108,7 +108,7 @@ async function menu(): Promise<void> {
 		} else if (choice === '99') {
 			readlineInterface.close();
 			console.clear();
-			console.log('Good bye\n');
+			console.log('Sampai jumpa\n');
 			await applyDelay(1000);
 			console.clear();
 			process.exit(0);
