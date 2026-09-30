@@ -9,13 +9,14 @@ async function writeIfMissing(file: string, content: string, mode?: number): Pro
 	if (mode !== undefined) await fs.chmod(file, mode);
 }
 
-// datas/ holds account passwords and credentials/ holds session cookies, so both stay readable by the owner only.
+// datas/ holds account passwords, credentials/ session cookies and logs/ account UIDs, so all three stay readable by the owner only.
 async function initProject(): Promise<void> {
 	const cwd = process.cwd();
 	const datasDir = path.join(cwd, 'datas');
 	const credentialsDir = path.join(cwd, 'credentials');
+	const logsDir = path.join(cwd, 'logs');
 
-	for (const dir of [datasDir, credentialsDir]) {
+	for (const dir of [datasDir, credentialsDir, logsDir]) {
 		await fs.mkdir(dir, { recursive: true, mode: 0o700 });
 		await fs.chmod(dir, 0o700);
 	}
@@ -23,7 +24,8 @@ async function initProject(): Promise<void> {
 	await writeIfMissing(path.join(datasDir, 'accounts.csv'), 'NO;UID;PASSWORD', 0o600);
 	await writeIfMissing(path.join(datasDir, 'contents.csv'), 'NO;COOKIE;ROUTE;TYPE;IDFANSPAGE;PATH;CAPTION;TAG;SCHEDULE', 0o600);
 	await writeIfMissing(path.join(credentialsDir, 'cookies.json'), '{}', 0o600);
-	await ignoreSecrets(path.join(cwd, '.gitignore'), ['datas', 'credentials']);
+	await writeIfMissing(path.join(logsDir, 'audit.log'), '', 0o600);
+	await ignoreSecrets(path.join(cwd, '.gitignore'), ['datas', 'credentials', 'logs']);
 }
 
 export { initProject };
