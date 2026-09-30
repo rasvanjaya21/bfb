@@ -11,7 +11,7 @@ type RowOutcome = { status: 'done' | 'skipped' | 'failed'; message?: string };
 // opens a page, so it cannot race the stealth plugin, which is still preparing a page it just saw created.
 // A task returns the reason its row was skipped, or nothing when the row is done. onRow hears every row's outcome
 // right after its task; a context that cannot be closed is reported afterwards as a second, failed outcome.
-async function runBrowserRows<T>(browser: Browser, rows: T[], task: (openPage: OpenPage, row: T) => Promise<string | void>, onRow: (outcome: RowOutcome, row: T) => void = () => {}): Promise<RowsResult> {
+async function runBrowserRows<T>(browser: Browser, rows: T[], task: (openPage: OpenPage, row: T) => Promise<string | void>, onRow: (outcome: RowOutcome, row: T) => void | Promise<void> = () => {}): Promise<RowsResult> {
 	const result: RowsResult = { done: 0, skipped: 0, failed: 0, stopped: false };
 
 	for (const row of rows) {
@@ -31,7 +31,7 @@ async function runBrowserRows<T>(browser: Browser, rows: T[], task: (openPage: O
 			outcome = { status: 'failed', message: (error as Error)?.message ?? String(error) };
 		}
 		result[outcome.status]++;
-		onRow(outcome, row);
+		await onRow(outcome, row);
 
 		const cleaned = context
 			? await context.close().then(
@@ -45,7 +45,7 @@ async function runBrowserRows<T>(browser: Browser, rows: T[], task: (openPage: O
 			break;
 		}
 		if (!cleaned) {
-			onRow({ status: 'failed', message: 'Sesi akun gagal dibersihkan, proses dihentikan' }, row);
+			await onRow({ status: 'failed', message: 'Sesi akun gagal dibersihkan, proses dihentikan' }, row);
 			result.stopped = true;
 			break;
 		}

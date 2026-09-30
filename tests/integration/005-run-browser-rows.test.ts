@@ -143,10 +143,25 @@ describe('runBrowserRows', () => {
 			fake.browser,
 			[1],
 			async () => '',
-			(outcome) => reports.push(outcome),
+			(outcome) => void reports.push(outcome),
 		);
 		expect(result).toEqual({ done: 0, skipped: 1, failed: 0, stopped: false });
 		expect(reports).toEqual([{ status: 'skipped', message: '' }]);
+	});
+
+	test('waits for an async onRow before starting the next row', async () => {
+		const fake = fakeBrowser();
+		const events: string[] = [];
+		await runBrowserRows(
+			fake.browser,
+			[1, 2],
+			async (_openPage, item) => void events.push(`task ${item}`),
+			async (_outcome, row) => {
+				await new Promise((resolve) => setTimeout(resolve, 20));
+				events.push(`logged ${row}`);
+			},
+		);
+		expect(events).toEqual(['task 1', 'logged 1', 'task 2', 'logged 2']);
 	});
 
 	test('reports each failure message to the caller', async () => {
@@ -174,7 +189,7 @@ describe('runBrowserRows', () => {
 				if (item === 2) return 'Masih dalam tahap pengembangan';
 				if (item === 3) throw new Error('Cookie tidak valid');
 			},
-			(outcome, row) => reports.push([outcome, row]),
+			(outcome, row) => void reports.push([outcome, row]),
 		);
 		expect(reports).toEqual([
 			[{ status: 'done' }, 1],
@@ -191,7 +206,7 @@ describe('runBrowserRows', () => {
 			fake.browser,
 			[1, 2],
 			async (openPage) => void (await openPage()),
-			(outcome, row) => reports.push([outcome, row]),
+			(outcome, row) => void reports.push([outcome, row]),
 		);
 		expect(reports).toEqual([
 			[{ status: 'done' }, 1],
