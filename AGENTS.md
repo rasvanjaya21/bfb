@@ -38,6 +38,7 @@ bun run test:coverage # bun test --coverage; gagal kalau satu file di bawah 90% 
 bun run clean        # hapus dist dan node_modules
 bun run auto         # clean + install + build
 bun run release      # bumpp --commit --push --tag
+bun run mock         # json-server dari mock/ (area coretan lokal, tidak di-commit)
 ```
 
 Pre-commit hook ada di `.githooks/pre-commit` dan menjalankan `lint && type-check && check`; `bun install` memasangnya lewat script `prepare` (`git config core.hooksPath .githooks`). Jangan kembali ke `simple-git-hooks`: postinstall-nya memanggil `node ./postinstall.js` langsung, sehingga `bun install` gagal (exit 126) di mesin tanpa Node, dan `[run] bun = true` tidak berlaku untuk script lifecycle dependency. CI (`.github/workflows/ci.yml`) menjalankan build, type-check, lint, dan test di ubuntu/macos/windows.
@@ -86,6 +87,7 @@ Siklus proyek, satu skill per tahap:
 ```
 
 - Keenam skill adalah fork dari `addyosmani/agent-skills` pada commit `2686b62`. Setiap `SKILL.md` berisi bagian khusus bfb di atas, lalu `# Method` yang di-vendor dari skill upstream (`spec-driven-development`, `planning-and-task-breakdown`, `incremental-implementation`, `test-driven-development`, `code-review-and-quality`, `shipping-and-launch`). Bagian bfb menang setiap kali keduanya bertentangan.
+- Saat user menjalankan skill, kerjakan setiap langkahnya persis seperti tertulis, walaupun terlihat tidak perlu (mis. `graphify update` saat kode tidak berubah). Langkah hanya boleh dilewati kalau skill itu sendiri yang menyuruh melewatinya.
 - Setiap folder skill hanya berisi satu `SKILL.md`, tanpa subfolder. Checklist yang dirujuk skill (Definition of Done, Testing Patterns, Security/Performance/Accessibility Checklist, referensi gaya commit) ditempel di bagian `# Reference` di akhir `SKILL.md`.
 - `.claude/` dan `.agents/` hanya berisi symlink lokal dan di-gitignore; cara membuatnya ada di `README.md` bagian "Agent Tooling". Kalau menambah symlink atau server MCP baru, perbarui instruksi di README juga.
 - Edit skill hanya di `skills/`, jangan pernah menyalin skill ke path symlink. Untuk memperbarui `# Method`, salin ulang dari upstream dan perbarui hash commit-nya.
@@ -136,7 +138,7 @@ Siklus proyek, satu skill per tahap:
 
 ## Pesan commit
 
-Format `type(scope): description` — huruf kecil, kalimat perintah, tanpa titik di akhir, satu baris. Tanpa `!`, tanpa `BREAKING CHANGE:`, tanpa trailer co-author. Scope yang dipakai di repo ini: `core`, `lib`, `command`, `constant`, `config`, `package`, `type`, `src`, `vcs`, `npm`, `lock`, `ignore`, `docs`/`howto`. Rilis seluruh repo: `chore: release vX.Y.Z`. Saat diminta commit, pakai skill `/bfb-commit`: perubahan dipecah per kategori, pesan dalam bahasa Inggris, tanpa co-author.
+Format `type(scope): description` — huruf kecil, kalimat perintah, tanpa titik di akhir, satu baris. Tanpa `!`, tanpa `BREAKING CHANGE:`, tanpa trailer co-author. Scope yang dipakai di repo ini: `core`, `lib`, `command`, `constant`, `util`, `config`, `package`, `type`, `src`, `vcs`, `npm`, `lock`, `workflow`, `project`, `test`, `docs`/`howto`, `architecture`, `agents`, `skill`, `mcp`, `graph` (daftar lengkap dan area tiap scope ada di `skills/bfb-commit/SKILL.md`). Rilis seluruh repo: `chore: release vX.Y.Z`. Saat diminta commit, pakai skill `/bfb-commit`: perubahan dipecah per kategori, pesan dalam bahasa Inggris, tanpa co-author.
 
 ## Testing
 

@@ -11,13 +11,14 @@ Temuan yang masih terbuka — diperbarui 2026-09-30. Semua item di sini butuh ke
 ## ⚪ Low
 
 - [ ] **Backend membalas token salah dengan HTTP 500** (`{"state":false}`) untuk POST dan GET `/api/v1/check`. Client sudah memutuskan dari isi body; perbaikan ada di server (401/403).
-- [ ] **Deteksi cookie kedaluwarsa via `page.url().includes('next')`** — `src/core/cookie.ts:66`. Rapuh terhadap perubahan URL Facebook; perlu dicek di halaman login yang sekarang.
+- [ ] **Deteksi cookie kedaluwarsa via `page.url().includes('next')`** — `src/core/cookie.ts:67`. Rapuh terhadap perubahan URL Facebook; perlu dicek di halaman login yang sekarang.
 - [ ] **`src/libs/asset-checker.ts` tidak dipakai** — putuskan dihapus, atau direncanakan (kemungkinan untuk validasi kolom `PATH` saat upload media; commit asalnya `ba5a8a1 feat(lib): add asset validation as non cwd`).
 - [ ] **`extract-zip` 2.0.1 punya 2 advisory high tanpa versi perbaikan** (dependency `@puppeteer/browsers`). Diterima untuk saat ini: hanya dipakai mengekstrak Chrome yang diunduh dari Google lewat HTTPS. Periksa lagi saat `@puppeteer/browsers` naik versi.
 - [ ] **`mcp-remote` di config global agy belum di-pin** — `~/.gemini/config/mcp_config.json` masih `bunx --bun mcp-remote <url>`; perintah di README sudah `mcp-remote@0.14.3`. Di luar repo, jadi butuh persetujuan user untuk mengubahnya.
 
 ## Tooling & CI
 
+- [ ] **Bun lokal 1.4.2, bukan 1.3.9 dari `.bumrc`** — `~/.bun/bin/bun` dipakai langsung, jadi format/lint/test/build lokal tidak berjalan di versi yang dikunci CI. Pilihan: pasang 1.3.9 (mis. `bun upgrade` ke versi itu atau lewat asdf), atau naikkan `.bumrc` dan `engines.bun` lalu `bun run docs`.
 - [ ] **`ci.yml` dan `release.yml` belum pernah jalan di GitHub Actions** — Bun dari `.bumrc`, action di-pin ke SHA, `test:coverage`, `bun publish --dry-run` (apakah butuh auth registry), job changelog terpisah. Baru terbukti setelah push/rilis berikutnya.
-- [ ] **Upgrade mayor belum dievaluasi** — `puppeteer-core` 25.x dan `bumpp` 12.x. Butuh satu siklus sendiri: baca changelog, `bun run docs`, tes Chrome ulang, dan idealnya satu run di akun uji.
+- [ ] **Upgrade mayor belum dievaluasi** — `puppeteer-core` 25.x, `@puppeteer/browsers` 3.x, `chalk` 6.x, `bumpp` 12.x, dan `json-server` 1.0 (masih beta; hanya untuk `bun run mock`). Butuh satu siklus sendiri: baca changelog, `bun run docs`, tes Chrome ulang, dan idealnya satu run di akun uji.
 - [ ] **Prettier tidak stabil pada satu baris `graphify-out/GRAPH_REPORT.md`** — baris berisi `src/**/*, tests/**/*, *.ts` berganti escape setiap `bun run format`, sehingga file itu selalu tampak berubah. Pilihan: biarkan, atau kecualikan file itu saja dari prettier (user memilih `docs/` dan `graphify-out/` tetap diformat).
