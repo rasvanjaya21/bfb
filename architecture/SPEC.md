@@ -23,7 +23,7 @@ User story:
 
 ## Tech Stack
 
-Bun 1.3.9 (`.bumrc`), TypeScript ESM, bunup 0.16.31 (`target: 'bun'`, `splitting: false`) + javascript-obfuscator, puppeteer-core 24.41.0, puppeteer-extra 3.3.6 + puppeteer-extra-plugin-stealth 2.11.2, @puppeteer/browsers 2.13.0, Chrome `147.0.7727.101` (`DRIVER_VERSION`), chalk, `tsgo`, oxlint, prettier, `bun test`, bumpp. Dokumentasi resmi versi-versi ini ada offline di `docs/`.
+Bun 1.3.9 (`.bumrc`), TypeScript ESM, bunup 0.16.32 (`target: 'bun'`, `splitting: false`) + javascript-obfuscator, puppeteer-core 24.43.1, puppeteer-extra 3.3.6 + puppeteer-extra-plugin-stealth 2.11.2, @puppeteer/browsers 2.13.2, Chrome `147.0.7727.101` (`DRIVER_VERSION`), chalk, `tsgo`, oxlint, prettier, `bun test`, bumpp. Dokumentasi resmi versi-versi ini ada offline di `docs/`.
 
 ## Data di folder kerja
 
@@ -46,7 +46,7 @@ Aturan CSV: tanda kutip hanya membuka sel berkutip di awal sel (setelah spasi); 
 - Setiap putaran menu menampilkan versi, OS, arsitektur, timezone, folder, status init, status driver, dan status aktivasi.
 - Menu 1 dan 95 **terkunci** sampai init, driver, dan aktivasi ketiganya siap.
 - Setiap layar mengikuti pola pause → clear → pesan → jeda 1 detik (disengaja) → clear → resume. Hasil menu 1 dan 95 ditahan sampai operator menekan Enter, lalu kembali ke menu.
-- `bfb --version`/`-v`/`version` mencetak versi; flag lain yang tidak dikenal ditolak dengan pesan.
+- `bfb --version`/`-v`/`version` mencetak versi; flag lain ditolak dengan `Flag tidak dikenal: '<flag>'`. Semua teks untuk operator dalam Bahasa Indonesia.
 
 ### Setup (menu 0, 96)
 
@@ -60,7 +60,7 @@ Aturan CSV: tanda kutip hanya membuka sel berkutip di awal sel (setelah spasi); 
     - body berisi `token` string ASCII tanpa spasi (1–4096 karakter) → token disimpan → "Token valid, aktifasi berhasil"
     - body lain → "Token tidak valid, aktifasi gagal"
     - timeout 5 detik, gangguan jaringan, atau body bukan JSON → "Server error, aktifasi gagal"
-- Cek aktivasi di menu memakai timeout 5 detik, tidak memanggil server kalau belum ada token, dan hasil aktif di-cache sampai proses selesai.
+- Input token di-trim; hanya spasi = "Token kosong". Cek aktivasi di menu memakai timeout 5 detik, tidak memanggil server kalau belum ada token, dan hasil aktif di-cache per token sampai proses selesai (token berganti → dicek ulang).
 
 ### Posting Facebook (menu 1)
 
@@ -72,6 +72,7 @@ Aturan CSV: tanda kutip hanya membuka sel berkutip di awal sel (setelah spasi); 
 
 ### Sinkronisasi cookie (menu 95)
 
+- UID kosong tidak pernah dipakai sebagai kunci `cookies.json`. Password hanya diketik kalau kolom `input[type="password"]` yang sedang fokus; kalau tidak, baris dihentikan.
 - Cookie valid → tidak diubah (berhasil). Kedaluwarsa atau tidak ada → login manual (UID/password diketik otomatis), lalu `Simpan cookie? (y/N)`; `y`/`Y` menyimpan, jawaban lain tidak (dilewati). Login bermasalah → dilewati.
 - Menyimpan cookie tidak pernah menghapus cookie akun lain atau entri lain di `cookies.json`; file yang rusak dilaporkan, tidak ditimpa.
 

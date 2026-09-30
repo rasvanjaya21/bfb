@@ -51,15 +51,15 @@ Tidak ada.
 
 ### Nit
 
-| Nit                                                    | Status                                                                |
-| ------------------------------------------------------ | --------------------------------------------------------------------- | --- | ----- |
-| Komentar `content-status.ts` tidak akurat              | **Diperbaiki**                                                        |
-| Entri non-array di `cookies.json` terhapus saat simpan | **Diperbaiki:** dipertahankan                                         |
-| `isInitilized` typo                                    | **Diperbaiki**                                                        |
-| `prepare` gagal di luar repo git                       | **Diperbaiki:** `                                                     |     | true` |
-| Teks bahasa Inggris di `index.ts`/`menu.ts`/`help.ts`  | `TODO.md` (sudah ada sebelum audit; mengubah teks UI butuh keputusan) |
-| `resetActivationCache` diekspor hanya untuk test       | `TODO.md`                                                             |
-| `slice(0, -1)` memotong surrogate pair                 | Diterima: token dibatasi ASCII                                        |
+| Nit                                                    | Status                                                                 |
+| ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| Komentar `content-status.ts` tidak akurat              | **Diperbaiki**                                                         |
+| Entri non-array di `cookies.json` terhapus saat simpan | **Diperbaiki:** dipertahankan                                          |
+| `isInitilized` typo                                    | **Diperbaiki**                                                         |
+| `prepare` gagal di luar repo git                       | **Diperbaiki:** ditambah `\|\| true`                                   |
+| Teks bahasa Inggris di `index.ts`/`menu.ts`/`help.ts`  | **Diperbaiki** setelah `/bfb-ship` (diterjemahkan ke Bahasa Indonesia) |
+| `resetActivationCache` diekspor hanya untuk test       | **Diperbaiki** setelah `/bfb-ship` (cache per token, ekspor dihapus)   |
+| `slice(0, -1)` memotong surrogate pair                 | Diterima: token dibatasi ASCII                                         |
 
 ### Ditemukan saat verifikasi review
 
