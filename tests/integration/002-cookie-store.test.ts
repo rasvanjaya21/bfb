@@ -66,6 +66,11 @@ describe('saveCookies', () => {
 		expect(JSON.parse(await readFile(file, 'utf-8'))).toEqual({ a: [1], note: 'kept', b: [2] });
 	});
 
+	test('rejects an empty or blank UID instead of saving cookies under an empty key', async () => {
+		await expect(saveCookies(file, '', [1])).rejects.toThrow();
+		await expect(saveCookies(file, '  ', [1])).rejects.toThrow();
+	});
+
 	test('rejects prototype keys as UID', async () => {
 		await expect(saveCookies(file, '__proto__', [1])).rejects.toThrow();
 	});
