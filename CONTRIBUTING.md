@@ -6,7 +6,7 @@ Thank you for your interest in contributing to our project! This guide will help
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) 1.3.9 or newer (see `.bumrc`). Node is not needed; `bunfig.toml` runs every script on Bun.
+- [Bun](https://bun.sh) 1.4.2 or newer (see `.bumrc`). Node is not needed; `bunfig.toml` runs every script on Bun.
 
 ### Getting Started
 
@@ -22,7 +22,7 @@ Thank you for your interest in contributing to our project! This guide will help
 2. Make your changes
 3. Check code style and formatting: `bun run lint` and `bun run format`
 4. Check types and imports: `bun run type-check` and `bun run check` (imports must use the `@/` alias)
-5. Run tests: `bun run test` (tests live in `tests/unit`, `tests/integration`, and `tests/endpoint`, named `NNN-name.test.ts`)
+5. Run tests: `bun run test:coverage` (every file a test imports must stay at 100% line and function coverage, as in CI; tests live in `tests/unit`, `tests/integration`, and `tests/endpoint`, named `NNN-name.test.ts`)
 6. Build the project: `bun run build`
 7. Commit your changes using the conventions below
 8. Push your branch to your fork

@@ -4,7 +4,7 @@ Bot for billy
 
 ## Installation
 
-Requires [Bun](https://bun.sh) 1.3.9 or newer (`engines.bun` in `package.json`). `bfb` runs on Bun and does not need Node; since 0.5.0 the `bfb` binary starts with `#!/usr/bin/env bun`, so `bun` must be on your `PATH`.
+Requires [Bun](https://bun.sh) 1.4.2 or newer (`engines.bun` in `package.json`). `bfb` runs on Bun and does not need Node; since 0.5.0 the `bfb` binary starts with `#!/usr/bin/env bun`, so `bun` must be on your `PATH`.
 
 `bfb` keeps account passwords, session cookies, and its activation token in `datas/` and `credentials/` inside the folder you run it from. On Linux and macOS these are created readable by your user only (folders `0700`, files `0600`). Windows ignores those modes, so keep that folder somewhere only you can open.
 
