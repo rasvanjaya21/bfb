@@ -1,39 +1,23 @@
 # TODO
 
-Hasil audit (code review, security, tooling/test) — 2026-09-30. Diperbarui setelah perbaikan — 2026-09-30.
-
-Yang tersisa hanya yang butuh keputusan, akses yang tidak ada di lokal (akun Facebook, rilis sungguhan, backend), atau belum bisa diverifikasi.
-
-## 🟠 High
-
-- [ ] **Tidak ada `engines` di `package.json`** — 0.5.0 butuh Bun; pengguna tanpa `bun` di PATH mendapat `env: bun: No such file`. Tambahkan `"engines": { "bun": ">=1.3.9" }` + catatan rilis.
+Temuan yang masih terbuka — diperbarui 2026-09-30. Semua item di sini butuh keputusan user, akses yang tidak ada di lokal (akun Facebook, backend, GitHub Actions), atau pemantauan.
 
 ## 🟡 Medium
 
-- [ ] **Deteksi postingan terkirim belum diverifikasi di akun sungguhan** — `src/core/facebook.ts`. Setelah Post, baris baru dihitung berhasil kalau composer (`text=Add to your post` dan `text=Post preview`) sudah tertutup dalam 30 detik. Logika dan cleanup sudah diuji dengan Chrome sungguhan memakai cookie palsu, tapi alur posting di Facebook belum.
-- [ ] **Cek aktivasi bisa di-bypass di sisi client** (obfuscate hanya memperlambat). Pertimbangkan respons bertanda tangan + kedaluwarsa, atau pindahkan fungsi penting ke server.
-- [ ] **Sekali "Server error" saat token salah** — terlihat satu kali di tes end-to-end build production, tidak terulang di 4 run berikutnya dan 18 request langsung (latensi 128–852 ms, timeout 5 detik). Pantau; kalau terulang, catat waktu dan respons server.
-
-- [ ] **Dependency dengan advisory** (`bun audit --prod`: 10 high, 6 moderate) — `ws` 8.20.0, `basic-ftp`, `ip-address`, `extract-zip`, `brace-expansion`. `bun update` + `bun run docs` + tes ulang sebelum tag.
-- [ ] **Test yang tidak bisa gagal** — `tests/integration/005-run-browser-rows.test.ts` ("opens at most one context per row"): `expect` di dalam task ditangkap runner. Assert setelah run, dan `result.failed === 0` di test yang punya assertion di dalam task.
-- [ ] **`architecture/TEST.md` tidak akurat** — coverage 96.50/95.86, baris Ctrl+C 51–53, test "tab closes" tidak menutup tab, "never overwrites" hanya `accounts.csv`.
+- [ ] **Alur Facebook belum diverifikasi di akun sungguhan** — `src/core/facebook.ts`, `src/core/cookie.ts`. Tiga asumsi yang hanya bisa dicek di Facebook: tombol Post memakai `aria-disabled` saat belum aktif (ditunggu lewat XPath `not(@aria-disabled="true")`); postingan dihitung terkirim kalau composer (`text=Add to your post`, `text=Post preview`) tertutup dalam 30 detik; halaman login meletakkan fokus di kolom password setelah Tab (sekarang dijaga `ensurePasswordFocus`, baris berhenti kalau tidak). Logika, cleanup, dan isolasi per-context sudah diuji di Chrome sungguhan dengan cookie palsu.
+- [ ] **Cek aktivasi bisa di-bypass di sisi client** — obfuscate hanya memperlambat. Butuh perubahan backend: respons bertanda tangan + kedaluwarsa, atau fungsi penting dipindah ke server.
+- [ ] **Sekali "Server error" saat token salah** — terlihat satu kali di tes end-to-end, tidak terulang di 4 run dan 18 request berikutnya (latensi 128–852 ms, timeout 5 detik). Pantau; kalau terulang, catat waktu dan respons server.
 
 ## ⚪ Low
 
-- [ ] **Backend membalas token salah dengan HTTP 500** (`{"state":false}`) untuk POST dan GET `/api/v1/check`. Client sudah menanganinya (keputusan dari isi body), tapi status yang benar adalah 401/403 supaya 5xx hanya berarti server error.
-- [ ] Deteksi login via `page.url().includes('next')` rapuh — `src/core/cookie.ts`. Perlu dicek terhadap halaman login Facebook yang sekarang.
-- [ ] `src/libs/asset-checker.ts` tidak dipakai; putuskan dihapus atau direncanakan.
-
-- [ ] Teks untuk operator yang masih bahasa Inggris (sudah ada sebelum audit): `Unknown flag`/`Try 'bfb help'` di `src/index.ts`, `Good bye` di `src/commands/menu.ts`, pesan `help` di `src/commands/help.ts`.
-- [ ] `resetActivationCache` di `src/libs/check-activation.ts` diekspor hanya untuk test.
-
-- [ ] Password diketik ke field yang fokus setelah Tab — `src/core/cookie.ts:101-104`. Pastikan fokus di `input[type=password]` sebelum mengetik.
-- [ ] Permission `0600`/`0700` tidak berlaku di Windows; dokumentasikan untuk operator Windows.
-- [ ] `mcp-remote` di `.mcp.json` tidak di-pin versinya (pin ≥ 0.1.16).
-- [ ] Test yang belum ada: `runBrowserRows` saat `createBrowserContext`/`newPage` gagal; `initProject` tidak menimpa `contents.csv`/`cookies.json` dan mengencangkan folder `0755`; `activateBfb` dengan input spasi saja; UID kosong di `accounts.csv`.
+- [ ] **Backend membalas token salah dengan HTTP 500** (`{"state":false}`) untuk POST dan GET `/api/v1/check`. Client sudah memutuskan dari isi body; perbaikan ada di server (401/403).
+- [ ] **Deteksi cookie kedaluwarsa via `page.url().includes('next')`** — `src/core/cookie.ts:66`. Rapuh terhadap perubahan URL Facebook; perlu dicek di halaman login yang sekarang.
+- [ ] **`src/libs/asset-checker.ts` tidak dipakai** — putuskan dihapus, atau direncanakan (kemungkinan untuk validasi kolom `PATH` saat upload media; commit asalnya `ba5a8a1 feat(lib): add asset validation as non cwd`).
+- [ ] **`extract-zip` 2.0.1 punya 2 advisory high tanpa versi perbaikan** (dependency `@puppeteer/browsers`). Diterima untuk saat ini: hanya dipakai mengekstrak Chrome yang diunduh dari Google lewat HTTPS. Periksa lagi saat `@puppeteer/browsers` naik versi.
+- [ ] **`mcp-remote` di config global agy belum di-pin** — `~/.gemini/config/mcp_config.json` masih `bunx --bun mcp-remote <url>`; perintah di README sudah `mcp-remote@0.14.3`. Di luar repo, jadi butuh persetujuan user untuk mengubahnya.
 
 ## Tooling & CI
 
-- [ ] Coverage + `coverageThreshold` di `bunfig.toml` — butuh angka ambang yang disepakati.
-- [ ] Update dependency minor (puppeteer-core 24.43.x, oxlint 1.86); evaluasi puppeteer-core 25 dan bumpp 12. Setiap bump versi harus diikuti `bun run docs`.
-- [ ] Perubahan `ci.yml` (versi Bun dari `.bumrc`, `check`, `bun publish --dry-run`, urutan type-check) belum pernah jalan di GitHub Actions; cek hasil run pertama di ubuntu, macos, dan windows, termasuk apakah `bun publish --dry-run` butuh auth registry. Hal yang sama untuk `release.yml` yang baru (action di-pin ke SHA, npm 12.1.0, changelogithub 15.0.5 di job terpisah): baru terbukti di rilis berikutnya.
+- [ ] **`ci.yml` dan `release.yml` belum pernah jalan di GitHub Actions** — Bun dari `.bumrc`, action di-pin ke SHA, `test:coverage`, `bun publish --dry-run` (apakah butuh auth registry), job changelog terpisah. Baru terbukti setelah push/rilis berikutnya.
+- [ ] **Upgrade mayor belum dievaluasi** — `puppeteer-core` 25.x dan `bumpp` 12.x. Butuh satu siklus sendiri: baca changelog, `bun run docs`, tes Chrome ulang, dan idealnya satu run di akun uji.
+- [ ] **Prettier tidak stabil pada satu baris `graphify-out/GRAPH_REPORT.md`** — baris berisi `src/**/*, tests/**/*, *.ts` berganti escape setiap `bun run format`, sehingga file itu selalu tampak berubah. Pilihan: biarkan, atau kecualikan file itu saja dari prettier (user memilih `docs/` dan `graphify-out/` tetap diformat).
