@@ -1,6 +1,6 @@
 # Spec: bfb (Bot for billy) — as-built
 
-Ditulis lewat `/bfb-spec` pada 2026-09-30. Spec ini mendokumentasikan bfb **apa adanya** di v0.4.0 setelah perbaikan audit, bukan fitur baru. Fitur baru butuh spec sendiri.
+Ditulis lewat `/bfb-spec` pada 2026-09-30. Spec ini mendokumentasikan bfb **apa adanya** di v0.4.0 setelah perbaikan audit. Fitur baru ditulis sebagai bagian terpisah di akhir file ini (saat ini: [audit log](#spec-fitur-audit-log)).
 
 ## Asumsi
 
@@ -159,3 +159,106 @@ Dari `TODO.md`, butuh keputusan user:
 4. Ambang coverage minimum berapa?
 5. `src/libs/asset-checker.ts`: hapus atau direncanakan?
 6. Kapan deteksi "postingan terkirim" dan deteksi login (`includes('next')`) diverifikasi di akun sungguhan?
+
+---
+
+# Spec fitur: audit log
+
+Ditulis lewat `/bfb-spec` pada 2026-10-01. **Status: usulan, belum dibangun, menunggu persetujuan user.**
+
+## Objective
+
+Operator butuh catatan tertulis tentang apa yang dilakukan bfb di folder kerjanya: menu apa yang dipilih, kapan, dan hasilnya, sampai ke tingkat per akun untuk posting dan sinkronisasi cookie. Saat ini hasil hanya tampil di layar lalu hilang saat layar dibersihkan. Dengan audit log, operator bisa menjawab "akun mana yang gagal posting kemarin dan kenapa" tanpa menjalankan ulang.
+
+## Keputusan user (2026-10-01)
+
+1. **Rinci:** setiap pilihan menu dan hasilnya, ditambah satu baris per akun/konten di menu 1 dan 95, lalu ringkasan run.
+2. **Folder kerja lama:** `logs/audit.log` dibuat otomatis saat pertama kali menulis. Status init dan kunci menu tidak berubah, jadi tidak perlu init ulang.
+3. **Format:** teks satu baris, dipisah `|`, dengan waktu lokal plus offset.
+4. **Rotasi:** tidak ada. Satu `audit.log`, selalu ditambahkan di akhir.
+
+## Asumsi
+
+Koreksi kalau salah:
+
+1. `logs/` dibuat `0700` dan `audit.log` `0600`, sama seperti `datas/` dan `credentials/`, karena log berisi UID akun.
+2. `.gitignore` folder kerja ikut mendapat `logs/` (lewat `ignoreSecrets` yang sudah ada), baik saat init maupun saat log dibuat otomatis.
+3. **Tidak pernah dicatat:** password, token, isi cookie, isi caption, dan input mentah dari prompt. Input menu yang tidak valid dicatat sebagai "input tidak valid" tanpa nilainya, karena operator bisa saja salah mengetik password di prompt menu.
+4. Awal dan akhir sesi ikut dicatat (`SESI | mulai | bfb v0.4.0, linux x64` dan menu 99). Flag CLI (`-v`, `help`, flag tidak dikenal) tidak dicatat karena tidak membuka menu dan tidak menyentuh folder kerja.
+5. Kalau log gagal ditulis (disk penuh, izin ditolak), bfb **tidak** berhenti dan tidak menggagalkan task. Satu peringatan tampil di layar, lalu bfb lanjut tanpa log sampai sesi berikutnya.
+6. Waktu memakai zona waktu mesin operator, sama dengan yang tampil di "Timezone" pada layar menu.
+
+## Format
+
+```
+<YYYY-MM-DD HH:mm:ss ±HH:MM> | <SUMBER> | <aksi> | <hasil>[ | <keterangan>]
+```
+
+- `SUMBER`: `SESI`, atau `MENU <n>` dengan `<n>` rata kiri dua karakter (`MENU 1 `, `MENU 97`).
+- `hasil`: salah satu dari `mulai`, `berhasil`, `dilewati`, `gagal`, `terkunci`, `belum tersedia`, `sudah siap`, `selesai`, `dihentikan`.
+- `keterangan`: pesan Bahasa Indonesia yang sama dengan di layar. Baris baru diganti spasi, dan `|` di dalam pesan diganti `/`, supaya satu kejadian selalu satu baris.
+
+Contoh:
+
+```
+2026-10-01 14:00:01 +07:00 | SESI    | bfb v0.4.0 | mulai | linux x64
+2026-10-01 14:03:12 +07:00 | MENU 97 | Aktifasi bfb | gagal | Token tidak valid
+2026-10-01 14:05:40 +07:00 | MENU 1  | Rawat facebook | mulai | 180 baris
+2026-10-01 14:05:58 +07:00 | MENU 1  | NO 1 UID 100092161240413 | berhasil
+2026-10-01 14:06:20 +07:00 | MENU 1  | NO 2 UID 100092461914823 | gagal | Cookie tidak valid
+2026-10-01 14:06:21 +07:00 | MENU 1  | NO 7 UID 100093621565922 | dilewati | Masih dalam tahap pengembangan
+2026-10-01 14:41:02 +07:00 | MENU 1  | Rawat facebook | selesai | 170 berhasil, 5 dilewati, 5 gagal
+2026-10-01 14:41:30 +07:00 | MENU 95 | Sinkronisasi cookies | terkunci | Fitur masih terkunci, setup terlebih dahulu
+2026-10-01 14:42:00 +07:00 | MENU ?  | Input tidak valid | gagal
+2026-10-01 14:42:05 +07:00 | MENU 99 | Keluar | selesai
+```
+
+## Yang dicatat per menu
+
+| Menu             | Dicatat                                                                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0 Init project   | `sudah siap`, atau `berhasil` / `gagal` + pesan error                                                                                                              |
+| 1 Rawat facebook | `terkunci`; atau `mulai` (jumlah baris), satu baris per konten (`NO`, `UID` dari kolom `COOKIE`, hasil, alasan), lalu `selesai` atau `dihentikan` + ringkasan      |
+| 2, 3, 4, 98      | `belum tersedia`                                                                                                                                                   |
+| 95 Sinkronisasi  | seperti menu 1, per akun (`NO`, `UID`)                                                                                                                             |
+| 96 Pasang driver | `sudah siap`, atau `berhasil` / `gagal` + pesan error                                                                                                              |
+| 97 Aktifasi      | `sudah siap`, atau hasil aktivasi dengan pesan yang sama seperti di layar (token kosong / tidak valid / server error / berhasil / gagal disimpan), **tanpa token** |
+| 99 Keluar        | `selesai`                                                                                                                                                          |
+| lainnya          | `MENU ?` `Input tidak valid`, tanpa nilai input                                                                                                                    |
+
+Error yang tidak tertangkap di dalam task (yang sekarang muncul merah lalu "Tekan Enter") dicatat sebagai `gagal` + pesan error di menu yang sedang berjalan.
+
+## Data dan dampak
+
+- **CSV dan `src/types/global.ts`:** tidak berubah.
+- **Folder kerja:** `logs/audit.log` baru. `checkInit()` tidak berubah (keputusan 2).
+- **Data sensitif:** log tidak pernah berisi password, token, cookie, atau caption (asumsi 3). UID tercatat, sehingga file dikunci `0600`.
+- **Menu (`src/commands/menu.ts`):** setiap cabang memanggil pencatat. Teks, urutan layar, dan jeda 1 detik tidak berubah.
+- **`core/*` dan `runBrowserRows`:** hasil per baris (berhasil / dilewati + alasan / gagal + pesan) harus sampai ke pencatat. Saat ini hanya kegagalan yang dilaporkan lewat `onFailure`.
+
+## Testing Strategy
+
+- **Unit (`tests/unit/`):** format satu baris (waktu + offset, lebar `MENU`, pembersihan baris baru dan `|`), dan pemetaan pilihan menu ke sumber/aksi.
+- **Integration (`tests/integration/`):** penulis log di folder temp: membuat `logs/` `0700` dan `audit.log` `0600` kalau belum ada (juga di folder yang sudah di-init tanpa `logs/`), menambahkan di akhir tanpa menimpa, menambahkan `logs/` ke `.gitignore`, dan gagal tulis tidak melempar error. `initProject` membuat `logs/audit.log`. `runBrowserRows` dengan browser palsu melaporkan hasil setiap baris (berhasil, dilewati, gagal). Cek bahwa token dan password dari fixture tidak pernah muncul di file log.
+- **Manual:** menu 1 dan 95 di Chrome sungguhan (sesuai `TODO.md`), lalu cocokkan `logs/audit.log` dengan ringkasan di layar.
+- Ambang coverage 1.0 berlaku untuk setiap file baru di `src/libs/`.
+
+## Boundaries
+
+- **Always:** tulis satu kejadian per baris, langsung ditambahkan ke file (tanpa buffer yang bisa hilang kalau bfb ditutup paksa). Pakai pesan Bahasa Indonesia yang sama dengan di layar.
+- **Ask first:** menambah dependency logging, mengubah format setelah dipakai operator, menambahkan rotasi.
+- **Never:** mencatat password, token, isi cookie, caption, atau input mentah; membuat task gagal karena log gagal ditulis; mengubah teks atau jeda di layar menu.
+
+## Success Criteria
+
+1. `bfb` menu 0 di folder kosong membuat `logs/audit.log` (`0600`, folder `0700`) di samping `datas/` dan `credentials/`, dan `.gitignore` berisi `logs/`.
+2. Di folder kerja lama tanpa `logs/`, pilihan menu pertama membuat `logs/audit.log`; status init tetap "Siap".
+3. Setiap pilihan menu 0–99, termasuk input tidak valid dan menu terkunci, menghasilkan tepat satu baris hasil (ditambah baris per akun di menu 1 dan 95).
+4. Menu 1 dengan N baris konten menghasilkan satu baris `mulai`, N baris per konten, dan satu baris `selesai`/`dihentikan` yang angkanya sama dengan ringkasan di layar.
+5. Tidak ada password, token, isi cookie, atau caption di `audit.log` (dicek test dengan nilai fixture).
+6. Log yang tidak bisa ditulis tidak menghentikan menu atau task.
+7. `bun run test:coverage` tetap 100% dan semua pemeriksaan lolos.
+
+## Open Questions
+
+Tidak ada yang memblokir. Asumsi 1–6 di atas perlu dikonfirmasi.
