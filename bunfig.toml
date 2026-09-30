@@ -5,7 +5,7 @@ linker = "hoisted"
 bun = true
 
 [test]
-# Per file: 90% of lines, 80% of functions. check.ts is excluded because its runner is exercised by
+# Per file: 100% of lines and functions for every file a test imports. check.ts is excluded because its runner is exercised by
 # `bun run check` in the pre-commit hook and CI; its logic (hasRelativeImport) is still unit-tested.
-coverageThreshold = { line = 0.9, function = 0.8 }
+coverageThreshold = 1.0
 coveragePathIgnorePatterns = ["check.ts"]
