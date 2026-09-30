@@ -5,31 +5,31 @@ on:
         tags:
             - 'v*'
 
-permissions:
-    contents: write
-    id-token: write
-    packages: write
+# Every job declares its own permissions; nothing is granted by default.
+permissions: {}
 
 jobs:
     release:
         name: Release Package
         runs-on: ubuntu-latest
+        # Only this job can mint the npm trusted-publishing (OIDC) identity, and every tool it runs is pinned:
+        # actions by commit SHA, Bun from .bumrc, npm by exact version.
+        permissions:
+            contents: read
+            id-token: write
+            packages: write
         steps:
             - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
+              uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-            - name: Setup Node for npm
-              uses: actions/setup-node@v6
-              with:
-                  node-version: '24'
-                  registry-url: 'https://registry.npmjs.org'
+            - name: Read Bun version
+              id: bun-version
+              run: echo "version=$(cat .bumrc)" >> "$GITHUB_OUTPUT"
 
             - name: Setup Bun
-              uses: oven-sh/setup-bun@v2
+              uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
               with:
-                  bun-version: latest
+                  bun-version: ${{ steps.bun-version.outputs.version }}
 
             - name: Install dependencies
               run: bun install --frozen-lockfile
@@ -40,20 +40,23 @@ jobs:
             - name: Lint
               run: bun run lint
 
+            - name: Relative import check
+              run: bun run check
+
             - name: Run tests
               run: bun run test
 
             - name: Build
               run: bun run build
 
-            - name: Generate changelog
-              run: bunx changelogithub
-              continue-on-error: true
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            - name: Setup Node for npm
+              uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+              with:
+                  node-version: '24'
+                  registry-url: 'https://registry.npmjs.org'
 
             - name: Update npm
-              run: npm install -g npm@latest
+              run: npm install -g npm@12.1.0
 
             - name: Pack
               run: bun pm pack
@@ -62,7 +65,7 @@ jobs:
               run: npm publish ./*.tgz --access public
 
             - name: Setup Node for github packages
-              uses: actions/setup-node@v6
+              uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
               with:
                   node-version: '24'
                   registry-url: 'https://npm.pkg.github.com'
@@ -72,3 +75,31 @@ jobs:
               run: npm publish ./*.tgz
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    changelog:
+        name: Generate changelog
+        runs-on: ubuntu-latest
+        needs: release
+        # Separate job without id-token, so the changelog tool can never reach the publish identity.
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+              with:
+                  fetch-depth: 0
+
+            - name: Read Bun version
+              id: bun-version
+              run: echo "version=$(cat .bumrc)" >> "$GITHUB_OUTPUT"
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+              with:
+                  bun-version: ${{ steps.bun-version.outputs.version }}
+
+            - name: Generate changelog
+              run: bunx --bun changelogithub@15.0.5
+              continue-on-error: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
