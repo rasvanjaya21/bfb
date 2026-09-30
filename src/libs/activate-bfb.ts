@@ -12,7 +12,7 @@ async function showResult(message: string): Promise<void> {
 }
 
 async function activateBfb(readToken: () => Promise<string> = () => hideQuestion('Masukkan token: ')): Promise<void> {
-	const input = await readToken();
+	const input = (await readToken()).trim();
 
 	if (!input) return showResult('Token kosong, aktifasi gagal');
 

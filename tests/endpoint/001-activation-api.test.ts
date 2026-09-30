@@ -1,4 +1,4 @@
-import { checkActivation, resetActivationCache } from '@/libs/check-activation';
+import { checkActivation } from '@/libs/check-activation';
 import { requestActivation } from '@/libs/request-activation';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
@@ -26,7 +26,6 @@ beforeEach(async () => {
 	dir = await mkdtemp(join(tmpdir(), 'bfb-activation-'));
 	process.chdir(dir);
 	calls = 0;
-	resetActivationCache();
 });
 
 afterEach(async () => {
@@ -86,7 +85,7 @@ describe('checkActivation', () => {
 	});
 
 	test('is true only when the server answers state true', async () => {
-		await saveToken('abc');
+		await saveToken('token-1');
 		mockFetch(json({ state: false }, 500));
 		expect(await checkActivation()).toBe(false);
 		mockFetch(json({ state: 'yes' }));
@@ -96,7 +95,7 @@ describe('checkActivation', () => {
 	});
 
 	test('caches a positive result for the rest of the session', async () => {
-		await saveToken('abc');
+		await saveToken('token-2');
 		mockFetch(json({ state: true }));
 		await checkActivation();
 		await checkActivation();
@@ -104,8 +103,18 @@ describe('checkActivation', () => {
 		expect(calls).toBe(1);
 	});
 
+	test('asks the server again when the token changes', async () => {
+		await saveToken('first-token');
+		mockFetch(json({ state: true }));
+		await checkActivation();
+		await saveToken('second-token');
+		mockFetch(json({ state: false }, 500));
+		expect(await checkActivation()).toBe(false);
+		expect(calls).toBe(2);
+	});
+
 	test('gives up instead of hanging when the server does not answer', async () => {
-		await saveToken('abc');
+		await saveToken('token-3');
 		globalThis.fetch = ((_url: string, init?: RequestInit) =>
 			new Promise((_resolve, reject) => {
 				init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));

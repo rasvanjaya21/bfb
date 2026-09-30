@@ -64,6 +64,28 @@ describe('activateBfb', () => {
 		expect(messages).toEqual(['Token kosong, aktifasi gagal\n']);
 	});
 
+	test('treats input with only spaces as an empty token, without calling the server', async () => {
+		let called = false;
+		globalThis.fetch = (async () => {
+			called = true;
+			return new Response('{}');
+		}) as unknown as typeof fetch;
+		await activateBfb(async () => '   ');
+		expect(called).toBe(false);
+		expect(messages).toEqual(['Token kosong, aktifasi gagal\n']);
+	});
+
+	test('ignores spaces around a typed token', async () => {
+		let sent = '';
+		globalThis.fetch = (async (_url: string, init?: RequestInit) => {
+			sent = new Headers(init?.headers).get('Authorization') ?? '';
+			return new Response(JSON.stringify({ token: 'server-token-123' }));
+		}) as unknown as typeof fetch;
+		await activateBfb(async () => '  typed-token  ');
+		expect(sent).toBe('Bearer typed-token');
+		expect(messages).toEqual(['Token valid, aktifasi berhasil\n']);
+	});
+
 	test('writes nothing for an invalid token (server 500 with state false)', async () => {
 		respond(JSON.stringify({ state: false }), 500);
 		await activateBfb(async () => 'wrong');
