@@ -60,7 +60,6 @@ Pakai scope ini dulu sebelum membuat yang baru:
 | `constant` | `src/utils/constant.ts` (versi ikut naik lewat `bun run release`, jadi tidak perlu commit versi terpisah) |
 | `util`     | `src/utils/*` selain konstanta versi                                                                      |
 | `src`      | `src/index.ts` dan perubahan lintas `src/`                                                                |
-| `ignore`   | `src/ignore/*`                                                                                            |
 | `config`   | file konfigurasi (`tsconfig.json`, `bunup.config.ts`, `bunfig.toml`, `.npmrc`)                            |
 | `package`  | `package.json` (script, dependency, keyword)                                                              |
 | `lock`     | `bun.lock`                                                                                                |
@@ -69,7 +68,9 @@ Pakai scope ini dulu sebelum membuat yang baru:
 | `workflow` | `.github/workflows/*`                                                                                     |
 | `project`  | metadata level repo (README, LICENSE)                                                                     |
 
-Scope baru yang masuk akal untuk tooling agent, karena belum ada di log: `agents` (AGENTS.md, CLAUDE.md, TODO.md), `skill` (`skills/*`), `mcp` (`.mcp.json`), `graph` (`graphify-out/`, `.graphifyignore`).
+Scope untuk test, dokumentasi, dan tooling agent (sudah dipakai di log): `test` (`tests/*`), `docs` (`docs/`, `docs.ts`), `architecture` (`architecture/*`), `agents` (`AGENTS.md`, `CLAUDE.md`, `TODO.md`), `skill` (`skills/*`), `mcp` (`.mcp.json`), `graph` (`graphify-out/`, `.graphifyignore`).
+
+`ignore` pernah dipakai untuk `src/ignore/*`; folder itu sudah dihapus, jadi jangan dipakai lagi.
 
 Contoh dari log bfb:
 
