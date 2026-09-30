@@ -1,38 +1,34 @@
+import { ACTIVATION_API_URL, ACTIVATION_TIMEOUT_MS } from '@/utils/constant';
 import fs from 'fs/promises';
 import path from 'path';
 
-const BACKEND_URL_API = 'https://bfb.blackfriday.my.id/api/v1/check';
+// The menu asks on every loop; once the server confirms, keep the answer for the session instead of asking again.
+let activated = false;
 
-async function checkActivation(): Promise<boolean> {
+function resetActivationCache(): void {
+	activated = false;
+}
+
+async function checkActivation(timeoutMs: number = ACTIVATION_TIMEOUT_MS): Promise<boolean> {
+	if (activated) return true;
+
 	try {
-		const cwd = process.cwd();
-		const filePath = path.join(cwd, 'credentials', 'token.bfb');
-
-		try {
-			await fs.access(filePath);
-		} catch {
-			return false;
-		}
-
-		const token = (await fs.readFile(filePath, 'utf-8')).trim();
+		const filePath = path.join(process.cwd(), 'credentials', 'token.bfb');
+		const token = (await fs.readFile(filePath, 'utf-8').catch(() => '')).trim();
 		if (!token) return false;
 
-		const response = await fetch(BACKEND_URL_API, {
+		const response = await fetch(ACTIVATION_API_URL, {
 			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${token}`,
-			},
+			headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+			signal: AbortSignal.timeout(timeoutMs),
 		});
+		const data = (await response.json()) as { state?: unknown } | null;
 
-		const data = (await response.json()) as { state: boolean };
-
-		if (!data.state) return false;
-
-		return true;
+		activated = data?.state === true;
+		return activated;
 	} catch {
 		return false;
 	}
 }
 
-export { checkActivation };
+export { checkActivation, resetActivationCache };
