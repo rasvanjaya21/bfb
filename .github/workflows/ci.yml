@@ -41,8 +41,8 @@ jobs:
             - name: Relative import check
               run: bun run check
 
-            - name: Run tests
-              run: bun run test
+            - name: Run tests with coverage threshold
+              run: bun run test:coverage
 
             - name: Build
               run: bun run build
