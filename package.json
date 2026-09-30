@@ -47,6 +47,7 @@
 		"type-check": "tsgo --noEmit",
 		"clean": "bun run clean.ts",
 		"check": "bun run check.ts",
+		"docs": "bun run docs.ts",
 		"mock": "json-server --port 3000 mock/datas.json --routes mock/routes.json --watch",
 		"auto": "bun clean.ts && bun install && bun run build"
 	},
