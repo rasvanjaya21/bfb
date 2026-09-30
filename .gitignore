@@ -22,3 +22,9 @@ workspaces
 mock
 backups
 temp
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/graph.html
+!graphify-out/graph.json
+.claude
+.agents
