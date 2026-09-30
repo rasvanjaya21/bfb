@@ -1,3 +1,4 @@
+import { ignoreSecrets } from '@/libs/ignore-secrets';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -6,17 +7,6 @@ async function writeIfMissing(file: string, content: string, mode?: number): Pro
 		if (error.code !== 'EEXIST') throw error;
 	});
 	if (mode !== undefined) await fs.chmod(file, mode);
-}
-
-// An existing .gitignore keeps its content; only the secret folders it does not cover yet are appended.
-async function ignoreSecrets(file: string): Promise<void> {
-	const current = await fs.readFile(file, 'utf-8').catch(() => '');
-	const covered = new Set(current.split(/\r?\n/).map((line) => line.trim().replace(/^\//, '').replace(/\/$/, '')));
-	const missing = ['datas', 'credentials'].filter((folder) => !covered.has(folder));
-	if (missing.length === 0) return;
-
-	const prefix = current && !current.endsWith('\n') ? '\n' : '';
-	await fs.writeFile(file, current + prefix + missing.map((folder) => `${folder}/\n`).join(''), 'utf-8');
 }
 
 // datas/ holds account passwords and credentials/ holds session cookies, so both stay readable by the owner only.
@@ -33,7 +23,7 @@ async function initProject(): Promise<void> {
 	await writeIfMissing(path.join(datasDir, 'accounts.csv'), 'NO;UID;PASSWORD', 0o600);
 	await writeIfMissing(path.join(datasDir, 'contents.csv'), 'NO;COOKIE;ROUTE;TYPE;IDFANSPAGE;PATH;CAPTION;TAG;SCHEDULE', 0o600);
 	await writeIfMissing(path.join(credentialsDir, 'cookies.json'), '{}', 0o600);
-	await ignoreSecrets(path.join(cwd, '.gitignore'));
+	await ignoreSecrets(path.join(cwd, '.gitignore'), ['datas', 'credentials']);
 }
 
 export { initProject };
