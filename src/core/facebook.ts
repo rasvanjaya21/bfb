@@ -28,7 +28,9 @@ async function facebook(): Promise<void> {
 	const browser = await launchBrowser();
 
 	try {
-		const result = await runBrowserRows(browser, contents, postFeed, (message) => {
+		const result = await runBrowserRows(browser, contents, postFeed, (outcome) => {
+			if (outcome.status !== 'failed') return;
+			const message = outcome.message ?? '';
 			console.log(message.includes('closed') ? 'Koneksi tertutup' : message);
 			console.log(chalk.red('Gagal memposting konten'));
 		});
@@ -42,7 +44,8 @@ async function facebook(): Promise<void> {
 	}
 }
 
-async function postFeed(openPage: OpenPage, content: Content): Promise<boolean> {
+// Returns the reason a content row is skipped, or nothing once it is posted.
+async function postFeed(openPage: OpenPage, content: Content): Promise<string | void> {
 	console.log('===============================');
 	console.log(`Data konten nomor ${content.NO}`);
 
@@ -58,7 +61,7 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<boolean> 
 
 	if (status === 'in-development') {
 		console.log('Masih dalam tahap pengembangan');
-		return false;
+		return 'Masih dalam tahap pengembangan';
 	}
 
 	console.log('Menginject cookies');
@@ -156,7 +159,6 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<boolean> 
 	}
 
 	console.log(chalk.green('Selesai memposting konten'));
-	return true;
 }
 
 export { facebook, postFeed };

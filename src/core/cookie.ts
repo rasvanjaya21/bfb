@@ -31,7 +31,9 @@ async function cookies(readlineInterface: readline.Interface): Promise<void> {
 			browser,
 			accounts,
 			(openPage, account) => syncCookies(openPage, readlineInterface, account),
-			(message) => {
+			(outcome) => {
+				if (outcome.status !== 'failed') return;
+				const message = outcome.message ?? '';
 				console.log(message.includes('closed') ? 'Koneksi tertutup' : message);
 				console.log(chalk.red('Gagal menyinkronkan cookie'));
 			},
@@ -46,7 +48,8 @@ async function cookies(readlineInterface: readline.Interface): Promise<void> {
 	}
 }
 
-async function syncCookies(openPage: OpenPage, readlineInterface: readline.Interface, account: Account): Promise<boolean> {
+// Returns the reason an account is skipped, or nothing once its cookies are in sync.
+async function syncCookies(openPage: OpenPage, readlineInterface: readline.Interface, account: Account): Promise<string | void> {
 	console.log('===============================');
 	console.log(`Data akun nomor ${account.NO}`);
 
@@ -111,17 +114,16 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 
 		if (answer.trim().toLowerCase() !== 'y') {
 			console.log('Cookie tidak di simpan');
-			return false;
+			return 'Cookie tidak di simpan';
 		}
 		await saveCookies(cookiesPath, account.UID, await context.cookies());
 		console.log('Menyimpan cookie baru');
-		if (loginProblem) return false;
+		if (loginProblem) return 'Login bermasalah';
 	} else {
 		console.log('Cookie valid');
 	}
 
 	console.log(chalk.green('Selesai menyinkronkan cookie'));
-	return true;
 }
 
 export { cookies };
