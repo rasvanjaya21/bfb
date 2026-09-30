@@ -70,7 +70,7 @@ async function menu(): Promise<void> {
 		console.info(`Timezone: ${chalk.dim(timezone)}`);
 		console.info(`Folder saat ini: ${chalk.dim(cwd)}`);
 		console.info(`Status init project: ${isInitialized ? chalk.dim(chalk.green('Siap')) : chalk.dim(chalk.red('Belum siap'))}`);
-		console.info(`Workspace project: ${chalk.dim(isInitialized ? 'datas/, credentials/' : '-')}`);
+		console.info(`Workspace project: ${chalk.dim(isInitialized ? 'datas/, credentials/, logs/' : '-')}`);
 		console.info(`Status driver: ${isDriverInstalled ? chalk.dim(chalk.green('Terpasang')) : chalk.dim(chalk.red('Belum terpasang'))}`);
 		console.info(`Lokasi driver: ${chalk.dim(isDriverInstalled ? isDriverInstalled.path : '-')}`);
 		console.info(`Status aktifasi: ${isActivated ? chalk.dim(chalk.green('Aktif')) : chalk.dim(chalk.red('Belum aktif'))}`);
