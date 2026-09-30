@@ -1,40 +1,42 @@
 # Commit log
 
-Ditulis lewat `/bfb-commit` pada 2026-09-30. Putaran ketiga: perbaikan item `TODO.md` setelah `/bfb-ship`. Semua perubahan sejak `fd178cb` di-commit dalam **16 commit**, dipecah per niat, tanpa trailer co-author, ditandatangani SSH. Belum di-push.
+Ditulis lewat `/bfb-commit` pada 2026-09-30. Mencakup dua putaran: putaran sebelumnya yang dihentikan user setelah commit keempat (commit `architecture/` belum dibuat), dan putaran ini.
 
-## Commit
+## Putaran sebelumnya (dihentikan)
 
-| Hash         | Pesan                                                                            | File                                                                                                                                                  |
-| ------------ | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `640cb5f`    | `feat(package): update dependencies and override vulnerable transitive packages` | `bun.lock`, `package.json`                                                                                                                            |
-| `fbef430`    | `feat(package): require bun 1.3.9 through engines`                               | `package.json`                                                                                                                                        |
-| `3884455`    | `feat(docs): regenerate offline docs for updated dependency versions`            | `docs/` (3 file)                                                                                                                                      |
-| `a7e813a`    | `feat(config): add per file coverage threshold`                                  | `bunfig.toml`                                                                                                                                         |
-| `9330161`    | `feat(workflow): run tests with coverage threshold in ci`                        | `.github/workflows/ci.yml`                                                                                                                            |
-| `b88731b`    | `feat(lib): trim activation input and cache activation per token`                | `src/libs/activate-bfb.ts`, `src/libs/check-activation.ts`, `tests/endpoint/001-activation-api.test.ts`, `tests/integration/004-activate-bfb.test.ts` |
-| `bdf7ad8`    | `feat(lib): reject blank uid when saving cookies`                                | `src/libs/save-cookies.ts`, `tests/integration/002-cookie-store.test.ts`                                                                              |
-| `2a3c285`    | `feat(core): check password field focus before typing`                           | `src/core/cookie.ts`, `src/libs/ensure-password-focus.ts`, `tests/unit/007-password-focus.test.ts`                                                    |
-| `d34c09d`    | `feat(src): translate cli messages to indonesian`                                | `src/commands/help.ts`, `src/commands/menu.ts`, `src/index.ts`                                                                                        |
-| `f3e1573`    | `feat(test): cover runner failures and init project overwrites`                  | `tests/integration/003-init-project.test.ts`, `tests/integration/005-run-browser-rows.test.ts`                                                        |
-| `18923a2`    | `feat(mcp): pin mcp-remote version`                                              | `.mcp.json`                                                                                                                                           |
-| `68fd509`    | `feat(skill): label graph communities with claude cli in prepare`                | `skills/bfb-prepare/SKILL.md`                                                                                                                         |
-| `279dc3d`    | `docs(agents): update agents guide and todo`                                     | `AGENTS.md`, `TODO.md`                                                                                                                                |
-| `a4eb0e3`    | `docs(project): add bun version, windows note, and pinned mcp-remote`            | `README.md`                                                                                                                                           |
-| `bc37bba`    | `chore(graph): update knowledge graph with claude cli labels`                    | `graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`, `graphify-out/graph.json`                                                                  |
-| (commit ini) | `docs(architecture): update review, spec, test report, and commit log`           | `architecture/REVIEW.md`, `architecture/SPEC.md`, `architecture/TEST.md`, `architecture/COMMIT.md`                                                    |
+| Hash      | Pesan                                                                      | File                                                       |
+| --------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `8af86b3` | `feat(skill): update commit scopes to match repo log`                      | `skills/bfb-commit/SKILL.md`                               |
+| `607f399` | `docs(agents): add skill execution rule, commit scopes, and todo findings` | `AGENTS.md`, `TODO.md`                                     |
+| `4defc07` | `docs(project): update contributing guide for bun only workflow`           | `CONTRIBUTING.md`                                          |
+| `1d67888` | `chore(graph): update knowledge graph`                                     | `graphify-out/GRAPH_REPORT.md`, `graph.html`, `graph.json` |
 
-## Pengelompokan
+## Putaran ini
 
-- **`package.json` berisi dua niat** dan di-stage bertahap: update dependency + `overrides` untuk dependency transitif yang rentan (bersama `bun.lock`), lalu `engines` di commit sendiri.
-- **Kode dan test-nya digabung per perilaku** (aktivasi, UID kosong, fokus password), karena test-nya membuktikan perilaku itu. Test yang hanya menambah cakupan untuk perilaku lama (`runBrowserRows`, `initProject`) di commit `feat(test)` sendiri.
-- **`bunfig.toml` dan `ci.yml` dipisah**: ambang coverage (config) dulu, lalu CI yang memakainya (workflow).
-- **`docs/`** dibuat ulang oleh `bun run docs` karena versi `puppeteer-core`, `@puppeteer/browsers`, dan `bunup` naik.
-- **`architecture/REVIEW.md`**: tabel Nit rusak sejak commit sebelumnya (`|| true` tanpa escape di dalam sel tabel memecah kolom saat diformat prettier). Tabel ditulis ulang dengan pipe di-escape; semua tabel markdown di repo sudah dicek konsisten jumlah kolomnya.
+| Hash         | Pesan                                                                           | File                                                                                                                            |
+| ------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `7215a94`    | `feat(package): bump bun to 1.4.2`                                              | `.bumrc`, `package.json`                                                                                                        |
+| `79855d7`    | `feat(docs): regenerate bun docs for 1.4.2`                                     | `docs/bun.md`                                                                                                                   |
+| `8e74ccd`    | `fix(src): exit with code 1 on unknown flag`                                    | `src/index.ts`                                                                                                                  |
+| `47b130d`    | `feat(test): cover cli exit code, token save failure, and ctrl+c`               | `tests/integration/007-cli-entry.test.ts`, `tests/integration/004-activate-bfb.test.ts`, `tests/unit/005-hide-question.test.ts` |
+| `cb3e166`    | `feat(config): require full coverage for every tested file`                     | `bunfig.toml`                                                                                                                   |
+| `7f8b227`    | `feat(skill): gate build, plan, ship, and test on full coverage`                | `skills/bfb-build/SKILL.md`, `skills/bfb-plan/SKILL.md`, `skills/bfb-ship/SKILL.md`, `skills/bfb-test/SKILL.md`                 |
+| `1eb3770`    | `docs(project): update bun version and coverage step`                           | `README.md`, `CONTRIBUTING.md`                                                                                                  |
+| `29ad26b`    | `docs(agents): add coverage threshold gotcha, cli exit code, and todo findings` | `AGENTS.md`, `TODO.md`                                                                                                          |
+| `64bd057`    | `chore(graph): update knowledge graph`                                          | `graphify-out/GRAPH_REPORT.md`, `graph.html`, `graph.json`                                                                      |
+| (commit ini) | `docs(architecture): update plan, spec, test report, prepare, and commit log`   | `architecture/BUILD.md`, `PLAN.md`, `PREPARE.md`, `SHIP.md`, `SPEC.md`, `TEST.md`, `COMMIT.md`                                  |
 
-## Sengaja tidak di-commit
+## Alasan pengelompokan
 
-Tidak ada. `graphify-out/2026-09-30/` (backup yang dibuat `graphify label`), cache graphify, `dist/`, dan `workspaces/` di-gitignore.
+- Bun 1.4.2 dulu (`.bumrc` + `engines.bun` satu alasan), lalu `docs/bun.md` yang mengikuti versi itu.
+- `fix(src)` sebelum test-nya: exit 0 untuk flag tidak dikenal memang perilaku yang salah, bukan koreksi kode baru.
+- Test sebelum `bunfig.toml`: ambang 1.0 baru lolos setelah tiga celah coverage ditutup, jadi setiap commit tetap hijau di `test:coverage`.
+- Skill, docs developer, docs agent, graph, dan `architecture/` dipisah per area sesuai scope repo.
+
+## Tidak di-commit
+
+Tidak ada. Tidak ada file di `datas/`, `credentials/`, `.env*`, `dist/`, atau cache `graphify-out/` yang ikut berubah.
 
 ## Pre-commit hook
 
-`.githooks/pre-commit` lolos di setiap commit, tanpa Node dan tanpa `--no-verify`.
+`lint && type-check && check` lolos di semua commit; tanpa `--no-verify`.

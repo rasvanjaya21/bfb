@@ -23,7 +23,7 @@ User story:
 
 ## Tech Stack
 
-Bun 1.3.9 (`.bumrc`), TypeScript ESM, bunup 0.16.32 (`target: 'bun'`, `splitting: false`) + javascript-obfuscator, puppeteer-core 24.43.1, puppeteer-extra 3.3.6 + puppeteer-extra-plugin-stealth 2.11.2, @puppeteer/browsers 2.13.2, Chrome `147.0.7727.101` (`DRIVER_VERSION`), chalk, `tsgo`, oxlint, prettier, `bun test`, bumpp. Dokumentasi resmi versi-versi ini ada offline di `docs/`.
+Bun 1.4.2 (`.bumrc`), TypeScript ESM, bunup 0.16.32 (`target: 'bun'`, `splitting: false`) + javascript-obfuscator, puppeteer-core 24.43.1, puppeteer-extra 3.3.6 + puppeteer-extra-plugin-stealth 2.11.2, @puppeteer/browsers 2.13.2, Chrome `147.0.7727.101` (`DRIVER_VERSION`), chalk, `tsgo`, oxlint, prettier, `bun test`, bumpp. Dokumentasi resmi versi-versi ini ada offline di `docs/`.
 
 ## Data di folder kerja
 
@@ -46,7 +46,7 @@ Aturan CSV: tanda kutip hanya membuka sel berkutip di awal sel (setelah spasi); 
 - Setiap putaran menu menampilkan versi, OS, arsitektur, timezone, folder, status init, status driver, dan status aktivasi.
 - Menu 1 dan 95 **terkunci** sampai init, driver, dan aktivasi ketiganya siap.
 - Setiap layar mengikuti pola pause → clear → pesan → jeda 1 detik (disengaja) → clear → resume. Hasil menu 1 dan 95 ditahan sampai operator menekan Enter, lalu kembali ke menu.
-- `bfb --version`/`-v`/`version` mencetak versi; flag lain ditolak dengan `Flag tidak dikenal: '<flag>'`. Semua teks untuk operator dalam Bahasa Indonesia.
+- `bfb --version`/`-v`/`version` mencetak versi; flag lain ditolak dengan `Flag tidak dikenal: '<flag>'` dan exit code 1. Semua teks untuk operator dalam Bahasa Indonesia.
 
 ### Setup (menu 0, 96)
 
@@ -140,7 +140,7 @@ export { showResult };
 
 - **Always:** lewat `runBrowserRows()` untuk setiap loop browser (context per baris); tulis data sensitif lewat `writeSecretFile()`; jalankan `bun run lint`, `type-check`, `check`, `test` sebelum commit; generate ulang `docs/` setelah bump versi.
 - **Ask first:** menjalankan bot terhadap akun sungguhan; menyentuh `datas/`/`credentials/` operator; mengubah `DRIVER_VERSION`; menambah dependency; mengubah `release.yml`; `bun run release`.
-- **Never:** commit isi `datas/`, `credentials/`, cookie, atau token; `process.exit` di `core/*`; memindah publish npm ke `bun publish` (Bun 1.3.9 tidak mendukung OIDC); mencetak password/cookie/token ke log.
+- **Never:** commit isi `datas/`, `credentials/`, cookie, atau token; `process.exit` di `core/*`; memindah publish npm ke `bun publish` (Bun sampai 1.4.2 tidak mendukung OIDC); mencetak password/cookie/token ke log.
 
 ## Success Criteria
 

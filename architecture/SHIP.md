@@ -4,7 +4,7 @@ Ditulis lewat `/bfb-ship` pada 2026-09-30. Tiga spesialis berjalan paralel dan r
 
 ## Ship Decision: **NO-GO**
 
-> **Update (setelah keputusan):** kedua blocker sudah diperbaiki — CSV kutip di tengah sel (4 test baru, merah dulu) dan `release.yml` (action di-pin ke SHA, npm 12.1.0, changelogithub 15.0.5 di job tanpa `id-token`, Bun dari `.bumrc`, `bun run check` ditambahkan). `src/ignore/index.ts` dihapus: penyebab bug-nya (fungsi di `page.evaluate` rusak oleh obfuscator, terbukti dengan `ReferenceError`) diganti XPath `not(@aria-disabled="true")` di `facebook.ts`. Jalankan `/bfb-ship` lagi untuk keputusan baru; rekomendasi di bawah (terutama `engines` dan `bun update`) masih terbuka.
+> **Update (setelah keputusan):** kedua blocker sudah diperbaiki — CSV kutip di tengah sel (4 test baru, merah dulu) dan `release.yml` (action di-pin ke SHA, npm 12.1.0, changelogithub 15.0.5 di job tanpa `id-token`, Bun dari `.bumrc`, `bun run check` ditambahkan). `src/ignore/index.ts` dihapus: penyebab bug-nya (fungsi di `page.evaluate` rusak oleh obfuscator, terbukti dengan `ReferenceError`) diganti XPath `not(@aria-disabled="true")` di `facebook.ts`. Rekomendasi di bawah juga sudah dikerjakan: `engines.bun >=1.3.9`, `bun update` + `overrides` (advisory 16 → 2, sisa `extract-zip` tanpa versi perbaikan), test runner diperbaiki, `TEST.md` diperbarui. Jalankan `/bfb-ship` lagi untuk keputusan baru.
 
 Dua blocker, keduanya kecil untuk diperbaiki. Setelah keduanya selesai dan checklist di bawah hijau, keputusan bisa diulang dengan `/bfb-ship`.
 
@@ -23,7 +23,7 @@ Dua blocker, keduanya kecil untuk diperbaiki. Setelah keduanya selesai dan check
 - **Dependency dengan advisory** (security-auditor, `bun audit --prod`: 10 high, 6 moderate): `ws` 8.20.0 (fix 8.20.1), `basic-ftp`, `ip-address`, `extract-zip`, `brace-expansion`. Dampak praktis rendah (`ws` hanya bicara ke Chrome lokal; sisanya jalur unduh driver lewat HTTPS), tapi `bun update` + `bun run docs` sebelum tag.
 - **Test yang tidak bisa gagal** (test-engineer): di `tests/integration/005-run-browser-rows.test.ts` "opens at most one context per row", `expect` di dalam task ditangkap runner; hanya `contexts.length` yang benar-benar diperiksa. Tangkap nilai di dalam task dan assert setelah run, dan assert `result.failed === 0` di test yang punya assertion di dalam task.
 - **`TEST.md` tidak akurat**: coverage sekarang 96.50% fungsi / 95.86% baris; Ctrl+C di `hide-question.ts` baris 51–53; test "keeps going when only a tab closes" tidak benar-benar menutup tab; "never overwrites existing files" hanya memeriksa `accounts.csv`.
-- **Keputusan `src/ignore`** (user, sedang dibahas): entry build `src/ignore/index.ts` dihapus di `4c08b0b` tanpa tahu alasan user. Isi tarball 0.5.0 bergantung pada keputusan ini.
+- **Keputusan `src/ignore`** (selesai, lihat update di atas): entry build `src/ignore/index.ts` dihapus di `4c08b0b` tanpa tahu alasan user. Isi tarball 0.5.0 bergantung pada keputusan ini.
 
 ### Acknowledged risks (boleh ikut rilis)
 

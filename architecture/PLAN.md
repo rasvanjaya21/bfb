@@ -55,10 +55,10 @@ Tidak ada task Fase 1 yang saling bergantung; urutannya dari yang paling kecil.
 
 ### Fase 2: Butuh keputusan user (jangan dikerjakan sebelum dijawab)
 
-- [ ] Task 4: Pin versi dan SHA di `release.yml`, pisahkan job changelog tanpa `id-token: write` — keputusan: setuju, dan siapa yang mengawasi rilis pertama sesudahnya.
-- [ ] Task 5: Hapus atau rencanakan `src/ignore/index.ts` dan `src/libs/asset-checker.ts`.
-- [ ] Task 6: Coverage + `coverageThreshold` di `bunfig.toml` — butuh angka ambang.
-- [ ] Task 7: Bump dependency (puppeteer-core, oxlint, bumpp) diikuti `bun run docs` dan tes Chrome ulang.
+- [x] Task 4: Pin versi dan SHA di `release.yml`, pisahkan job changelog tanpa `id-token: write`. Rilis pertama sesudahnya belum jalan (Task 10).
+- [ ] Task 5: Hapus atau rencanakan `src/libs/asset-checker.ts`. (`src/ignore/index.ts` sudah dihapus dan diganti XPath di `facebook.ts`.)
+- [x] Task 6: Coverage + `coverageThreshold` di `bunfig.toml` (per file 100% baris dan fungsi, sebelumnya 90% / 80%; dijalankan CI).
+- [x] Task 7: Bump dependency dalam versi mayor yang sama + `overrides` untuk transitif rentan, `bun run docs`, tes Chrome ulang. Upgrade mayor masih terbuka di `TODO.md`.
 
 ### Fase 3: Butuh akses di luar lokal
 

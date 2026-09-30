@@ -33,4 +33,4 @@ Dikerjakan dalam satu putaran (tiga task kecil yang saling lepas), setiap task T
 
 ## Noticed but not touching
 
-- `src/commands/menu.ts` masih memakai nama variabel `isInitilized` (typo). Tidak diganti karena di luar scope task; `menu-access` memakai nama yang benar di interface-nya.
+- ~~`src/commands/menu.ts` memakai nama variabel `isInitilized` (typo)~~ — sudah diperbaiki setelah `/bfb-review`.
