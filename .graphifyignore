@@ -1,0 +1,22 @@
+# Build output and dependencies
+node_modules/
+dist/
+bun.lock
+
+# Graph output itself
+graphify-out/
+
+# Symlinks into skills/; the real files are indexed there once
+.agents/
+.claude/
+
+# Mirrored upstream documentation, not our code
+docs/
+
+# Local scratch areas and runtime data
+mock/
+backups/
+temp/
+workspaces/
+datas/
+credentials/
