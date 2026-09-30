@@ -3,8 +3,10 @@ import { contentStatus } from '@/libs/content-status';
 import { csvToJson } from '@/libs/csv-parser';
 import { formatDuration } from '@/libs/format-duration';
 import { launchBrowser } from '@/libs/launch-browser';
+import { logRowOutcome } from '@/libs/log-row-outcome';
 import { readCookies } from '@/libs/read-cookies';
 import { runBrowserRows, type OpenPage } from '@/libs/run-browser-rows';
+import type { AuditLogger } from '@/libs/write-audit-log';
 import { type Content } from '@/types/global';
 import chalk from 'chalk';
 import path from 'path';
@@ -13,7 +15,8 @@ import type { CookieData } from 'puppeteer-core';
 // How long Facebook gets to enable the Post button, and to close the composer after Post before the row counts as not sent.
 const PUBLISH_TIMEOUT_MS = 30000;
 
-async function facebook(): Promise<void> {
+// log records the run under the menu's action: the start, one line per content row, and the summary.
+async function facebook(log: AuditLogger, action: string): Promise<void> {
 	const contents = await csvToJson<Content>(path.join(process.cwd(), 'datas', 'contents.csv'));
 
 	if (contents.length === 0) {
@@ -21,24 +24,29 @@ async function facebook(): Promise<void> {
 		console.log('Data content(s) kosong\n');
 		await applyDelay(1000);
 		console.clear();
+		await log(action, 'dilewati', 'Data content(s) kosong');
 		return;
 	}
 
 	const start = Date.now();
 	const browser = await launchBrowser();
+	await log(action, 'mulai', `${contents.length} baris`);
 
 	try {
-		const result = await runBrowserRows(browser, contents, postFeed, (outcome) => {
-			if (outcome.status !== 'failed') return;
-			const message = outcome.message ?? '';
-			console.log(message.includes('closed') ? 'Koneksi tertutup' : message);
-			console.log(chalk.red('Gagal memposting konten'));
+		const result = await runBrowserRows(browser, contents, postFeed, async (outcome, content) => {
+			if (outcome.status === 'failed') {
+				outcome = { ...outcome, message: outcome.message?.includes('closed') ? 'Koneksi tertutup' : outcome.message };
+				console.log(outcome.message);
+				console.log(chalk.red('Gagal memposting konten'));
+			}
+			await logRowOutcome(log, `NO ${content.NO} UID ${content.COOKIE}`, outcome);
 		});
 
 		console.log('===============================');
 		console.log(`Berhasil: ${result.done}, dilewati: ${result.skipped}, gagal: ${result.failed}`);
 		console.log(`Estimasi durasi: ${formatDuration(Date.now() - start)}`);
 		console.log('===============================\n');
+		await log(action, result.stopped ? 'dihentikan' : 'selesai', `${result.done} berhasil, ${result.skipped} dilewati, ${result.failed} gagal`);
 	} finally {
 		await browser.close().catch(() => {});
 	}

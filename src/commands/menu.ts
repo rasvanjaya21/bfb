@@ -103,12 +103,18 @@ async function menu(): Promise<void> {
 			}
 		} else if (choice === '1') {
 			if (isLocked) await showAndLog('Fitur masih terkunci, setup terlebih dahulu', 'terkunci');
-			else await runTask('Rawat facebook', facebook, true);
+			else {
+				const { error } = await runTask('Rawat facebook', () => facebook(log, action), true);
+				if (error !== undefined) await log(action, 'gagal', error);
+			}
 		} else if (choice === '2' || choice === '3' || choice === '4' || choice === '98') {
 			await showAndLog('Belum tersedia, stay tuned', 'belum tersedia');
 		} else if (choice === '95') {
 			if (isLocked) await showAndLog('Fitur masih terkunci, setup terlebih dahulu', 'terkunci');
-			else await runTask('Sinkronisasi cookies', () => cookies(readlineInterface), true);
+			else {
+				const { error } = await runTask('Sinkronisasi cookies', () => cookies(readlineInterface, log, action), true);
+				if (error !== undefined) await log(action, 'gagal', error);
+			}
 		} else if (choice === '96') {
 			if (isDriverInstalled) await showAndLog('Driver sudah terpasang, platform siap digunakan', 'sudah siap');
 			else {

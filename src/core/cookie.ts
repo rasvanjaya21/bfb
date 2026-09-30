@@ -3,16 +3,19 @@ import { csvToJson } from '@/libs/csv-parser';
 import { ensurePasswordFocus } from '@/libs/ensure-password-focus';
 import { formatDuration } from '@/libs/format-duration';
 import { launchBrowser } from '@/libs/launch-browser';
+import { logRowOutcome } from '@/libs/log-row-outcome';
 import { readCookies } from '@/libs/read-cookies';
 import { runBrowserRows, type OpenPage } from '@/libs/run-browser-rows';
 import { saveCookies } from '@/libs/save-cookies';
+import type { AuditLogger } from '@/libs/write-audit-log';
 import type { Account } from '@/types/global';
 import chalk from 'chalk';
 import path from 'path';
 import type { CookieData } from 'puppeteer-core';
 import readline from 'readline/promises';
 
-async function cookies(readlineInterface: readline.Interface): Promise<void> {
+// log records the run under the menu's action: the start, one line per account, and the summary.
+async function cookies(readlineInterface: readline.Interface, log: AuditLogger, action: string): Promise<void> {
 	const accounts = await csvToJson<Account>(path.join(process.cwd(), 'datas', 'accounts.csv'));
 
 	if (accounts.length === 0) {
@@ -20,22 +23,26 @@ async function cookies(readlineInterface: readline.Interface): Promise<void> {
 		console.log('Data account(s) kosong\n');
 		await applyDelay(1000);
 		console.clear();
+		await log(action, 'dilewati', 'Data account(s) kosong');
 		return;
 	}
 
 	const start = Date.now();
 	const browser = await launchBrowser();
+	await log(action, 'mulai', `${accounts.length} baris`);
 
 	try {
 		const result = await runBrowserRows(
 			browser,
 			accounts,
 			(openPage, account) => syncCookies(openPage, readlineInterface, account),
-			(outcome) => {
-				if (outcome.status !== 'failed') return;
-				const message = outcome.message ?? '';
-				console.log(message.includes('closed') ? 'Koneksi tertutup' : message);
-				console.log(chalk.red('Gagal menyinkronkan cookie'));
+			async (outcome, account) => {
+				if (outcome.status === 'failed') {
+					outcome = { ...outcome, message: outcome.message?.includes('closed') ? 'Koneksi tertutup' : outcome.message };
+					console.log(outcome.message);
+					console.log(chalk.red('Gagal menyinkronkan cookie'));
+				}
+				await logRowOutcome(log, `NO ${account.NO} UID ${account.UID}`, outcome);
 			},
 		);
 
@@ -43,6 +50,7 @@ async function cookies(readlineInterface: readline.Interface): Promise<void> {
 		console.log(`Berhasil: ${result.done}, dilewati: ${result.skipped}, gagal: ${result.failed}`);
 		console.log(`Estimasi durasi: ${formatDuration(Date.now() - start)}`);
 		console.log('===============================\n');
+		await log(action, result.stopped ? 'dihentikan' : 'selesai', `${result.done} berhasil, ${result.skipped} dilewati, ${result.failed} gagal`);
 	} finally {
 		await browser.close().catch(() => {});
 	}
