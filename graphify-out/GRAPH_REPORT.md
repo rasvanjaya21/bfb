@@ -6,41 +6,41 @@
 
 ## Summary
 
-- 770 nodes · 904 edges · 45 communities (39 shown, 5 thin omitted)
+- 776 nodes · 909 edges · 49 communities (42 shown, 6 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 23 edges (avg confidence: 0.87)
-- Token cost: 39,724 input · 557 output
+- Token cost: 40,511 input · 612 output
 
 ## Graph Freshness
 
-- Built from commit: `6092395b`
+- Built from commit: `1d678881`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 
-- Facebook Automation Menu Flow
-- Project Overview and Conventions
+- Menu and Browser Automation
+- Project Overview and CI
 - TypeScript Compiler Config
 - Package Scripts
 - Dev Dependencies
-- Test Skill Method
+- Test-Driven Development Method
 - Prettier Config
 - Runtime Dependencies
 - MCP Server Config
+- Review Skill Security Checklist
 - Performance Checklist
-- Performance Checklist Reference
 - CSV and Cookie Parsing
-- Shipping and Launch Checklist
+- Shipping and Launch Method
 - Relative Import Checker
 - Issue Templates and Stale Workflow
 - Clean Script
 - Feature Request Template
 - Question Issue Template
 - As-Built Spec
-- Review Skill Security
+- Test Skill Mocking Patterns
 - Offline Docs Generator
 - Prepare Skill Steps
-- Ship Skill Accessibility
+- Accessibility Checklist
 - Pre-commit Hook
 - Implementation Plan
 - Code Review Report
@@ -53,23 +53,27 @@
 - Hidden Input Prompt
 - Bunup Config and Keywords
 - Commit Log
+- Definition of Done
 - Published Package Files
 - Repository Metadata
+- Ship Skill Workflow
 - Dependency Security Overrides
-- Build Skill Method
+- Accessibility Essential Checks
+- CLI Entry Tests
+- Build Skill Implementation Rules
 - Commit Message Conventions
-- Plan Skill Method
-- Code Review Quality Axes
-- Security Checklist Reference
-- Spec Skill Method
+- Plan Skill Workflow
+- Code Review Method
+- Security Checklist
+- Spec Skill Workflow
 
 ## God Nodes (most connected - your core abstractions)
 
 1. `compilerOptions` - 25 edges
 2. `Code Review and Quality` - 19 edges
 3. `scripts` - 16 edges
-4. `Security Checklist` - 15 edges
-5. `Test-Driven Development` - 15 edges
+4. `Test-Driven Development` - 15 edges
+5. `Security Checklist` - 15 edges
 6. `Security Checklist` - 15 edges
 7. `menu()` - 13 edges
 8. `Shipping and Launch` - 13 edges
@@ -99,14 +103,14 @@
 - **Menu Setup Gates (init, driver, activation)** — agents_runtime_flow, agents_csv_data_files, agents_driver_version, agents_activation_check [EXTRACTED 1.00]
 - **GitHub Contribution Intake Templates** — _github_issue_template_bug_report_bug_report, _github_issue_template_feature_request_feature_request, _github_issue_template_question_question, _github_pull_request_template_pull_request_template [INFERRED 0.85]
 
-## Communities (45 total, 5 thin omitted)
+## Communities (49 total, 6 thin omitted)
 
-### Community 0 - "Facebook Automation Menu Flow"
+### Community 0 - "Menu and Browser Automation"
 
 Cohesion: 0.06
 Nodes (37): menu(), cookies(), syncCookies(), facebook(), postFeed(), activateBfb(), showResult(), applyDelay() (+29 more)
 
-### Community 1 - "Project Overview and Conventions"
+### Community 1 - "Project Overview and CI"
 
 Cohesion: 0.07
 Nodes (39): Pull Request Template, CI Workflow (build, type-check, lint, test on ubuntu/macos/windows), changelogithub, Release Workflow (tag v* -> npm + GitHub Packages), Token Activation Check (bfb.blackfriday.my.id API), @/ Alias Import Rule (no relative imports, enforced by check.ts), bfb CLI (@rasvanjaya21/bfb), Bun Toolchain (bunup, tsgo, oxlint, prettier, bun test) (+31 more)
@@ -126,10 +130,10 @@ Nodes (16): scripts, auto, build, check, clean, dev, docs, format (+8 more)
 Cohesion: 0.11
 Nodes (19): bumpp, bunup, javascript-obfuscator, json-server, oxlint, devDependencies, bumpp, bunup (+11 more)
 
-### Community 5 - "Test Skill Method"
+### Community 5 - "Test-Driven Development Method"
 
-Cohesion: 0.04
-Nodes (46): API / Integration Testing, /bfb-test, Browser Testing with DevTools, Common Assertions, Common Rationalizations, DAMP Over DRY in Tests, Decision Guide, Discover the Stack First (+38 more)
+Cohesion: 0.07
+Nodes (29): Browser Testing with DevTools, Common Rationalizations, DAMP Over DRY in Tests, Decision Guide, Discover the Stack First, Name Tests Descriptively, One Assertion Per Concept, Overview (+21 more)
 
 ### Community 6 - "Prettier Config"
 
@@ -146,12 +150,12 @@ Nodes (11): chalk, dependencies, chalk, @puppeteer/browsers, puppeteer-core, pup
 Cohesion: 0.53
 Nodes (5): bunx, bun, bunup, puppeteer, puppeteer-extra
 
-### Community 9 - "Performance Checklist"
+### Community 9 - "Review Skill Security Checklist"
 
-Cohesion: 0.08
-Nodes (26): API, Backend Checklist, Cache checklist, Caching Strategies, Common Anti-Patterns, Connection pooling, Core Web Vitals Targets, CSS (+18 more)
+Cohesion: 0.04
+Nodes (47): AI / LLM Security, API, Authentication, Authorization, Backend Checklist, /bfb-review, Cache checklist, Caching Strategies (+39 more)
 
-### Community 10 - "Performance Checklist Reference"
+### Community 10 - "Performance Checklist"
 
 Cohesion: 0.08
 Nodes (26): API, Backend Checklist, Cache checklist, Caching Strategies, Common Anti-Patterns, Connection pooling, Core Web Vitals Targets, CSS (+18 more)
@@ -161,7 +165,7 @@ Nodes (26): API, Backend Checklist, Cache checklist, Caching Strategies, Common 
 Cohesion: 0.21
 Nodes (12): Cell, csvToJson(), emptyCell(), parseRows(), isReservedKey(), RESERVED_KEYS, parseCookieStore(), readCookies() (+4 more)
 
-### Community 12 - "Shipping and Launch Checklist"
+### Community 12 - "Shipping and Launch Method"
 
 Cohesion: 0.08
 Nodes (25): Accessibility, Code Quality, Common Rationalizations, Documentation, Error Budget Release Gate, Error Reporting, Feature Flag Strategy, Infrastructure (+17 more)
@@ -176,10 +180,10 @@ Nodes (6): hasRelativeImport(), relativeImportChecker(), ROOTS, transpiler, walk
 Cohesion: 0.11
 Nodes (18): Aktivasi (menu 97), Asumsi, Boundaries, Code Style, Commands, Data di folder kerja, Fitur dan acceptance criteria, Menu dan status (+10 more)
 
-### Community 20 - "Review Skill Security"
+### Community 20 - "Test Skill Mocking Patterns"
 
-Cohesion: 0.09
-Nodes (21): AI / LLM Security, Authentication, Authorization, /bfb-review, CORS Configuration, Data Protection, Dependency Security, Destructive Path Operations (+13 more)
+Cohesion: 0.11
+Nodes (17): API / Integration Testing, /bfb-test, Common Assertions, E2E Testing (Playwright), Method, Mock at Boundaries Only, Mock Functions, Mock Modules (+9 more)
 
 ### Community 21 - "Offline Docs Generator"
 
@@ -191,10 +195,10 @@ Nodes (21): browsers, bun, bunPages(), bunup, bunupPages(), checkout(), Doc, doc
 Cohesion: 0.17
 Nodes (11): 10. Ringkasan, 1. TODO.md, 2. Selaraskan memory Claude dan Antigravity, 3. Hapus yang usang, 4. Hapus sisa debug, 5. Update docs, 6. Update skills, 7. Update pengetahuan kamu (+3 more)
 
-### Community 23 - "Ship Skill Accessibility"
+### Community 23 - "Accessibility Checklist"
 
-Cohesion: 0.06
-Nodes (33): Accessibility Checklist, Accessible Lists, ARIA Roles, /bfb-ship, Buttons vs. Links, Common Anti-Patterns, Common HTML Patterns, Content (+25 more)
+Cohesion: 0.20
+Nodes (10): Accessibility Checklist, Accessible Lists, ARIA Roles, Buttons vs. Links, Common Anti-Patterns, Common HTML Patterns, Form Labels, Quick Reference: ARIA Live Regions (+2 more)
 
 ### Community 25 - "Implementation Plan"
 
@@ -228,8 +232,8 @@ Nodes (15): bin, bfb, bugs, url, description, engines, bun, exports (+7 more)
 
 ### Community 31 - "Prepare Report"
 
-Cohesion: 0.25
-Nodes (7): 1. TODO.md, 2. Memory Claude dan Antigravity, 3–4. Usang dan sisa debug, 5–7. Docs, skills, pengetahuan, 8. Formatter, linter, test, build, 9. Graphify, Prepare
+Cohesion: 0.18
+Nodes (10): 1. TODO.md, 2. Memory Claude dan Antigravity, 3. Usang, 4. Sisa debug, 5. Docs, 6. Skills, 7. Pengetahuan, 8. Formatter, linter, test, build (+2 more)
 
 ### Community 32 - "Ship Decision Report"
 
@@ -251,6 +255,11 @@ Nodes (6): bun, keywords, automation, bunup, puppeteer, typescript
 Cohesion: 0.33
 Nodes (5): Commit, Commit log, Pengelompokan, Pre-commit hook, Sengaja tidak di-commit
 
+### Community 36 - "Definition of Done"
+
+Cohesion: 0.20
+Nodes (10): Correctness, Definition of Done, Definition of Done vs. Acceptance Criteria, Documentation, How to Apply, Integration, Quality, Red Flags (+2 more)
+
 ### Community 37 - "Published Package Files"
 
 Cohesion: 0.50
@@ -261,12 +270,22 @@ Nodes (4): files, dist, LICENSE, README.md
 Cohesion: 0.67
 Nodes (3): repository, type, url
 
+### Community 39 - "Ship Skill Workflow"
+
+Cohesion: 0.25
+Nodes (7): /bfb-ship, Fase A, fan-out paralel, Fase B, gabungkan, Fase C, keputusan, Method, Realitas bfb yang harus dicek sebelum GO, Reference
+
 ### Community 40 - "Dependency Security Overrides"
 
 Cohesion: 0.40
 Nodes (5): overrides, basic-ftp, brace-expansion, ip-address, ws
 
-### Community 45 - "Build Skill Method"
+### Community 41 - "Accessibility Essential Checks"
+
+Cohesion: 0.33
+Nodes (6): Content, Essential Checks, Forms, Keyboard Navigation, Screen Readers, Visual
+
+### Community 45 - "Build Skill Implementation Rules"
 
 Cohesion: 0.05
 Nodes (38): Aturan bfb yang mengalahkan saran generik, /bfb-build, Common Rationalizations, Contract-First Slicing, Correctness, Definition of Done, Definition of Done vs. Acceptance Criteria, Documentation (+30 more)
@@ -276,47 +295,47 @@ Nodes (38): Aturan bfb yang mengalahkan saran generik, /bfb-build, Common Ration
 Cohesion: 0.07
 Nodes (28): Ad-hoc types (one-offs, not to be reproduced), Aturan pesan, Backend / data, /bfb-commit, Canonical types, `chore` — 276 uses (16%), Commit Message Conventions — rasvanjaya21, Core shape (+20 more)
 
-### Community 58 - "Plan Skill Method"
+### Community 58 - "Plan Skill Workflow"
 
 Cohesion: 0.06
 Nodes (31): /bfb-plan, Common Rationalizations, Correctness, Definition of Done, Definition of Done vs. Acceptance Criteria, Documentation, How to Apply, Integration (+23 more)
 
-### Community 59 - "Code Review Quality Axes"
+### Community 59 - "Code Review Method"
 
 Cohesion: 0.07
 Nodes (29): 1. Correctness, 2. Readability & Simplicity, 3. Architecture, 4. Security, 5. Performance, Change Descriptions, Change Sizing, Code Review and Quality (+21 more)
 
-### Community 61 - "Security Checklist Reference"
+### Community 61 - "Security Checklist"
 
 Cohesion: 0.12
 Nodes (17): AI / LLM Security, Authentication, Authorization, CORS Configuration, Data Protection, Dependency Security, Destructive Path Operations, Error Handling (+9 more)
 
-### Community 65 - "Spec Skill Method"
+### Community 65 - "Spec Skill Workflow"
 
 Cohesion: 0.12
 Nodes (15): /bfb-spec, Common Rationalizations, Keeping the Spec Alive, Method, Overview, Phase 0: Scope Check, Phase 1: Specify, Phase 2: Plan (+7 more)
 
 ## Knowledge Gaps
 
-- **475 isolated node(s):** `SetupStatus`, `ActivationResult`, `RowsResult`, `FakeContext`, `Cell` (+470 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 506 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **479 isolated node(s):** `SetupStatus`, `ActivationResult`, `RowsResult`, `FakeContext`, `Cell` (+474 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 511 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Reference` connect `Ship Skill Accessibility` to `Performance Checklist Reference`, `Security Checklist Reference`?**
+- **Why does `Reference` connect `Ship Skill Workflow` to `Performance Checklist`, `Definition of Done`, `Security Checklist`, `Accessibility Checklist`?**
   _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **Why does `Performance Checklist` connect `Performance Checklist Reference` to `Ship Skill Accessibility`?**
+- **Why does `Performance Checklist` connect `Performance Checklist` to `Ship Skill Workflow`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
-- **Why does `Shipping and Launch` connect `Shipping and Launch Checklist` to `Ship Skill Accessibility`?**
+- **Why does `Shipping and Launch` connect `Shipping and Launch Method` to `Ship Skill Workflow`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **What connects `SetupStatus`, `ActivationResult`, `RowsResult` to the rest of the system?**
-  _475 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Facebook Automation Menu Flow` be split into smaller, more focused modules?**
+  _479 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `Menu and Browser Automation` be split into smaller, more focused modules?**
   _Cohesion score 0.05765765765765766 - nodes in this community are weakly interconnected._
-- **Should `Project Overview and Conventions` be split into smaller, more focused modules?**
+- **Should `Project Overview and CI` be split into smaller, more focused modules?**
   _Cohesion score 0.07422402159244265 - nodes in this community are weakly interconnected._
 - **Should `TypeScript Compiler Config` be split into smaller, more focused modules?**
   _Cohesion score 0.05405405405405406 - nodes in this community are weakly interconnected._
