@@ -164,7 +164,7 @@ Dari `TODO.md`, butuh keputusan user:
 
 # Spec fitur: audit log
 
-Ditulis lewat `/bfb-spec` pada 2026-10-01. **Status: usulan, belum dibangun, menunggu persetujuan user.**
+Ditulis lewat `/bfb-spec` pada 2026-10-01. **Status: dibangun (2026-10-01), lihat `architecture/BUILD.md`.** Belum diverifikasi: menu 97 dengan token sungguhan dan menu 1/95 di akun sungguhan (cek manual user).
 
 ## Objective
 

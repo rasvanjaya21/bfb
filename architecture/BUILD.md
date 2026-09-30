@@ -38,18 +38,39 @@ Ditulis lewat `/bfb-build` pada 2026-10-01. Serah terima untuk task berikutnya d
 - **Dibuktikan oleh:** `tests/unit/009-describe-menu.test.ts` (2 test: semua label, tujuh input tidak valid termasuk password dan key prototype). Merah dulu, lalu 3 mutasi tertangkap. `menu.ts` tidak tercakup coverage; diverifikasi manual.
 - **Manual:** smoke test lewat stdin (2, `abc`, 1, 0, 0, 98, 1, 99) di folder kosong, dari `src/` dan dari build production. Layar dibandingkan dengan rekaman sebelum perubahan: identik kecuali path folder sementara. `audit.log` berisi 9 baris sesuai tabel spec. Menu 96 (driver sudah terpasang) tercatat `sudah siap`. Menu 97 tidak dicoba (tanpa request ke API aktivasi produksi); menunggu cek user.
 
-## Checkpoint: Menu sederhana — menunggu review user
+## Checkpoint: Menu sederhana — disetujui user
 
 - `format`, `lint`, `type-check`, `check`, `test:coverage` (128 pass, 100%), `build` exit 0.
-- Belum: review user sebelum Fase 3 menyentuh `runBrowserRows`.
+- Review user: disetujui dengan menjalankan `/bfb-build auto` lagi.
 
 ## Noticed but not touching
 
 - `check.ts` mengurai semua file dengan `Bun.Transpiler({ loader: 'tsx' })`, sehingga arrow function generik `<T>(...) =>` di file `.ts` gagal diurai (terbaca sebagai JSX) dan `bun run check` serta pre-commit hook gagal. Ditemukan di Task 5 dan dihindari dengan deklarasi `function`. Perbaikan: pilih loader dari ekstensi file (`ts` untuk `.ts`).
 
-## Berikutnya
+## Task 6: `runBrowserRows` melaporkan setiap baris — selesai
 
-Setelah review: Task 6, `runBrowserRows` melaporkan setiap baris lewat `onRow(outcome, row)`.
+- **Diimplementasikan:** `onFailure(message, row)` diganti `onRow(outcome, row)` dengan `RowOutcome = { status: 'done' | 'skipped' | 'failed'; message? }`. Task mengembalikan teks alasan untuk baris yang dilewati (teks kosong tetap dihitung dilewati) atau `undefined` kalau berhasil; `false`/`true` dihapus. Hitungan memakai `result[outcome.status]++`. Context yang gagal ditutup dilaporkan sebagai `failed` kedua untuk baris yang sama, dan hitungannya tidak berubah. `postFeed` mengembalikan `'Masih dalam tahap pengembangan'`; `syncCookies` mengembalikan `'Cookie tidak di simpan'` atau `'Login bermasalah'`. Callback di `facebook.ts`/`cookie.ts` tetap hanya mencetak untuk baris gagal, dengan teks yang sama.
+- **Dibuktikan oleh:** `tests/integration/005-run-browser-rows.test.ts` disesuaikan ke `onRow` tanpa melemahkan assertion lama, ditambah 3 test (setiap baris dilaporkan sekali beserta alasan/pesan, gagal tutup context dilaporkan setelah baris itu, alasan kosong tetap dilewati). Merah dulu, lalu 5 mutasi; satu awalnya lolos (`!skipReason`), dan test alasan kosong ditambahkan untuk menangkapnya.
+- **Manual A:** harness sementara (`bun test` + `mock.module` untuk `launchBrowser` headless, dihapus setelah dipakai) menjalankan `facebook()` sungguhan dengan 4 baris palsu (cookie palsu, BM, cookie tidak ada, STORY) terhadap salinan `HEAD` dan terhadap kode baru. Layar identik; satu run sempat "Facebook tidak terbuka" (timeout navigasi), dan dua run berikutnya dari kode baru serta satu run ulang `HEAD` membuktikan itu variasi jaringan.
+
+## Task 7: Menu 1 dan 95 mencatat per baris — selesai
+
+- **Diimplementasikan:** `onRow` boleh async dan ditunggu runner, sehingga urutan baris di log sama dengan urutan run. `src/libs/log-row-outcome.ts` memetakan `done/skipped/failed` → `berhasil/dilewati/gagal`. `facebook(log, action)` dan `cookies(readline, log, action)` mencatat data kosong (`dilewati`), `mulai` (jumlah baris, setelah browser terbuka), satu baris per konten/akun (`NO <no> UID <uid>`, pesan gagal sama dengan layar termasuk `Koneksi tertutup`), lalu `selesai`/`dihentikan` dengan ringkasan. `menu.ts` meneruskan logger dan nama aksi, dan mencatat `gagal` + pesan error kalau task melempar (mis. `Driver belum terpasang`).
+- **Dibuktikan oleh:** `tests/unit/010-log-row-outcome.test.ts` (2 mutasi tertangkap) dan test async `onRow` di `005` (merah dulu).
+- **Manual A:** harness yang sama dengan logger sungguhan: layar identik dengan sebelum Task 6, dan `audit.log` berisi `mulai | 4 baris`, 4 baris per konten, lalu `selesai | 0 berhasil, 2 dilewati, 2 gagal`, cocok dengan ringkasan layar. Offset `+00:00` karena `bun test` memaksa `TZ=UTC`. Build production: menu 1 dan 95 yang terkunci tercatat `terkunci`.
+- **Belum:** menu 95 tidak dijalankan headless (butuh login dan jawaban `y/N`); manual B (akun sungguhan) oleh user. Keduanya di `TODO.md`.
+
+## Task 8: Docs dan status spec — selesai
+
+- `AGENTS.md`: `logs/audit.log` di data runtime, alur runtime, konvensi audit log dan `runBrowserRows`/`onRow`, catatan `TZ=UTC` dan larangan file test coba-coba di repo.
+- `README.md`: bagian "Audit log" untuk operator.
+- `architecture/SPEC.md`: status "dibangun" beserta verifikasi yang masih terbuka.
+- `TODO.md`: bug loader TSX `check.ts`, audit log belum dicek di alur sungguhan, dan teks `Workspace project` tanpa `logs/`.
+
+## Checkpoint: Fitur lengkap — lolos
+
+- `format`, `lint`, `type-check`, `check`, `test:coverage` (133 pass, 100%), `build` exit 0.
+- Success criteria spec 1–7 terpenuhi; criterion 4 di akun sungguhan menunggu user.
 
 ---
 

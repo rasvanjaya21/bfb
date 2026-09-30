@@ -70,16 +70,16 @@ commands/menu.ts ── createAuditLogger('MENU n') ─────────�
 
 - [x] Semua pemeriksaan hijau, coverage 100%
 - [x] `audit.log` dari smoke test manual cocok dengan tabel "Yang dicatat per menu" di spec (kecuali menu 1 dan 95)
-- [ ] Review dengan user sebelum menyentuh runner browser
+- [x] Review dengan user sebelum menyentuh runner browser
 
 ### Fase 3: Hasil per baris di menu 1 dan 95
 
-- [ ] **Task 6: `runBrowserRows` melaporkan setiap baris**
+- [x] **Task 6: `runBrowserRows` melaporkan setiap baris**
     - Description: ganti `onFailure(message, row)` dengan `onRow(outcome, row)`; task mengembalikan string alasan untuk baris yang dilewati. Kegagalan membersihkan context dilaporkan sebagai `failed` dengan pesan yang sama seperti sekarang. `postFeed` dan `syncCookies` mengembalikan alasan, dan callback di `facebook.ts`/`cookie.ts` tetap mencetak teks yang sama.
     - Acceptance: berhasil, dilewati (dengan alasan), dan gagal (dengan pesan) masing-masing dilaporkan sekali per baris; hitungan `RowsResult` tidak berubah; semua test lama di `005-run-browser-rows` tetap membuktikan hal yang sama setelah disesuaikan ke `onRow`.
     - Verify: `bun run test:coverage`, `bun run type-check`; manual: Chrome headless dengan cookie palsu seperti di `TEST.md` (tanpa akun sungguhan), layar tetap sama.
     - Dependencies: none. Files: `src/libs/run-browser-rows.ts`, `src/core/facebook.ts`, `src/core/cookie.ts`, `tests/integration/005-run-browser-rows.test.ts`. Scope: M.
-- [ ] **Task 7: Menu 1 dan 95 mencatat per baris**
+- [x] **Task 7: Menu 1 dan 95 mencatat per baris**
     - Description: `facebook(log)` dan `cookies(readline, log)` mencatat `mulai` (jumlah baris), satu baris per konten/akun (`NO <no> UID <uid>`), lalu `selesai` atau `dihentikan` dengan ringkasan yang sama dengan layar. Data kosong dicatat sebagai `dilewati`. `menu.ts` meneruskan logger yang terikat ke `MENU 1`/`MENU 95`, dan mencatat `terkunci` kalau menu terkunci.
     - Acceptance: success criterion 4; caption, password, dan cookie tidak pernah muncul di log.
     - Verify: `bun run test:coverage`, `bun run type-check`; manual A (tanpa akun): Chrome headless + cookie palsu 3 baris → 3 baris per konten + `selesai` cocok dengan layar. Manual B (user, akun sungguhan, 2–3 baris `contents.csv`): menu 1 dan 95 di Chrome, lalu cocokkan `logs/audit.log` dengan ringkasan layar.
@@ -87,12 +87,12 @@ commands/menu.ts ── createAuditLogger('MENU n') ─────────�
 
 ### Checkpoint: Fitur lengkap
 
-- [ ] Semua 7 success criteria di spec terpenuhi (criterion 4 lewat manual A; manual B oleh user)
-- [ ] `bun run format`, `lint`, `type-check`, `check`, `test:coverage`, `build` hijau
+- [x] Semua 7 success criteria di spec terpenuhi (criterion 4 lewat manual A; manual B oleh user masih terbuka, lihat `TODO.md`)
+- [x] `bun run format`, `lint`, `type-check`, `check`, `test:coverage`, `build` hijau
 
 ### Fase 4: Dokumentasi
 
-- [ ] **Task 8: Docs dan status spec**
+- [x] **Task 8: Docs dan status spec**
     - Description: `AGENTS.md` (data runtime `logs/audit.log`, konvensi logger dan hal yang tidak boleh dicatat, `onRow`), `README.md` (operator: letak dan isi log), status spec menjadi "dibangun", `TODO.md` bila ada temuan.
     - Acceptance: tidak ada klaim di docs yang bertentangan dengan kode.
     - Verify: `bun run format`; baca ulang terhadap kode.
