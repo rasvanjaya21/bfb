@@ -93,6 +93,23 @@ describe('activateBfb', () => {
 		expect(messages).toEqual(['Token tidak valid, aktifasi gagal\n']);
 	});
 
+	test('reports a valid token that could not be saved', async () => {
+		await writeFile(join(dir, 'credentials'), 'not a folder');
+		respond(JSON.stringify({ token: 'server-token-123' }));
+		await activateBfb(async () => 'typed-token');
+		expect(await readFile(join(dir, 'credentials'), 'utf-8')).toBe('not a folder');
+		expect(messages).toEqual(['Token valid, tapi gagal disimpan\n']);
+	});
+
+	test('reads the token from stdin when no reader is given', async () => {
+		respond(JSON.stringify({ token: 'server-token-123' }));
+		const done = activateBfb();
+		process.stdin.emit('data', 'typed-token\r');
+		await done;
+		expect(await readFile(tokenFile(), 'utf-8')).toBe('server-token-123');
+		expect(messages).toEqual(['Token valid, aktifasi berhasil\n']);
+	});
+
 	test('writes nothing when the server fails', async () => {
 		respond('<html>Bad Gateway</html>', 502);
 		await activateBfb(async () => 'typed-token');

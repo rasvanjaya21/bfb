@@ -1,5 +1,5 @@
 import { hideQuestion } from '@/libs/hide-question';
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, spyOn, test } from 'bun:test';
 import { PassThrough } from 'stream';
 
 function fakeTerminal() {
@@ -66,6 +66,23 @@ describe('hideQuestion', () => {
 		terminal.input.write('secret\r');
 		await answer;
 		expect(terminal.written()).toBe('Masukkan token: ******\n');
+	});
+
+	test('Ctrl+C restores the terminal and exits with 0', () => {
+		const terminal = fakeTerminal();
+		const previous = (): void => {};
+		terminal.input.on('data', previous);
+		const exit = spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+		try {
+			void hideQuestion('Masukkan token: ', terminal.input, terminal.output);
+			terminal.input.emit('data', 'ab\u0003');
+			expect(exit).toHaveBeenCalledWith(0);
+			expect(terminal.input.isRaw).toBe(false);
+			expect(terminal.input.rawListeners('data')).toEqual([previous]);
+			expect(terminal.written()).toBe('Masukkan token: **\n');
+		} finally {
+			exit.mockRestore();
+		}
 	});
 
 	test('restores raw mode and the previous data listeners', async () => {
