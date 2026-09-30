@@ -23,15 +23,16 @@
 		"noPropertyAccessFromIndexSignature": false,
 
 		"lib": ["ES2022", "DOM"],
+		"types": ["bun"],
 		"resolveJsonModule": true,
 		"outDir": "./dist",
-		"rootDir": "./src",
+		"rootDir": ".",
 		"declarationDir": "./dist/types",
 		"paths": {
 			"@/*": ["./src/*"]
 		}
 	},
 
-	"include": ["src/**/*"],
+	"include": ["src/**/*", "tests/**/*", "*.ts"],
 	"exclude": ["node_modules", "dist", "bunup.config.ts"]
 }
