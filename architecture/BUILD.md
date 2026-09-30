@@ -67,6 +67,12 @@ Ditulis lewat `/bfb-build` pada 2026-10-01. Serah terima untuk task berikutnya d
 - `architecture/SPEC.md`: status "dibangun" beserta verifikasi yang masih terbuka.
 - `TODO.md`: bug loader TSX `check.ts`, audit log belum dicek di alur sungguhan, dan teks `Workspace project` tanpa `logs/`.
 
+## Setelah build (permintaan user, 2026-10-01)
+
+- **Tanpa jendela `about:blank`:** `launchBrowser` memakai `--no-startup-window` + `waitForInitialPage: false`. Diuji di Chrome headful lewat `xvfb-run`: tanpa halaman awal, Chrome tetap hidup setelah jendela context tiap baris ditutup (3 baris), stealth aktif (`webdriver` false, `chrome` ada, 5 plugin), dan `facebook()` ujung ke ujung dengan 4 baris palsu tetap membuka Facebook di baris 4. Setiap baris tetap membuka jendelanya sendiri (browser context per akun).
+- **`check.ts` memilih loader dari ekstensi:** `.ts` diurai dengan loader `ts`, `.tsx` dengan `tsx`. `hasRelativeImport(content, loader = 'ts')`. Dua test baru di `tests/unit/006-relative-import-check.test.ts`, 2 mutasi tertangkap, dan file sementara berisi arrow generik di `src/` lolos `bun run check`.
+- **Layar menu:** `Workspace project: datas/, credentials/, logs/` (lihat keputusan 5 di spec).
+
 ## Checkpoint: Fitur lengkap — lolos
 
 - `format`, `lint`, `type-check`, `check`, `test:coverage` (133 pass, 100%), `build` exit 0.

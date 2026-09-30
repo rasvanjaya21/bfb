@@ -176,6 +176,7 @@ Operator butuh catatan tertulis tentang apa yang dilakukan bfb di folder kerjany
 2. **Folder kerja lama:** `logs/audit.log` dibuat otomatis saat pertama kali menulis. Status init dan kunci menu tidak berubah, jadi tidak perlu init ulang.
 3. **Format:** teks satu baris, dipisah `|`, dengan waktu lokal plus offset.
 4. **Rotasi:** tidak ada. Satu `audit.log`, selalu ditambahkan di akhir.
+5. **Layar menu (2026-10-01, setelah build):** baris `Workspace project` ikut menyebut `logs/` (`datas/, credentials/, logs/`). Ini satu-satunya teks layar yang berubah; aturan "jangan ubah teks layar" di Boundaries berlaku untuk teks lainnya.
 
 ## Asumsi
 
