@@ -15,7 +15,7 @@ File CSV **dipisah titik koma** (`src/libs/csv-parser.ts`), dan header-nya harus
 
 ## Stack
 
-- Runtime/tooling: **Bun saja** (`.bumrc` 1.3.9, `engines.bun` `>=1.3.9` di `package.json`), tidak butuh Node. Output build menargetkan Bun (`target: 'bun'`, shebang `#!/usr/bin/env bun`), hanya ESM. Node hanya dipakai CI rilis untuk `npm publish`.
+- Runtime/tooling: **Bun saja** (`.bumrc` 1.4.2, `engines.bun` `>=1.4.2` di `package.json`), tidak butuh Node. Output build menargetkan Bun (`target: 'bun'`, shebang `#!/usr/bin/env bun`), hanya ESM. Node hanya dipakai CI rilis untuk `npm publish`.
 - Bundler: bunup (`bunup.config.ts`, `splitting: false`), lalu `javascript-obfuscator` pada `dist/index.js`. Splitting dimatikan karena dengan target Bun, chunk bersama diawali pragma `// @bun` sehingga banner shebang jatuh ke baris 2 dan Bun menolaknya sebagai syntax error.
 - Type check: `tsgo` (`@typescript/native-preview`), bukan `tsc`
 - Lint: oxlint · Format: prettier + `prettier-plugin-organize-imports`
@@ -34,20 +34,20 @@ bun run check        # check.ts — gagal jika ada import relatif
 bun run docs         # docs.ts — mirror ulang dokumentasi resmi ke docs/ sesuai versi di .bumrc dan bun.lock
 bun run format       # prettier --write
 bun run test         # bun test
-bun run test:coverage # bun test --coverage; gagal kalau satu file di bawah 90% baris / 80% fungsi (bunfig.toml)
+bun run test:coverage # bun test --coverage; gagal kalau satu file yang di-import test di bawah 100% baris / fungsi (bunfig.toml)
 bun run clean        # hapus dist dan node_modules
 bun run auto         # clean + install + build
 bun run release      # bumpp --commit --push --tag
 bun run mock         # json-server dari mock/ (area coretan lokal, tidak di-commit)
 ```
 
-Pre-commit hook ada di `.githooks/pre-commit` dan menjalankan `lint && type-check && check`; `bun install` memasangnya lewat script `prepare` (`git config core.hooksPath .githooks`). Jangan kembali ke `simple-git-hooks`: postinstall-nya memanggil `node ./postinstall.js` langsung, sehingga `bun install` gagal (exit 126) di mesin tanpa Node, dan `[run] bun = true` tidak berlaku untuk script lifecycle dependency. CI (`.github/workflows/ci.yml`) menjalankan build, type-check, lint, dan test di ubuntu/macos/windows.
+Pre-commit hook ada di `.githooks/pre-commit` dan menjalankan `lint && type-check && check`; `bun install` memasangnya lewat script `prepare` (`git config core.hooksPath .githooks`). Jangan kembali ke `simple-git-hooks`: postinstall-nya memanggil `node ./postinstall.js` langsung, sehingga `bun install` gagal (exit 126) di mesin tanpa Node, dan `[run] bun = true` tidak berlaku untuk script lifecycle dependency. CI (`.github/workflows/ci.yml`) menjalankan `install --frozen-lockfile`, type-check, lint, check, `test:coverage`, build, dan `bun publish --dry-run` di ubuntu/macos/windows.
 
 ## Struktur
 
 ```
 src/
-  index.ts        entry: parsing argumen (version/help/-v/-h), selain itu membuka menu
+  index.ts        entry: parsing argumen (version/help/-v/-h); flag tidak dikenal → pesan + exit 1; tanpa argumen membuka menu
   commands/       menu.ts (loop interaktif utama), help.ts, version.ts
   core/           alur otomasi browser: facebook.ts (posting), cookie.ts (sinkronisasi cookie / login manual)
   libs/           satu fungsi kecil per file (nama file kebab-case, export camelCase)
@@ -91,7 +91,7 @@ Siklus proyek, satu skill per tahap:
 - Setiap folder skill hanya berisi satu `SKILL.md`, tanpa subfolder. Checklist yang dirujuk skill (Definition of Done, Testing Patterns, Security/Performance/Accessibility Checklist, referensi gaya commit) ditempel di bagian `# Reference` di akhir `SKILL.md`.
 - `.claude/` dan `.agents/` hanya berisi symlink lokal dan di-gitignore; cara membuatnya ada di `README.md` bagian "Agent Tooling". Kalau menambah symlink atau server MCP baru, perbarui instruksi di README juga.
 - Edit skill hanya di `skills/`, jangan pernah menyalin skill ke path symlink. Untuk memperbarui `# Method`, salin ulang dari upstream dan perbarui hash commit-nya.
-- `docs/` adalah mode offline dari dokumentasi resmi stack. Baca dari sana sebelum memakai API Bun, bunup, Puppeteer, atau puppeteer-extra, dan jangan mengarang API yang tidak ada di sana. Setiap file dibuat oleh `bun run docs` (`docs.ts`) dari repo resminya **pada tag rilis yang sama dengan versi yang dipakai bfb**: versi Bun dibaca dari `.bumrc`, versi paket dari `bun.lock` (saat ini Bun `bun-v1.3.9`, bunup `v0.16.32`, puppeteer `puppeteer-core-v24.43.1`, `puppeteer-extra@3.3.6`, `puppeteer-extra-plugin-stealth@2.11.2`). Versi, tag, dan commit tercatat di header tiap file. Jangan edit tangan; jalankan ulang `bun run docs` setiap kali versi naik.
+- `docs/` adalah mode offline dari dokumentasi resmi stack. Baca dari sana sebelum memakai API Bun, bunup, Puppeteer, atau puppeteer-extra, dan jangan mengarang API yang tidak ada di sana. Setiap file dibuat oleh `bun run docs` (`docs.ts`) dari repo resminya **pada tag rilis yang sama dengan versi yang dipakai bfb**: versi Bun dibaca dari `.bumrc`, versi paket dari `bun.lock` (saat ini Bun `bun-v1.4.2`, bunup `v0.16.32`, puppeteer `puppeteer-core-v24.43.1`, `puppeteer-extra@3.3.6`, `puppeteer-extra-plugin-stealth@2.11.2`). Versi, tag, dan commit tercatat di header tiap file. Jangan edit tangan; jalankan ulang `bun run docs` setiap kali versi naik.
 - Setiap server MCP gitmcp (MCP untuk dokumentasi resmi dari repo GitHub) punya pasangan satu file di `docs/`, dan sebaliknya: `bun` ↔ `docs/bun.md`, `bunup` ↔ `docs/bunup.md`, `puppeteer` ↔ `docs/puppeteer.md`, `puppeteer-extra` ↔ `docs/puppeteer-extra.md` (satu repo GitHub, jadi satu server dan satu file untuk `puppeteer-extra` dan stealth plugin-nya). Menambah atau menghapus salah satunya berarti menambah atau menghapus pasangannya, termasuk entri di `docs.ts`. Server MCP yang bukan gitmcp tidak butuh file docs. Catatan: gitmcp membaca branch default repo (versi terbaru), sedangkan `docs/` terkunci ke versi bfb; kalau keduanya berbeda, `docs/` yang benar.
 - Server MCP cukup diedit di `.mcp.json`; `.agents/mcp_config.json` adalah symlink ke file itu. Symlink hanya bisa karena semua server berbentuk stdio (`command` + `args`), satu-satunya skema yang sama di Claude dan Antigravity. Server remote dibungkus `bunx --bun mcp-remote@0.14.3 <url>` (versi di-pin, sama di README); jangan pakai `type`/`url` (Claude) atau `serverUrl` (Antigravity). `--bun` wajib, karena tanpa itu `mcp-remote` jalan di Node via asdf dan gagal kalau versi Node belum di-set.
 - `.agents/mcp_config.json` adalah jalur MCP per-proyek resmi untuk Antigravity, tapi sejak agy 1.1.3 file itu tidak dimuat karena bug ([google-antigravity/antigravity-cli#60](https://github.com/google-antigravity/antigravity-cli/issues/60)); diuji di 1.2.14 lewat `/mcp` dengan symlink, file biasa, dan format `serverUrl`, tidak ada yang muncul. Symlink tetap dipertahankan supaya langsung jalan begitu bug diperbaiki.
@@ -126,13 +126,14 @@ Siklus proyek, satu skill per tahap:
 - Sebelum mengetik password di halaman login, panggil `ensurePasswordFocus(page)`; password tidak boleh diketik ke kolom yang fokusnya tidak pasti.
 - Data sensitif (`cookies.json`, `token.bfb`) ditulis lewat `writeSecretFile()`: file temp baru `0600` (`wx`) lalu rename, jadi tidak pernah terbaca pihak lain walau sesaat; folder `0700`. File yang rusak dilaporkan sebagai error, tidak pernah ditimpa diam-diam.
 - Key `__proto__`, `constructor`, dan `prototype` ditolak sebagai UID atau header CSV (`isReservedKey()`).
+- `coverageThreshold` di `bunfig.toml` ditulis sebagai angka tunggal (`1.0`). Kalau ambang baris dan fungsi perlu dibedakan, kuncinya `lines`/`functions` (Bun 1.4+); `line`/`function` dari Bun 1.3 diabaikan tanpa peringatan, jadi ambangnya diam-diam mati. Setelah mengubah ambang atau menaikkan Bun, buktikan dengan menambah sementara fungsi tanpa test: `bun run test:coverage` harus exit 1.
 - `bunx` tidak ikut `[run] bun = true`; untuk menjalankan CLI ber-shebang Node di luar `bun run`, pakai `bunx --bun`.
 
 ## Versi & rilis
 
 - `bun run release` menjalankan `bumpp package.json src/utils/constant.ts`, jadi `VERSION` di `constant.ts` ikut naik bersama `package.json` dalam commit `chore: release vX.Y.Z` yang sama. Tidak perlu commit terpisah untuk `constant.ts`.
 - Push tag `v*` memicu `.github/workflows/release.yml` (type-check, lint, test, build, changelogithub, publish).
-- Publish ke npmjs sengaja tetap memakai `npm publish` di `release.yml` (satu-satunya tempat Node masih dipakai). npm memakai trusted publishing (OIDC) dengan provenance, terbukti di registry untuk 0.3.0–0.4.0, tanpa token tersimpan. `bun publish` 1.3.9 tidak mendukung OIDC, hanya `NPM_CONFIG_TOKEN`, jadi jangan dipindah ke Bun sampai Bun mendukungnya.
+- Publish ke npmjs sengaja tetap memakai `npm publish` di `release.yml` (satu-satunya tempat Node masih dipakai). npm memakai trusted publishing (OIDC) dengan provenance, terbukti di registry untuk 0.3.0–0.4.0, tanpa token tersimpan. `bun publish` (dicek sampai 1.4.2) tidak mendukung OIDC, hanya `NPM_CONFIG_TOKEN`, jadi jangan dipindah ke Bun sampai Bun mendukungnya.
 - `release.yml` dan `ci.yml` memakai action yang di-pin ke SHA commit (komentar menyebut versinya), Bun dari `.bumrc`, npm dan changelogithub versi pasti. Hanya job `release` yang punya `id-token: write`; changelog berjalan di job terpisah dengan `contents: write` saja. Saat menaikkan versi action atau tool, ganti SHA/versinya secara eksplisit, jangan kembali ke tag bergerak atau `latest`.
 - `DRIVER_VERSION` mengunci build Chrome; mengubahnya memaksa user memasang ulang driver (menu 96).
 
@@ -142,7 +143,7 @@ Format `type(scope): description` — huruf kecil, kalimat perintah, tanpa titik
 
 ## Testing
 
-Test ada di `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file system, beberapa modul dengan fake), `tests/endpoint/` (kontrak API aktivasi); nama file `NNN-nama.test.ts`, nomor mulai `001` di setiap folder. Satu file per modul atau kontrak; test baru memakai nomor berikutnya di foldernya. Alur browser di `core/` tidak bisa dites otomatis terhadap Facebook: logika keputusannya ada di `libs/` (`contentStatus`, `runBrowserRows`) dan dites dengan browser palsu. Test yang bergantung pada mode file POSIX di-skip di Windows. `hideQuestion` dites lewat stream palsu (parameter `stdin`/`stdout`), termasuk input yang datang sekaligus dalam satu potongan.
+Test ada di `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file system, beberapa modul dengan fake), `tests/endpoint/` (kontrak API aktivasi); nama file `NNN-nama.test.ts`, nomor mulai `001` di setiap folder. Satu file per modul atau kontrak; test baru memakai nomor berikutnya di foldernya. Alur browser di `core/` tidak bisa dites otomatis terhadap Facebook: logika keputusannya ada di `libs/` (`contentStatus`, `runBrowserRows`) dan dites dengan browser palsu. Test yang bergantung pada mode file POSIX di-skip di Windows. `hideQuestion` dites lewat stream palsu (parameter `stdin`/`stdout`), termasuk input yang datang sekaligus dalam satu potongan; Ctrl+C dites dengan `spyOn(process, 'exit')`. Exit code CLI dites dengan menjalankan `src/index.ts` lewat `Bun.spawn` (`integration/007-cli-entry`); test seperti itu tidak menambah angka coverage, karena coverage hanya menghitung file yang di-import proses test.
 
 ## Catatan
 
