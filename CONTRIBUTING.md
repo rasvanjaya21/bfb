@@ -6,14 +6,14 @@ Thank you for your interest in contributing to our project! This guide will help
 
 ### Prerequisites
 
-- Bun installed on your system
+- [Bun](https://bun.sh) 1.3.9 or newer (see `.bumrc`). Node is not needed; `bunfig.toml` runs every script on Bun.
 
 ### Getting Started
 
 1. Fork the repository
 2. Clone your fork: `git clone https://github.com/rasvanjaya21/bfb.git`
 3. Navigate to the project directory: `cd bfb`
-4. Install dependencies: `bun install`
+4. Install dependencies: `bun install` (also installs the pre-commit hook from `.githooks/`)
 5. Start development: `bun run dev`
 
 ## Development Workflow
@@ -21,15 +21,16 @@ Thank you for your interest in contributing to our project! This guide will help
 1. Create a new branch: `git checkout -b feature/your-feature-name`
 2. Make your changes
 3. Check code style and formatting: `bun run lint` and `bun run format`
-4. Run tests: `bun run test`
-5. Build the project: `bun run build`
-6. Commit your changes using the conventions below
-7. Push your branch to your fork
-8. Open a pull request
+4. Check types and imports: `bun run type-check` and `bun run check` (imports must use the `@/` alias)
+5. Run tests: `bun run test` (tests live in `tests/unit`, `tests/integration`, and `tests/endpoint`, named `NNN-name.test.ts`)
+6. Build the project: `bun run build`
+7. Commit your changes using the conventions below
+8. Push your branch to your fork
+9. Open a pull request
 
 ## Commit Message Conventions
 
-We follow [Conventional Commits](https://conventionalcommits.org/) for clear and structured commit messages:
+We follow [Conventional Commits](https://conventionalcommits.org/) in the form `type(scope): description`: lowercase, imperative, no trailing period, one line. Scopes follow the area you touched (`lib`, `core`, `command`, `package`, `config`, `test`, ...); see `AGENTS.md` for the full list.
 
 - `feat:` New features
 - `fix:` Bug fixes
