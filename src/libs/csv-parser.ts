@@ -1,60 +1,66 @@
+import { isReservedKey } from '@/libs/is-reserved-key';
 import fs from 'fs/promises';
+
+type Cell = { value: string; quoted: boolean };
+
+// Parses the whole text character by character, so separators and line breaks inside quotes stay part of the cell.
+function parseRows(text: string): string[][] {
+	const rows: string[][] = [];
+	let row: Cell[] = [];
+	let cell: Cell = { value: '', quoted: false };
+	let inQuotes = false;
+
+	const endCell = () => {
+		row.push(cell);
+		cell = { value: '', quoted: false };
+	};
+	const endRow = () => {
+		endCell();
+		rows.push(row.map((item) => (item.quoted ? item.value : item.value.trim())));
+		row = [];
+	};
+
+	for (let i = 0; i < text.length; i++) {
+		const char = text[i]!;
+
+		if (inQuotes) {
+			if (char === '"' && text[i + 1] === '"') {
+				cell.value += '"';
+				i++;
+			} else if (char === '"') {
+				inQuotes = false;
+			} else {
+				cell.value += char;
+			}
+		} else if (char === '"') {
+			inQuotes = true;
+			cell.quoted = true;
+		} else if (char === ';') {
+			endCell();
+		} else if (char === '\n' || char === '\r') {
+			if (char === '\r' && text[i + 1] === '\n') i++;
+			endRow();
+		} else {
+			cell.value += char;
+		}
+	}
+	endRow();
+
+	return rows.filter((cells) => cells.some((value) => value !== ''));
+}
 
 async function csvToJson<T>(csvPath: string): Promise<T[]> {
 	const raw = await fs.readFile(csvPath, 'utf-8');
+	const [header, ...rows] = parseRows(raw.replace(/^\uFEFF/, ''));
 
-	const lines = raw
-		.split(/\r?\n/)
-		.map((l) => l.trim())
-		.filter(Boolean);
+	if (!header) return [];
 
-	if (lines.length === 0) return [];
-
-	const parseLine = (line: string): string[] => {
-		const result: string[] = [];
-		let current = '';
-		let inQuotes = false;
-
-		for (let i = 0; i < line.length; i++) {
-			const char = line[i];
-
-			if (char === '"') {
-				if (inQuotes && line[i + 1] === '"') {
-					current += '"';
-					i++;
-				} else {
-					inQuotes = !inQuotes;
-				}
-			} else if (char === ';' && !inQuotes) {
-				result.push(current.trim());
-				current = '';
-			} else {
-				current += char;
-			}
-		}
-
-		result.push(current.trim());
-		return result;
-	};
-
-	const headerLine = lines[0];
-	if (!headerLine) return [];
-
-	const parsedHeader = parseLine(headerLine).filter(Boolean);
-	if (parsedHeader.length === 0) return [];
-
-	const header = parsedHeader as (keyof T)[];
-	const rows = lines.slice(1);
-
-	return rows.map((line) => {
-		const values = parseLine(line);
-		const obj = {} as T;
-
+	return rows.map((values) => {
+		const obj: Record<string, string> = {};
 		header.forEach((key, i) => {
-			(obj as any)[key] = values[i] ?? '';
+			if (key && !isReservedKey(key)) obj[key] = values[i] ?? '';
 		});
-
-		return obj;
+		return obj as T;
 	});
 }
 
