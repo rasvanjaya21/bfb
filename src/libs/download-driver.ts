@@ -1,7 +1,6 @@
 import { applyDelay } from '@/libs/apply-delay';
-import { resolvePlatform } from '@/libs/resolve-platform';
 import { DRIVER_VERSION } from '@/utils/constant';
-import { Browser, install } from '@puppeteer/browsers';
+import { Browser, detectBrowserPlatform, install } from '@puppeteer/browsers';
 import os from 'os';
 
 async function downloadDriver(): Promise<void> {
@@ -11,11 +10,19 @@ async function downloadDriver(): Promise<void> {
 	console.log('Proses instalasi driver\n');
 	await applyDelay(1000);
 
+	const platform = detectBrowserPlatform();
+	if (!platform) {
+		console.clear();
+		console.log(`Platform ${os.platform()} ${os.arch()} tidak didukung, instalasi driver gagal\n`);
+		await applyDelay(1000);
+		return;
+	}
+
 	try {
 		await install({
 			browser: Browser.CHROME,
 			buildId: DRIVER_VERSION,
-			platform: resolvePlatform(),
+			platform,
 			cacheDir: `${homeDir}/.cache`,
 		});
 
