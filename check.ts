@@ -1,43 +1,32 @@
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
-const ROOT = '.';
+// Only first-party code is checked: src/, tests/ and the scripts at the repo root.
+const ROOTS = ['src', 'tests'];
 
-function walk(dir: string, files: string[] = []) {
-	const entries = readdirSync(dir);
-
-	for (const entry of entries) {
+function walk(dir: string, files: string[] = []): string[] {
+	for (const entry of readdirSync(dir)) {
 		const full = join(dir, entry);
-
-		if (statSync(full).isDirectory()) {
-			if (['node_modules', 'dist'].includes(entry)) continue;
-			walk(full, files);
-		} else {
-			if (/\.(ts|tsx)$/.test(entry)) {
-				files.push(full);
-			}
-		}
+		if (statSync(full).isDirectory()) walk(full, files);
+		else if (/\.(ts|tsx)$/.test(entry)) files.push(full);
 	}
-
 	return files;
 }
 
-function hasRelativeImport(content: string) {
-	const regex = /from\s+['"](\.\/|\.\.\/)/g;
-	return regex.test(content);
+const transpiler = new Bun.Transpiler({ loader: 'tsx' });
+
+// Type-only imports are erased before Bun scans, so static import/export statements are also matched at the start of a line.
+const STATIC_RELATIVE_IMPORT = /^\s*(?:import|export)\b[^'"`;]*?\bfrom\s*['"]\.{1,2}(?:\/|['"])/m;
+
+// Bun parses the real imports (static, side-effect, dynamic, require), so text in comments and strings is ignored.
+function hasRelativeImport(content: string): boolean {
+	return transpiler.scanImports(content).some(({ path }) => path === '.' || path === '..' || path.startsWith('./') || path.startsWith('../')) || STATIC_RELATIVE_IMPORT.test(content);
 }
 
-function relativeImportChecker() {
-	const files = walk(ROOT);
-	const violators: string[] = [];
-
-	files.forEach((file) => {
-		const content = readFileSync(file, 'utf8');
-
-		if (hasRelativeImport(content)) {
-			violators.push(file);
-		}
-	});
+function relativeImportChecker(): void {
+	const rootScripts = readdirSync('.').filter((entry) => /\.(ts|tsx)$/.test(entry) && statSync(entry).isFile());
+	const files = [...rootScripts, ...ROOTS.filter((dir) => existsSync(dir)).flatMap((dir) => walk(dir))];
+	const violators = files.filter((file) => hasRelativeImport(readFileSync(file, 'utf8')));
 
 	console.log('1. relative import checker\n');
 
@@ -50,5 +39,9 @@ function relativeImportChecker() {
 	}
 }
 
-relativeImportChecker();
-console.log('\ncheck complete.');
+if (import.meta.main) {
+	relativeImportChecker();
+	console.log('\ncheck complete.');
+}
+
+export { hasRelativeImport };
