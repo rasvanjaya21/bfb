@@ -52,6 +52,25 @@ describe('csvToJson', () => {
 		expect(await parse('\uFEFF"NO";UID\n1;100')).toEqual([{ NO: '1', UID: '100' }]);
 	});
 
+	test('keeps a quote in the middle of a cell as text and does not swallow later rows', async () => {
+		expect(await parse('NO;CAPTION;TAG\n1;Layar 6" mantap;NO\n2;kedua;YES')).toEqual([
+			{ NO: '1', CAPTION: 'Layar 6" mantap', TAG: 'NO' },
+			{ NO: '2', CAPTION: 'kedua', TAG: 'YES' },
+		]);
+	});
+
+	test('opens a quoted cell after leading spaces', async () => {
+		expect(await parse('NO;CAPTION\n1; "a;b"')).toEqual([{ NO: '1', CAPTION: 'a;b' }]);
+	});
+
+	test('ignores spaces after a closing quote', async () => {
+		expect(await parse('NO;COOKIE\n1;"100" ')).toEqual([{ NO: '1', COOKIE: '100' }]);
+	});
+
+	test('rejects a quote that is never closed instead of merging the rest of the file', async () => {
+		await expect(parse('NO;CAPTION\n1;"hello\n2;world')).rejects.toThrow('tanda kutip');
+	});
+
 	test('fills missing trailing cells with an empty string', async () => {
 		expect(await parse('NO;UID;PASSWORD\n1;100')).toEqual([{ NO: '1', UID: '100', PASSWORD: '' }]);
 	});
