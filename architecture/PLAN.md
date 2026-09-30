@@ -55,12 +55,12 @@ commands/menu.ts ── createAuditLogger('MENU n') ─────────�
 
 ### Fase 2: Mencatat hasil menu
 
-- [ ] **Task 4: Aktivasi dan pasang driver mengembalikan hasilnya**
+- [x] **Task 4: Aktivasi dan pasang driver mengembalikan hasilnya**
     - Description: `activateBfb` dan `downloadDriver` mengembalikan `{ ok, message }` dengan pesan yang sama dengan di layar. Tampilan tidak berubah.
     - Acceptance: setiap cabang `activateBfb` (kosong, tidak valid, server error, berhasil, gagal disimpan) mengembalikan pesannya; token tidak pernah ada di `message`; cabang `downloadDriver` (platform tidak didukung, sudah terpasang, server error, berhasil) mengembalikan pesannya.
     - Verify: `bun run test:coverage`, `bun run type-check`; manual: pasang driver di folder temp (unduhan Chrome ±150 detik) sekali untuk cabang berhasil.
     - Dependencies: none. Files: `src/libs/activate-bfb.ts`, `src/libs/download-driver.ts`, `tests/integration/004-activate-bfb.test.ts`, `tests/integration/009-download-driver.test.ts` (unduhan dan platform dipalsukan). Scope: M.
-- [ ] **Task 5: Setiap pilihan menu tercatat**
+- [x] **Task 5: Setiap pilihan menu tercatat**
     - Description: `src/libs/describe-menu.ts` memetakan pilihan ke sumber dan nama aksi (`'97'` → `MENU 97` / `Aktifasi bfb`; input lain → `MENU ?` / `Input tidak valid`, tanpa nilainya). `menu.ts` mencatat awal sesi, dan untuk menu 0, 2, 3, 4, 96, 97, 98, 99, input tidak valid, dan menu terkunci mencatat tepat satu baris hasil. Error yang tertangkap `runTask` dicatat sebagai `gagal`. Menu 99 menunggu log tertulis sebelum `process.exit`.
     - Acceptance: success criterion 3 untuk semua menu kecuali 1 dan 95 (yang ditangani Task 7); teks, urutan layar, dan jeda 1 detik tidak berubah.
     - Verify: `bun run test:coverage`, `bun run type-check`, `bun run lint`; manual lewat build production di folder kerja temp: menu 0, 2, 98, 96 (sudah terpasang), input `abc`, menu 1 terkunci, 99, lalu cocokkan `logs/audit.log`. Menu 97 dicek manual oleh user (hindari request tambahan ke API aktivasi produksi).
@@ -68,8 +68,8 @@ commands/menu.ts ── createAuditLogger('MENU n') ─────────�
 
 ### Checkpoint: Menu sederhana
 
-- [ ] Semua pemeriksaan hijau, coverage 100%
-- [ ] `audit.log` dari smoke test manual cocok dengan tabel "Yang dicatat per menu" di spec (kecuali menu 1 dan 95)
+- [x] Semua pemeriksaan hijau, coverage 100%
+- [x] `audit.log` dari smoke test manual cocok dengan tabel "Yang dicatat per menu" di spec (kecuali menu 1 dan 95)
 - [ ] Review dengan user sebelum menyentuh runner browser
 
 ### Fase 3: Hasil per baris di menu 1 dan 95

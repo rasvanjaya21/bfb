@@ -26,9 +26,30 @@ Ditulis lewat `/bfb-build` pada 2026-10-01. Serah terima untuk task berikutnya d
 - `format`, `lint`, `type-check`, `check`, `test:coverage` (121 pass, 100%), `build` exit 0.
 - Build production di folder kosong, menu 0 lalu 99 lewat stdin: `datas/`, `credentials/`, `logs/` `700`; `logs/audit.log` `600`, 0 byte; `.gitignore` = `datas/`, `credentials/`, `logs/`.
 
+## Task 4: Aktivasi dan pasang driver mengembalikan hasilnya — selesai
+
+- **Diimplementasikan:** tipe `Outcome { ok, message }` di `src/types/global.ts`. `activateBfb` dan `downloadDriver` mengembalikannya dengan pesan yang sama seperti di layar (tanpa `\n`). `downloadDriver(detect?, installChrome?)` menerima fungsi deteksi platform dan instalasi, dengan default `@puppeteer/browsers`, supaya bisa dites tanpa mengunduh Chrome. Alur layar tidak berubah; pesan "sudah terpasang" sekarang dicetak setelah blok `try`. `runTask` di `menu.ts` menerima task dengan nilai kembalian apa pun (diperlukan agar type-check lolos).
+- **Dibuktikan oleh:** `tests/integration/004-activate-bfb.test.ts` (+2: semua hasil beserta pesannya dan tanpa token; gagal simpan) dan `tests/integration/009-download-driver.test.ts` (3 test baru: argumen `install` benar, gagal unduh tidak melempar, platform tidak didukung tidak mengunduh). Merah dulu, lalu 7 mutasi tertangkap (termasuk token dimasukkan ke pesan, `detect` bawaan dipakai, `cacheDir` salah). `download-driver.ts` sekarang ikut coverage (100%).
+- **Manual:** `downloadDriver()` sungguhan dengan `HOME` sementara mengunduh dan mengekstrak Chrome 147 dalam 191 detik dan mengembalikan `{ ok: true, message: "Chrome v147.0.7727.101 sudah terpasang" }`; folder sementara dihapus.
+
+## Task 5: Setiap pilihan menu tercatat — selesai
+
+- **Diimplementasikan:** `src/libs/describe-menu.ts` mengekspor `describeMenu(choice)` → `{ source, action }` dan `MENU_LABELS` (sebuah `Map`, supaya `__proto__`/`constructor` tidak pernah cocok). Input tidak valid menjadi `MENU ?` / `Input tidak valid` tanpa nilainya. `menu.ts`: baris `SESI` saat mulai; daftar menu dicetak dari `MENU_LABELS` (output identik); `runTask` menjadi `function runTask<T>` yang mengembalikan `{ value?, error? }`; helper `showAndLog`; menu 0, 2, 3, 4, 96, 97, 98, 99, input tidak valid, dan 1/95 terkunci masing-masing mencatat satu baris; menu 99 menunggu log sebelum `process.exit`. Menu 1/95 yang terbuka belum mencatat (Task 7).
+- **Dibuktikan oleh:** `tests/unit/009-describe-menu.test.ts` (2 test: semua label, tujuh input tidak valid termasuk password dan key prototype). Merah dulu, lalu 3 mutasi tertangkap. `menu.ts` tidak tercakup coverage; diverifikasi manual.
+- **Manual:** smoke test lewat stdin (2, `abc`, 1, 0, 0, 98, 1, 99) di folder kosong, dari `src/` dan dari build production. Layar dibandingkan dengan rekaman sebelum perubahan: identik kecuali path folder sementara. `audit.log` berisi 9 baris sesuai tabel spec. Menu 96 (driver sudah terpasang) tercatat `sudah siap`. Menu 97 tidak dicoba (tanpa request ke API aktivasi produksi); menunggu cek user.
+
+## Checkpoint: Menu sederhana — menunggu review user
+
+- `format`, `lint`, `type-check`, `check`, `test:coverage` (128 pass, 100%), `build` exit 0.
+- Belum: review user sebelum Fase 3 menyentuh `runBrowserRows`.
+
+## Noticed but not touching
+
+- `check.ts` mengurai semua file dengan `Bun.Transpiler({ loader: 'tsx' })`, sehingga arrow function generik `<T>(...) =>` di file `.ts` gagal diurai (terbaca sebagai JSX) dan `bun run check` serta pre-commit hook gagal. Ditemukan di Task 5 dan dihindari dengan deklarasi `function`. Perbaikan: pilih loader dari ekstensi file (`ts` untuk `.ts`).
+
 ## Berikutnya
 
-Task 4: `activateBfb` dan `downloadDriver` mengembalikan `{ ok, message }`.
+Setelah review: Task 6, `runBrowserRows` melaporkan setiap baris lewat `onRow(outcome, row)`.
 
 ---
 
