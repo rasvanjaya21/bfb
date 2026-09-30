@@ -11,6 +11,8 @@ Temuan yang masih terbuka — diperbarui 2026-09-30. Semua item di sini butuh ke
 
 ## ⚪ Low
 
+- [ ] **Audit log belum dicek di alur sungguhan** — menu 97 dengan token sungguhan (token tidak boleh muncul di `logs/audit.log`) dan menu 1/95 di akun sungguhan (baris per akun cocok dengan ringkasan layar). Menu 95 belum pernah dijalankan sama sekali dengan logger, bahkan headless, karena butuh login dan jawaban `y/N`.
+- [ ] **Layar menu masih menulis `Workspace project: datas/, credentials/`** — `src/commands/menu.ts`, tanpa `logs/`. Tidak diubah karena spec audit log melarang mengubah teks layar; putuskan apakah `logs/` ikut disebut.
 - [ ] **Backend membalas token salah dengan HTTP 500** (`{"state":false}`) untuk POST dan GET `/api/v1/check`. Client sudah memutuskan dari isi body; perbaikan ada di server (401/403).
 - [ ] **Deteksi cookie kedaluwarsa via `page.url().includes('next')`** — `src/core/cookie.ts:67`. Rapuh terhadap perubahan URL Facebook; perlu dicek di halaman login yang sekarang.
 - [ ] **`src/libs/asset-checker.ts` tidak dipakai** — putuskan dihapus, atau direncanakan (kemungkinan untuk validasi kolom `PATH` saat upload media; commit asalnya `ba5a8a1 feat(lib): add asset validation as non cwd`).
@@ -19,6 +21,7 @@ Temuan yang masih terbuka — diperbarui 2026-09-30. Semua item di sini butuh ke
 
 ## Tooling & CI
 
+- [ ] **`check.ts` mengurai file `.ts` sebagai TSX** — `Bun.Transpiler({ loader: 'tsx' })` di `check.ts:16`, sehingga arrow function generik `async <T>(...) =>` di file `.ts` gagal diurai (terbaca sebagai tag JSX) dan `bun run check` serta pre-commit hook gagal. Prettier menghapus koma di `<T,>`, jadi cara itu tidak bertahan. Sementara dihindari dengan deklarasi `function`. Perbaikan: pilih loader dari ekstensi file.
 - [ ] **Coverage 100% hanya mencakup 20 dari 31 file `src/`** — `bun test --coverage` hanya menghitung file yang di-import proses test. `src/index.ts` (dites lewat `Bun.spawn`), `commands/*`, `core/*`, `launch-browser.ts`, `check-driver.ts`, `download-driver.ts`, dan `asset-checker.ts` tidak muncul di laporan, jadi ambang 1.0 tidak berlaku untuknya. Pilihan untuk `index.ts`: pindahkan logikanya ke `src/libs/` yang mengembalikan exit code dan tes di proses test.
 - [ ] **`ci.yml` dan `release.yml` belum pernah jalan di GitHub Actions** — Bun 1.4.2 dari `.bumrc`, `coverageThreshold = 1.0`, test yang menjalankan CLI lewat `Bun.spawn` dan `process.stdin.emit` (belum pernah dicoba di macOS/Windows), action di-pin ke SHA, `test:coverage`, `bun publish --dry-run` (apakah butuh auth registry), job changelog terpisah. Baru terbukti setelah push/rilis berikutnya.
 - [ ] **Upgrade mayor belum dievaluasi** — `puppeteer-core` 25.x, `@puppeteer/browsers` 3.x, `chalk` 6.x, `bumpp` 12.x, dan `json-server` 1.0 (masih beta; hanya untuk `bun run mock`). Butuh satu siklus sendiri: baca changelog, `bun run docs`, tes Chrome ulang, dan idealnya satu run di akun uji.

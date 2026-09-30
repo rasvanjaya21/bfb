@@ -10,6 +10,7 @@ User menjalankan `bfb` di dalam folder kerja; semua data runtime dibaca dari / d
 - `datas/contents.csv` — `NO;COOKIE;ROUTE;TYPE;IDFANSPAGE;PATH;CAPTION;TAG;SCHEDULE`
 - `credentials/cookies.json` — `{ [uid]: CookieData[] }`
 - `credentials/token.bfb` — token aktivasi
+- `logs/audit.log` — audit log: satu baris per kejadian (`waktu ±offset | SUMBER | aksi | hasil | keterangan`), selalu di-append
 
 File CSV **dipisah titik koma** (`src/libs/csv-parser.ts`), dan header-nya harus cocok dengan interface di `src/types/global.ts`.
 
@@ -104,10 +105,11 @@ Siklus proyek, satu skill per tahap:
 
 ## Alur runtime
 
-1. `menu()` memperbarui status di setiap loop: `checkInit()` (file wajib ada), `checkDriver()` (Chrome `DRIVER_VERSION` ada di `~/.cache`), `checkActivation()` (token diverifikasi ke `https://bfb.blackfriday.my.id/api/v1/check`).
+1. `menu()` mencatat awal sesi ke `logs/audit.log`, lalu memperbarui status di setiap loop: `checkInit()` (file wajib ada), `checkDriver()` (Chrome `DRIVER_VERSION` ada di `~/.cache`), `checkActivation()` (token diverifikasi ke `https://bfb.blackfriday.my.id/api/v1/check`).
 2. Menu `0` → `initProject()`, `96` → `downloadDriver()`, `97` → `activateBfb()`. Menu `1` (Rawat facebook) dan `95` (Sinkronisasi cookies) terkunci sampai setup selesai.
 3. `core/*` membuka browser headful lewat `launchBrowser()` (`addExtra(puppeteerCore)` + `StealthPlugin`, gagal dengan `'Driver belum terpasang'` kalau driver tidak ada), lalu memproses baris CSV lewat `runBrowserRows()`: setiap baris berjalan di **browser context sendiri** yang ditutup setelah baris selesai, jadi cookie, localStorage, IndexedDB, dan service worker satu akun tidak pernah sampai ke baris berikutnya. Kalau context gagal ditutup, proses dihentikan. Context dan page baru dibuka saat task memanggil `openPage()`, setelah pemeriksaan awal lolos, sehingga baris yang ditolak tidak membuka page (dan tidak berlomba dengan stealth plugin yang sedang menyiapkan page). Cookie diset lewat `page.browserContext()`, bukan `browser`. Setelah semua baris, browser ditutup dan ringkasan (berhasil/dilewati/gagal) ditahan sampai user menekan Enter, lalu kembali ke menu.
-4. Error di satu baris dicatat lalu loop lanjut ke baris berikutnya; browser yang terputus (`browser.connected` false) menghentikan loop dan kembali ke menu; tab yang ditutup saja hanya menggagalkan baris itu. `core/*` tidak boleh memanggil `process.exit`. Kombinasi `ROUTE`/`TYPE` divalidasi oleh `contentStatus()` sebelum page dibuka; saat ini hanya `PERSONAL` + `POST` yang didukung, sisanya dilewati.
+4. Setiap pilihan menu (0–99, termasuk input tidak valid dan menu terkunci) menghasilkan satu baris hasil di `logs/audit.log`; menu 1 dan 95 menambahkan `mulai`, satu baris per konten/akun (`NO <no> UID <uid>`), dan `selesai`/`dihentikan` dengan ringkasan yang sama dengan layar. `logs/` dibuat otomatis (`0700`/`0600`, ditambahkan ke `.gitignore`) kalau belum ada, termasuk di folder kerja lama; `checkInit` tidak memeriksanya.
+5. Error di satu baris dicatat lalu loop lanjut ke baris berikutnya; browser yang terputus (`browser.connected` false) menghentikan loop dan kembali ke menu; tab yang ditutup saja hanya menggagalkan baris itu. `core/*` tidak boleh memanggil `process.exit`. Kombinasi `ROUTE`/`TYPE` divalidasi oleh `contentStatus()` sebelum page dibuka; saat ini hanya `PERSONAL` + `POST` yang didukung, sisanya dilewati.
 
 ## Konvensi kode
 
@@ -126,6 +128,8 @@ Siklus proyek, satu skill per tahap:
 - Sebelum mengetik password di halaman login, panggil `ensurePasswordFocus(page)`; password tidak boleh diketik ke kolom yang fokusnya tidak pasti.
 - Data sensitif (`cookies.json`, `token.bfb`) ditulis lewat `writeSecretFile()`: file temp baru `0600` (`wx`) lalu rename, jadi tidak pernah terbaca pihak lain walau sesaat; folder `0700`. File yang rusak dilaporkan sebagai error, tidak pernah ditimpa diam-diam.
 - Key `__proto__`, `constructor`, dan `prototype` ditolak sebagai UID atau header CSV (`isReservedKey()`).
+- **Audit log:** tulis lewat `createAuditLogger(source)` (`src/libs/write-audit-log.ts`); jangan menulis ke `logs/` langsung. Penulis tidak pernah melempar error: gagal tulis menampilkan satu peringatan lalu log mati sampai sesi berikutnya. **Tidak pernah dicatat:** password, token, isi cookie, caption, dan input mentah (input menu tidak valid dicatat tanpa nilainya, lewat `describeMenu`). `core/*` tidak tahu nomor menu: menu meneruskan logger yang sudah terikat ke sumbernya beserta nama aksinya (`facebook(log, action)`, `cookies(readline, log, action)`). Task dan fungsi menu yang hasilnya dicatat mengembalikan `Outcome { ok, message }` dengan pesan yang sama dengan layar.
+- `runBrowserRows(browser, rows, task, onRow)`: task mengembalikan teks alasan untuk baris yang dilewati, atau tidak mengembalikan apa-apa kalau berhasil; `onRow(outcome, row)` (boleh async, ditunggu) dipanggil sekali per baris, ditambah satu `failed` untuk context yang gagal ditutup. Hasil baris dipetakan ke kata log lewat `logRowOutcome`.
 - `coverageThreshold` di `bunfig.toml` ditulis sebagai angka tunggal (`1.0`). Kalau ambang baris dan fungsi perlu dibedakan, kuncinya `lines`/`functions` (Bun 1.4+); `line`/`function` dari Bun 1.3 diabaikan tanpa peringatan, jadi ambangnya diam-diam mati. Setelah mengubah ambang atau menaikkan Bun, buktikan dengan menambah sementara fungsi tanpa test: `bun run test:coverage` harus exit 1.
 - `bunx` tidak ikut `[run] bun = true`; untuk menjalankan CLI ber-shebang Node di luar `bun run`, pakai `bunx --bun`.
 
@@ -143,7 +147,7 @@ Format `type(scope): description` — huruf kecil, kalimat perintah, tanpa titik
 
 ## Testing
 
-Test ada di `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file system, beberapa modul dengan fake), `tests/endpoint/` (kontrak API aktivasi); nama file `NNN-nama.test.ts`, nomor mulai `001` di setiap folder. Satu file per modul atau kontrak; test baru memakai nomor berikutnya di foldernya. Alur browser di `core/` tidak bisa dites otomatis terhadap Facebook: logika keputusannya ada di `libs/` (`contentStatus`, `runBrowserRows`) dan dites dengan browser palsu. Test yang bergantung pada mode file POSIX di-skip di Windows. `hideQuestion` dites lewat stream palsu (parameter `stdin`/`stdout`), termasuk input yang datang sekaligus dalam satu potongan; Ctrl+C dites dengan `spyOn(process, 'exit')`. Exit code CLI dites dengan menjalankan `src/index.ts` lewat `Bun.spawn` (`integration/007-cli-entry`); test seperti itu tidak menambah angka coverage, karena coverage hanya menghitung file yang di-import proses test.
+Test ada di `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file system, beberapa modul dengan fake), `tests/endpoint/` (kontrak API aktivasi); nama file `NNN-nama.test.ts`, nomor mulai `001` di setiap folder. Satu file per modul atau kontrak; test baru memakai nomor berikutnya di foldernya. Alur browser di `core/` tidak bisa dites otomatis terhadap Facebook: logika keputusannya ada di `libs/` (`contentStatus`, `runBrowserRows`) dan dites dengan browser palsu. Test yang bergantung pada mode file POSIX di-skip di Windows. `bun test` berjalan dengan `TZ=UTC`, jadi test waktu menyuntikkan offset (`formatAuditLine(entry, offsetMinutes)`). Jangan menaruh file `*.test.ts` coba-coba di `temp/` atau folder lain di repo: `bun test` menemukannya dan ikut menjalankannya. `hideQuestion` dites lewat stream palsu (parameter `stdin`/`stdout`), termasuk input yang datang sekaligus dalam satu potongan; Ctrl+C dites dengan `spyOn(process, 'exit')`. Exit code CLI dites dengan menjalankan `src/index.ts` lewat `Bun.spawn` (`integration/007-cli-entry`); test seperti itu tidak menambah angka coverage, karena coverage hanya menghitung file yang di-import proses test.
 
 ## Catatan
 
