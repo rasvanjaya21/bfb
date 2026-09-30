@@ -7,6 +7,7 @@ import { checkDriver } from '@/libs/check-driver';
 import { checkInit } from '@/libs/check-init';
 import { downloadDriver } from '@/libs/download-driver';
 import { initProject } from '@/libs/init-project';
+import { isMenuLocked } from '@/libs/menu-access';
 import { MOTIVATIONS, VERSION } from '@/utils/constant';
 import chalk from 'chalk';
 import os from 'os';
@@ -15,12 +16,39 @@ import readline from 'readline/promises';
 
 async function menu(): Promise<void> {
 	const readlineInterface = readline.createInterface({ input, output });
+
+	// Every screen: pause input, clear, show, wait, clear, resume.
+	const showMessage = async (message: string): Promise<void> => {
+		readlineInterface.pause();
+		console.clear();
+		console.log(`${message}\n`);
+		await applyDelay(1000);
+		console.clear();
+		readlineInterface.resume();
+	};
+
+	// holdResult keeps a run's summary on screen until Enter, instead of clearing it straight away.
+	const runTask = async (title: string, task: () => Promise<void>, holdResult = false): Promise<void> => {
+		readlineInterface.pause();
+		console.clear();
+		console.log(`${title}\n`);
+		try {
+			await task();
+		} catch (error) {
+			console.log(chalk.red((error as Error)?.message ?? String(error)));
+			holdResult = true;
+		}
+		if (holdResult) await readlineInterface.question('Tekan Enter untuk kembali ke menu ');
+		console.clear();
+		readlineInterface.resume();
+	};
+
 	while (true) {
 		const cwd = process.cwd();
 		const platform = os.platform();
 		const arch = os.arch();
 		const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-		const isInitilized = await checkInit();
+		const isInitialized = await checkInit();
 		const isDriverInstalled = await checkDriver();
 		const isActivated = await checkActivation();
 
@@ -33,8 +61,8 @@ async function menu(): Promise<void> {
 		console.info(`Arsitektur sistem: ${chalk.dim(arch)}`);
 		console.info(`Timezone: ${chalk.dim(timezone)}`);
 		console.info(`Folder saat ini: ${chalk.dim(cwd)}`);
-		console.info(`Status init project: ${isInitilized ? chalk.dim(chalk.green('Siap')) : chalk.dim(chalk.red('Belum siap'))}`);
-		console.info(`Workspace project: ${chalk.dim(isInitilized ? 'datas/, credentials/' : '-')}`);
+		console.info(`Status init project: ${isInitialized ? chalk.dim(chalk.green('Siap')) : chalk.dim(chalk.red('Belum siap'))}`);
+		console.info(`Workspace project: ${chalk.dim(isInitialized ? 'datas/, credentials/' : '-')}`);
 		console.info(`Status driver: ${isDriverInstalled ? chalk.dim(chalk.green('Terpasang')) : chalk.dim(chalk.red('Belum terpasang'))}`);
 		console.info(`Lokasi driver: ${chalk.dim(isDriverInstalled ? isDriverInstalled.path : '-')}`);
 		console.info(`Status aktifasi: ${isActivated ? chalk.dim(chalk.green('Aktif')) : chalk.dim(chalk.red('Belum aktif'))}`);
@@ -54,92 +82,29 @@ async function menu(): Promise<void> {
 
 		const choice = await readlineInterface.question('Masukkan pilihan anda: ');
 
-		if (choice === '0' && !isInitilized) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Initialize project\n');
-			await applyDelay(1000);
-			await initProject();
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '0' && isInitilized) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Init project sudah siap, platform bisa digunakan\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '1' && (!isInitilized || !isDriverInstalled || !isActivated)) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Fitur masih terkunci, setup terlebih dahulu\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '1' && (isInitilized || isDriverInstalled || isActivated)) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Rawat facebook\n');
-			await facebook();
-			console.clear();
-			readlineInterface.resume();
-			continue;
-		} else if (choice === '2' || choice === '3' || choice === '4') {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Belum tersedia, stay tuned\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '95' && (!isInitilized || !isDriverInstalled || !isActivated)) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Fitur masih terkunci, setup terlebih dahulu\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '95' && (isInitilized || isDriverInstalled || isActivated)) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Sinkronisasi cookies\n');
-			await cookies(readlineInterface);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '96' && !isDriverInstalled) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Proses instalasi driver\n');
-			await downloadDriver();
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '96' && isDriverInstalled) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Driver sudah terpasang, platform siap digunakan\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '97' && !isActivated) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Proses aktifasi bfb\n');
-			await activateBfb();
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '97' && isActivated) {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Bfb sudah aktif, platform siap digunakan\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
-		} else if (choice === '98') {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Belum tersedia, stay tuned\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
+		const isLocked = isMenuLocked(choice, { isInitialized: Boolean(isInitialized), isDriverInstalled: Boolean(isDriverInstalled), isActivated });
+
+		if (choice === '0') {
+			if (isInitialized) await showMessage('Init project sudah siap, platform bisa digunakan');
+			else
+				await runTask('Initialize project', async () => {
+					await applyDelay(1000);
+					await initProject();
+				});
+		} else if (choice === '1') {
+			if (isLocked) await showMessage('Fitur masih terkunci, setup terlebih dahulu');
+			else await runTask('Rawat facebook', facebook, true);
+		} else if (choice === '2' || choice === '3' || choice === '4' || choice === '98') {
+			await showMessage('Belum tersedia, stay tuned');
+		} else if (choice === '95') {
+			if (isLocked) await showMessage('Fitur masih terkunci, setup terlebih dahulu');
+			else await runTask('Sinkronisasi cookies', () => cookies(readlineInterface), true);
+		} else if (choice === '96') {
+			if (isDriverInstalled) await showMessage('Driver sudah terpasang, platform siap digunakan');
+			else await runTask('Proses instalasi driver', downloadDriver);
+		} else if (choice === '97') {
+			if (isActivated) await showMessage('Bfb sudah aktif, platform siap digunakan');
+			else await runTask('Proses aktifasi bfb', activateBfb);
 		} else if (choice === '99') {
 			readlineInterface.close();
 			console.clear();
@@ -148,12 +113,7 @@ async function menu(): Promise<void> {
 			console.clear();
 			process.exit(0);
 		} else {
-			readlineInterface.pause();
-			console.clear();
-			console.log('Input tidak valid, coba lagi\n');
-			await applyDelay(1000);
-			console.clear();
-			readlineInterface.resume();
+			await showMessage('Input tidak valid, coba lagi');
 		}
 	}
 }
