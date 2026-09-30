@@ -1,10 +1,10 @@
 # Puppeteer documentation
 
-- Version: **puppeteer-core 24.41.0, @puppeteer/browsers 2.13.0**
-- Source: https://github.com/puppeteer/puppeteer/tree/puppeteer-core-v24.41.0/docs (commit `2d05dfc`)
+- Version: **puppeteer-core 24.43.1, @puppeteer/browsers 2.13.2**
+- Source: https://github.com/puppeteer/puppeteer/tree/puppeteer-core-v24.43.1/docs (commit `970bda6`)
 - Mirrored: 2026-09-30
 
-Guides first, then the full `puppeteer-core` API reference (`docs/api`) and the `@puppeteer/browsers` API (`docs/browsers-api`). `CHANGELOG.md` and `contributing.md` are left out. bfb installs `@puppeteer/browsers` 2.13.0; check that the tag ships the same version when either is bumped.
+Guides first, then the full `puppeteer-core` API reference (`docs/api`) and the `@puppeteer/browsers` API (`docs/browsers-api`). `CHANGELOG.md` and `contributing.md` are left out. bfb installs `@puppeteer/browsers` 2.13.2; check that the tag ships the same version when either is bumped.
 
 Complete official documentation for this exact version, mirrored for offline use. Not written by hand; regenerate it with `bun run docs` instead of editing it.
 
@@ -2239,7 +2239,21 @@ const browser = await puppeteer.launch({
 	enableExtensions: true,
 });
 
-await browser.installExtension(pathToExtension);
+const extensionId = await browser.installExtension(pathToExtension);
+```
+
+### Listing and uninstalling
+
+You can list all installed extensions and their properties using the `browser.extensions()` method. To uninstall an extension, use the `browser.uninstallExtension()` method.
+
+```ts
+const extensions = await browser.extensions();
+const extension = extensions.get(extensionId);
+
+console.log(extension?.name);
+console.log(extension?.version);
+
+await browser.uninstallExtension(extensionId);
 ```
 
 ## Background contexts
@@ -2313,11 +2327,54 @@ const popupPage = await popupTarget.asPage();
 await browser.close();
 ```
 
+## Triggering extension action
+
+You can trigger the default extension action for a page using the `page.triggerExtensionAction()` method. This will trigger the extension's action as if the user clicked the extension's button in the toolbar.
+
+```ts
+const extensions = await browser.extensions();
+const extension = extensions.get(extensionId);
+
+// You can trigger the action for a specific extension on a page.
+await page.triggerExtensionAction(extension);
+
+// Alternatively, you can trigger it from the extension object itself.
+await extension.triggerAction(page);
+
+// If the action opens a popup, you can then wait for the popup target.
+const popupTarget = await browser.waitForTarget((target) => target.type() === 'page' && target.url().includes(extensionId) && target.url().endsWith('popup.html'));
+```
+
 ## Content scripts
 
 Content scripts are injected as normal. Use `browser.newPage()` and `page.goto()` to navigate to a page where a content script will be injected.
 
-It is not currently possible to evaluate code in the content script isolated world.
+To evaluate code in the context of a content script, you can use the `page.extensionRealms()` method to find the realm associated with the extension and then use its `evaluate()` method.
+
+```ts
+// Get the extension ID
+const extensionId = await browser.installExtension(pathToExtension);
+
+// Find the extension realm.
+const realms = page.extensionRealms();
+let extensionRealm;
+for (const realm of realms) {
+	const extension = await realm.extension();
+	if (extension?.id === extensionId) {
+		extensionRealm = realm;
+		break;
+	}
+}
+
+if (!extensionRealm) {
+	throw new Error('Extension realm not found');
+}
+
+// Evaluate code in the content script context.
+const result = await extensionRealm.evaluate(() => {
+	return document.title;
+});
+```
 
 ## Learn more
 
@@ -3881,6 +3938,9 @@ If an exact matching version of Puppeteer isn't listed, the supported version of
 
 | Puppeteer                                                                                              | Chrome                                                                                     | Firefox                                                   |
 | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| [Puppeteer v24.43.1](https://github.com/puppeteer/puppeteer/blob/puppeteer-v24.43.1/docs/api/index.md) | [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) 148.0.7778.97  | [Firefox](https://www.mozilla.org/en-US/firefox/) 150.0.2 |
+| [Puppeteer v24.43.0](https://github.com/puppeteer/puppeteer/blob/puppeteer-v24.43.0/docs/api/index.md) | [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) 148.0.7778.97  | [Firefox](https://www.mozilla.org/en-US/firefox/) 150.0.1 |
+| [Puppeteer v24.42.0](https://github.com/puppeteer/puppeteer/blob/puppeteer-v24.42.0/docs/api/index.md) | [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) 147.0.7727.57  | [Firefox](https://www.mozilla.org/en-US/firefox/) 149.0.2 |
 | [Puppeteer v24.41.0](https://github.com/puppeteer/puppeteer/blob/puppeteer-v24.41.0/docs/api/index.md) | [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) 147.0.7727.56  | [Firefox](https://www.mozilla.org/en-US/firefox/) 149.0.2 |
 | [Puppeteer v24.40.0](https://github.com/puppeteer/puppeteer/blob/puppeteer-v24.40.0/docs/api/index.md) | [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) 146.0.7680.153 | [Firefox](https://www.mozilla.org/en-US/firefox/) 148.0.2 |
 | [Puppeteer v24.39.1](https://github.com/puppeteer/puppeteer/blob/puppeteer-v24.39.1/docs/api/index.md) | [Chrome for Testing](https://developer.chrome.com/blog/chrome-for-testing/) 146.0.7680.76  | [Firefox](https://www.mozilla.org/en-US/firefox/) 148.0.2 |
@@ -4886,6 +4946,15 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
+<span id="autofilladdressfield">[AutofillAddressField](./puppeteer.autofilladdressfield.md)</span>
+
+</td><td>
+
+Supported autofill address field names.
+
+</td></tr>
+<tr><td>
+
 <span id="browsercontextevent">[BrowserContextEvent](./puppeteer.browsercontextevent.md)</span>
 
 </td><td>
@@ -5003,13 +5072,6 @@ Description
 <tr><td>
 
 <span id="addscreenparams">[AddScreenParams](./puppeteer.addscreenparams.md)</span>
-
-</td><td>
-
-</td></tr>
-<tr><td>
-
-<span id="autofilldata">[AutofillData](./puppeteer.autofilldata.md)</span>
 
 </td><td>
 
@@ -5611,6 +5673,13 @@ Represents a Node and the properties of it that are relevant to Accessibility.
 </td></tr>
 <tr><td>
 
+<span id="setcontentwaitforoptions">[SetContentWaitForOptions](./puppeteer.setcontentwaitforoptions.md)</span>
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
 <span id="snapshotoptions">[SnapshotOptions](./puppeteer.snapshotoptions.md)</span>
 
 </td><td>
@@ -5846,6 +5915,13 @@ Description
 </td><td>
 
 Emulated bluetooth adapter state.
+
+</td></tr>
+<tr><td>
+
+<span id="autofilldata">[AutofillData](./puppeteer.autofilldata.md)</span>
+
+</td><td>
 
 </td></tr>
 <tr><td>
@@ -6656,57 +6732,230 @@ number
 </td></tr>
 </tbody></table>
 
-# AutofillData interface
+# AutofillAddressField enum
+
+Source: https://pptr.dev/api/puppeteer.autofilladdressfield
+
+Supported autofill address field names.
+
+### Signature
+
+```typescript
+export declare const enum AutofillAddressField
+```
+
+## Enumeration Members
+
+<table><thead><tr><th>
+
+Member
+
+</th><th>
+
+Value
+
+</th><th>
+
+Description
+
+</th></tr></thead>
+<tbody><tr><td>
+
+AddressHomeCity
+
+</td><td>
+
+`"ADDRESS_HOME_CITY"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+AddressHomeCountry
+
+</td><td>
+
+`"ADDRESS_HOME_COUNTRY"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+AddressHomeLine1
+
+</td><td>
+
+`"ADDRESS_HOME_LINE1"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+AddressHomeLine2
+
+</td><td>
+
+`"ADDRESS_HOME_LINE2"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+AddressHomeState
+
+</td><td>
+
+`"ADDRESS_HOME_STATE"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+AddressHomeStreetAddress
+
+</td><td>
+
+`"ADDRESS_HOME_STREET_ADDRESS"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+AddressHomeZip
+
+</td><td>
+
+`"ADDRESS_HOME_ZIP"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+EmailAddress
+
+</td><td>
+
+`"EMAIL_ADDRESS"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+NameFirst
+
+</td><td>
+
+`"NAME_FIRST"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+NameFull
+
+</td><td>
+
+`"NAME_FULL"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+NameLast
+
+</td><td>
+
+`"NAME_LAST"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+NameMiddle
+
+</td><td>
+
+`"NAME_MIDDLE"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+PhoneHomeCityAndNumber
+
+</td><td>
+
+`"PHONE_HOME_CITY_AND_NUMBER"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+PhoneHomeNumber
+
+</td><td>
+
+`"PHONE_HOME_NUMBER"`
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+PhoneHomeWholeNumber
+
+</td><td>
+
+`"PHONE_HOME_WHOLE_NUMBER"`
+
+</td><td>
+
+</td></tr>
+</tbody></table>
+
+# AutofillData type
 
 Source: https://pptr.dev/api/puppeteer.autofilldata
 
 ### Signature
 
 ```typescript
-export interface AutofillData
+export type AutofillData =
+	| {
+			creditCard: {
+				number: string;
+				name: string;
+				expiryMonth: string;
+				expiryYear: string;
+				cvc: string;
+			};
+			address?: never;
+	  }
+	| {
+			address: {
+				fields: Array<{
+					name: AutofillAddressField | (string & Record<never, never>);
+					value: string;
+				}>;
+			};
+			creditCard?: never;
+	  };
 ```
 
-## Properties
-
-<table><thead><tr><th>
-
-Property
-
-</th><th>
-
-Modifiers
-
-</th><th>
-
-Type
-
-</th><th>
-
-Description
-
-</th><th>
-
-Default
-
-</th></tr></thead>
-<tbody><tr><td>
-
-<span id="creditcard">creditCard</span>
-
-</td><td>
-
-</td><td>
-
-&#123; number: string; name: string; expiryMonth: string; expiryYear: string; cvc: string; &#125;
-
-</td><td>
-
-See [Autofill.CreditCard](https://chromedevtools.github.io/devtools-protocol/tot/Autofill/#type-CreditCard).
-
-</td><td>
-
-</td></tr>
-</tbody></table>
+**References:** [AutofillAddressField](./puppeteer.autofilladdressfield.md)
 
 # Awaitable type
 
@@ -12410,6 +12659,74 @@ Whether to ignore HTTPS errors during navigation.
 </td></tr>
 <tr><td>
 
+<span id="allowlist">allowlist</span>
+
+</td><td>
+
+`optional`
+
+</td><td>
+
+string\[\]
+
+</td><td>
+
+**_(Experimental)_** A list of URL patterns to allow.
+
+**Requires Chrome 149+.**
+
+This option allows you to restrict the browser from accessing any URLs except for those that match the patterns in the allowList. It uses the standard \[URLPattern\](https://urlpattern.spec.whatwg.org/) API to match URLs.
+
+When connecting to an existing browser, Puppeteer will silently detach from any already open targets that violate the patterns.
+
+For any network requests made by the browser (including navigations and subresources like images or scripts), the request will fail with an error if the URL does not match any pattern in the allowlist.
+
+**Remarks:**
+
+Currently only supported for CDP connections.
+
+Inner `<iframe>` content loading is currently not blocked.
+
+Cannot be used along with [ConnectOptions.blocklist](./puppeteer.connectoptions.md#blocklist).
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+<span id="blocklist">blocklist</span>
+
+</td><td>
+
+`optional`
+
+</td><td>
+
+string\[\]
+
+</td><td>
+
+**_(Experimental)_** A list of URL patterns to block.
+
+This option allows you to restrict the browser from accessing specific URLs or origins. It uses the standard \[URLPattern\](https://urlpattern.spec.whatwg.org/) API to match URLs.
+
+When connecting to an existing browser, Puppeteer will silently detach from any already open targets that violate the patterns.
+
+For any network requests made by the browser (including navigations and subresources like images or scripts), the request will fail with an error if the URL matches a blocked pattern.
+
+**Remarks:**
+
+Currently only supported for CDP connections.
+
+Inner `<iframe>` content loading is currently not blocked.
+
+Cannot be used along with [ConnectOptions.allowlist](./puppeteer.connectoptions.md#allowlist).
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
 <span id="browserurl">browserURL</span>
 
 </td><td>
@@ -15562,7 +15879,7 @@ export type ElementFor<TagName extends keyof HTMLElementTagNameMap | keyof SVGEl
 
 # ElementHandle.$() method
 
-Source: https://pptr.dev/api/puppeteer.elementhandle.\_
+Source: https://pptr.dev/api/puppeteer.elementhandle._
 
 Queries the current element for an element matching the given selector.
 
@@ -15612,7 +15929,7 @@ A [element handle](./puppeteer.elementhandle.md) to the first element matching t
 
 # ElementHandle.$$() method
 
-Source: https://pptr.dev/api/puppeteer.elementhandle.\_\_
+Source: https://pptr.dev/api/puppeteer.elementhandle.__
 
 Queries the current element for all elements matching the given selector.
 
@@ -18699,6 +19016,23 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
+<span id="enabled">enabled</span>
+
+</td><td>
+
+`readonly`
+
+</td><td>
+
+boolean
+
+</td><td>
+
+Whether the extension is enabled.
+
+</td></tr>
+<tr><td>
+
 <span id="id">id</span>
 
 </td><td>
@@ -18729,6 +19063,23 @@ string
 </td><td>
 
 The name of the extension as specified in its manifest.
+
+</td></tr>
+<tr><td>
+
+<span id="path">path</span>
+
+</td><td>
+
+`readonly`
+
+</td><td>
+
+string
+
+</td><td>
+
+The path in the file system where the extension is located.
 
 </td></tr>
 <tr><td>
@@ -19397,7 +19748,7 @@ export type FlattenHandle<T> = T extends HandleOr<infer U> ? U : never;
 
 # Frame.$() method
 
-Source: https://pptr.dev/api/puppeteer.frame.\_
+Source: https://pptr.dev/api/puppeteer.frame._
 
 Queries the frame for an element matching the given selector.
 
@@ -19447,7 +19798,7 @@ A [element handle](./puppeteer.elementhandle.md) to the first element matching t
 
 # Frame.$$() method
 
-Source: https://pptr.dev/api/puppeteer.frame.\_\_
+Source: https://pptr.dev/api/puppeteer.frame.__
 
 Queries the frame for all elements matching the given selector.
 
@@ -20209,6 +20560,8 @@ If:
 - the remote server does not respond or is unreachable.
 
 - the main resource failed to load.
+
+- the URL is blocked by blocklist/allowlist rules.
 
 ## Remarks
 
@@ -21071,7 +21424,7 @@ Set the content of the frame.
 
 ```typescript
 class Frame {
-	abstract setContent(html: string, options?: WaitForOptions): Promise<void>;
+	abstract setContent(html: string, options?: SetContentWaitForOptions): Promise<void>;
 }
 ```
 
@@ -21109,7 +21462,7 @@ options
 
 </td><td>
 
-[WaitForOptions](./puppeteer.waitforoptions.md)
+[SetContentWaitForOptions](./puppeteer.setcontentwaitforoptions.md)
 
 </td><td>
 
@@ -26458,13 +26811,13 @@ class Locator {
 
 Source: https://pptr.dev/api/puppeteer.locator.fill
 
-Fills out the input identified by the locator using the provided value. The type of the input is determined at runtime and the appropriate fill-out method is chosen based on the type. `contenteditable`, select, textarea and input elements are supported.
+Fills out the input identified by the locator using the provided value. The type of the input is determined at runtime and the appropriate fill-out method is chosen based on the type. `contenteditable`, select, textarea and input elements are supported. For checkboxes, radio buttons and switches specify a boolean value.
 
 ### Signature
 
 ```typescript
 class Locator {
-	fill<ElementType extends Element>(this: Locator<ElementType>, value: string, options?: Readonly<LocatorFillOptions>): Promise<void>;
+	fill<ElementType extends Element>(this: Locator<ElementType>, value: string | boolean, options?: Readonly<LocatorFillOptions>): Promise<void>;
 }
 ```
 
@@ -26500,7 +26853,7 @@ value
 
 </td><td>
 
-string
+string \| boolean
 
 </td><td>
 
@@ -26791,7 +27144,7 @@ Clones the locator.
 
 </td><td>
 
-Fills out the input identified by the locator using the provided value. The type of the input is determined at runtime and the appropriate fill-out method is chosen based on the type. `contenteditable`, select, textarea and input elements are supported.
+Fills out the input identified by the locator using the provided value. The type of the input is determined at runtime and the appropriate fill-out method is chosen based on the type. `contenteditable`, select, textarea and input elements are supported. For checkboxes, radio buttons and switches specify a boolean value.
 
 </td></tr>
 <tr><td>
@@ -29465,7 +29818,7 @@ y-offset for the clickable point relative to the top-left corner of the border b
 
 # Page.$() method
 
-Source: https://pptr.dev/api/puppeteer.page.\_
+Source: https://pptr.dev/api/puppeteer.page._
 
 Finds the first element that matches the selector. If no element matches the selector, the return value resolves to `null`.
 
@@ -29517,7 +29870,7 @@ Shortcut for [Page.mainFrame().$(selector)](./puppeteer.frame._.md).
 
 # Page.$$() method
 
-Source: https://pptr.dev/api/puppeteer.page.\_\_
+Source: https://pptr.dev/api/puppeteer.page.__
 
 Finds elements on the page that match the selector. If no elements match the selector, the return value resolves to `[]`.
 
@@ -32883,7 +33236,7 @@ All timestamps are in monotonic time: monotonically increasing time in seconds s
 
 </td><td>
 
-Opens DevTools for the current Page and returns the DevTools Page. This method is only available in Chrome.
+Opens DevTools for the this page if not already open and returns the DevTools page. This method is only available in Chrome.
 
 </td></tr>
 <tr><td>
@@ -33578,7 +33931,7 @@ All timestamps are in monotonic time: monotonically increasing time in seconds s
 
 Source: https://pptr.dev/api/puppeteer.page.opendevtools
 
-Opens DevTools for the current Page and returns the DevTools Page. This method is only available in Chrome.
+Opens DevTools for the this page if not already open and returns the DevTools page. This method is only available in Chrome.
 
 ### Signature
 
@@ -34320,7 +34673,7 @@ Set the content of the page.
 
 ```typescript
 class Page {
-	setContent(html: string, options?: WaitForOptions): Promise<void>;
+	setContent(html: string, options?: SetContentWaitForOptions): Promise<void>;
 }
 ```
 
@@ -34358,7 +34711,7 @@ options
 
 </td><td>
 
-[WaitForOptions](./puppeteer.waitforoptions.md)
+[SetContentWaitForOptions](./puppeteer.setcontentwaitforoptions.md)
 
 </td><td>
 
@@ -41064,6 +41417,64 @@ If the underlying DOM element has been disposed, the method might return an erro
 </td></tr>
 </tbody></table>
 
+# SetContentWaitForOptions interface
+
+Source: https://pptr.dev/api/puppeteer.setcontentwaitforoptions
+
+### Signature
+
+```typescript
+export interface SetContentWaitForOptions extends WaitForOptions
+```
+
+**Extends:** [WaitForOptions](./puppeteer.waitforoptions.md)
+
+## Properties
+
+<table><thead><tr><th>
+
+Property
+
+</th><th>
+
+Modifiers
+
+</th><th>
+
+Type
+
+</th><th>
+
+Description
+
+</th><th>
+
+Default
+
+</th></tr></thead>
+<tbody><tr><td>
+
+<span id="waituntil">waitUntil</span>
+
+</td><td>
+
+`optional`
+
+</td><td>
+
+Exclude&lt;[PuppeteerLifeCycleEvent](./puppeteer.puppeteerlifecycleevent.md), 'networkidle0' \| 'networkidle2'&gt; \| Array&lt;Exclude&lt;[PuppeteerLifeCycleEvent](./puppeteer.puppeteerlifecycleevent.md), 'networkidle0' \| 'networkidle2'&gt;&gt;
+
+</td><td>
+
+When to consider waiting succeeds. Given an array of event strings, waiting is considered to be successful after all events have been fired.
+
+</td><td>
+
+`'load'`
+
+</td></tr>
+</tbody></table>
+
 # SnapshotOptions interface
 
 Source: https://pptr.dev/api/puppeteer.snapshotoptions
@@ -43151,6 +43562,25 @@ boolean
 </td><td>
 
 A hint indicating that the tool does not modify any state.
+
+</td><td>
+
+</td></tr>
+<tr><td>
+
+<span id="untrustedcontent">untrustedContent</span>
+
+</td><td>
+
+`optional`
+
+</td><td>
+
+boolean
+
+</td><td>
+
+A hint indicating that the tool output may contain untrusted content, ex: UGC, 3rd party data.
 
 </td><td>
 

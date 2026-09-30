@@ -1,7 +1,7 @@
 # Bunup documentation
 
-- Version: **0.16.31**
-- Source: https://github.com/bunup/bunup/tree/v0.16.31/docs (commit `24c7a24`)
+- Version: **0.16.32**
+- Source: https://github.com/bunup/bunup/tree/v0.16.32/docs (commit `b904e3a`)
 - Mirrored: 2026-09-30
 
 Pages follow the sidebar order of `docs/.vitepress/config.mts`.
@@ -3664,9 +3664,7 @@ Add custom PostCSS plugins to extend processing.
 
 ```ts
 tailwindcss({
-	postcssPlugins: [
-		/* your PostCSS plugins */
-	],
+	postcssPlugins: [/* your PostCSS plugins */],
 });
 ```
 

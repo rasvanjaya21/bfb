@@ -261,7 +261,7 @@ bun --revision
           - For zsh: `~/.zshrc`
           - For fish: `~/.config/fish/config.fish`
         </Step>
-        
+
         <Step title="Add the Bun directory to PATH">
           Add this line to your configuration file:
           ```bash terminal icon="terminal"
@@ -269,7 +269,7 @@ bun --revision
           export PATH="$BUN_INSTALL/bin:$PATH"
           ```
         </Step>
-        
+
         <Step title="Reload your shell configuration">
           ```bash terminal icon="terminal"
           source ~/.bashrc  # or ~/.zshrc
@@ -733,7 +733,7 @@ Build a minimal HTTP server with `Bun.serve`, run it locally, then evolve it by 
 
 Bun can also execute `"scripts"` from your `package.json`. Add the following script:
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```json package.json icon="file-json"
 {
@@ -6344,7 +6344,7 @@ Bun.serve({
 
 Once the upgrade succeeds, Bun will send a `101 Switching Protocols` response per the [spec](https://developer.mozilla.org/en-US/docs/Web/HTTP/Protocol_upgrade_mechanism). Additional `headers` can be attached to this `Response` in the call to `server.upgrade()`.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```ts server.ts icon="/icons/typescript.svg"
 Bun.serve({
@@ -6558,9 +6558,7 @@ For convenience, Bun lets you setting custom headers directly in the constructor
 
 ```ts
 const socket = new WebSocket('ws://localhost:3000', {
-	headers: {
-		/* custom headers */
-	}, // [!code ++]
+	headers: {/* custom headers */}, // [!code ++]
 });
 ```
 
@@ -6742,9 +6740,7 @@ Bun.listen({
 The result of `Bun.listen` is a server that conforms to the `TCPSocket` interface.
 
 ```ts server.ts icon="/icons/typescript.svg"
-const server = Bun.listen({
-	/* config*/
-});
+const server = Bun.listen({/* config*/});
 
 // stop listening
 // parameter determines whether active connections are closed
@@ -6800,9 +6796,7 @@ Both TCP servers and sockets can be hot reloaded with new handlers.
 <CodeGroup>
 
 ```ts server.ts icon="/icons/typescript.svg"
-const server = Bun.listen({
-	/* config */
-});
+const server = Bun.listen({/* config */});
 
 // reloads handlers for all active server-side sockets
 server.reload({
@@ -6815,9 +6809,7 @@ server.reload({
 ```
 
 ```ts client.ts icon="/icons/typescript.svg"
-const socket = await Bun.connect({
-	/* config */
-});
+const socket = await Bun.connect({/* config */});
 
 socket.reload({
 	data() {
@@ -17427,7 +17419,7 @@ console.log(result);
 
 This replaces all images with a thumbnail of Rick Astley and wraps each `<img>` in a link, producing a diff like this:
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```html
 <html>
@@ -17770,9 +17762,7 @@ The `verify` function automatically detects the algorithm based on the input has
 ```ts
 const password = 'super-secure-pa$$word';
 
-const hash = await Bun.password.hash(password, {
-	/* config */
-});
+const hash = await Bun.password.hash(password, {/* config */});
 
 const isMatch = await Bun.password.verify(password, hash);
 // => true
@@ -17783,9 +17773,7 @@ Synchronous versions of all functions are also available. Keep in mind that thes
 ```ts
 const password = 'super-secure-pa$$word';
 
-const hash = Bun.password.hashSync(password, {
-	/* config */
-});
+const hash = Bun.password.hashSync(password, {/* config */});
 
 const isMatch = Bun.password.verifySync(password, hash);
 // => true
@@ -21375,7 +21363,7 @@ For more information on filtering with `bun install`, refer to [Package Manager 
 
 Bun supports npm's `"overrides"` and Yarn's `"resolutions"` in `package.json`. These are mechanisms for specifying a version range for _metadependencies_—the dependencies of your dependencies. Refer to [Package manager > Overrides and resolutions](/pm/overrides) for complete documentation.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```json package.json icon="file-json"
 {
@@ -25631,7 +25619,7 @@ Control metadependency versions with npm overrides and Yarn resolutions
 
 Bun supports npm's `"overrides"` and Yarn's `"resolutions"` in `package.json`. These are mechanisms for specifying a version range for _metadependencies_—the dependencies of your dependencies.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```json package.json icon="file-json"
 {
@@ -25678,7 +25666,7 @@ Add `bar` to the `"overrides"` field in `package.json`. Bun will defer to the sp
   overrides](https://docs.npmjs.com/cli/v9/configuring-npm/package-json#overrides) are not supported.
 </Note>
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```json package.json icon="file-json"
 {
@@ -25699,7 +25687,7 @@ The syntax is similar for `"resolutions"`, which is Yarn's alternative to `"over
 
 As with `"overrides"`, _nested resolutions_ are not currently supported.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```json package.json icon="file-json"
 {
@@ -26615,9 +26603,7 @@ A list of plugins to use during bundling.
 await Bun.build({
 	entrypoints: ['./index.tsx'],
 	outdir: './out',
-	plugins: [
-		/* ... */
-	],
+	plugins: [/* ... */],
 });
 ```
 
@@ -26674,11 +26660,12 @@ Inlines environment variables matching the given prefix (the part before the `*`
     await Bun.build({
       entrypoints: ['./index.tsx'],
       outdir: './out',
-      
+
       // Inline all env vars that start with "ACME_PUBLIC_"
       env: "ACME_PUBLIC_*",
     })
     ```
+
   </Tab>
   <Tab title="CLI">
     ```bash terminal icon="terminal"
@@ -27474,9 +27461,7 @@ interface BuildArtifact extends Blob {
 The `outputs` array contains all the files that were generated by the build. Each artifact implements the Blob interface.
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
-const build = await Bun.build({
-	/* */
-});
+const build = await Bun.build({/* */});
 
 for (const output of build.outputs) {
 	await output.arrayBuffer(); // => ArrayBuffer
@@ -27498,9 +27483,7 @@ Each artifact also contains the following properties:
 Similar to `BunFile`, `BuildArtifact` objects can be passed directly into `new Response()`.
 
 ```ts title="build.ts" icon="/icons/typescript.svg"
-const build = await Bun.build({
-	/* */
-});
+const build = await Bun.build({/* */});
 
 const artifact = build.outputs[0];
 
@@ -27514,9 +27497,7 @@ The Bun runtime implements special pretty-printing of `BuildArtifact` object to 
 
 ```ts build.ts icon="/icons/typescript.svg"
 // build.ts
-const build = await Bun.build({
-	/* */
-});
+const build = await Bun.build({/* */});
 
 const artifact = build.outputs[0];
 console.log(artifact);
@@ -29774,8 +29755,8 @@ All paths are resolved relative to your HTML file, making it easy to organize yo
 - Need more configuration options for things like asset handling
 - Need a way to configure CORS, headers, etc.
 
-{/_ todo: find the correct link to link to as this 404's and there isn't any similar files _/}
-{/_ If you want to submit a PR, most of the code is [here](https://github.com/oven-sh/bun/blob/main/src/bun.js/api/bun/html-rewriter.ts). You could even copy paste that file into your project and use it as a starting point. _/}
+{/* todo: find the correct link to link to as this 404's and there isn't any similar files _/}
+{/_ If you want to submit a PR, most of the code is [here](https://github.com/oven-sh/bun/blob/main/src/bun.js/api/bun/html-rewriter.ts). You could even copy paste that file into your project and use it as a starting point. */}
 
 </Warning>
 
@@ -35178,26 +35159,12 @@ The builder object provides some methods for hooking into parts of the bundling 
 const myPlugin: BunPlugin = {
 	name: 'my-plugin',
 	setup(builder) {
-		builder.onResolve(
-			{
-				/* onResolve.options */
-			},
-			(args) => {
-				return {
-					/* onResolve.results */
-				};
-			},
-		);
-		builder.onLoad(
-			{
-				/* onLoad.options */
-			},
-			(args) => {
-				return {
-					/* onLoad.results */
-				};
-			},
-		);
+		builder.onResolve({/* onResolve.options */}, (args) => {
+			return {/* onResolve.results */};
+		});
+		builder.onLoad({/* onLoad.options */}, (args) => {
+			return {/* onLoad.results */};
+		});
 	},
 };
 ```
@@ -35248,7 +35215,7 @@ const myPlugin: BunPlugin = {
 
   </Tab>
   <Tab title="arguments">
-  
+
     - 🟢 `path`
     - 🔴 `namespace`
     - 🔴 `suffix`
@@ -39653,10 +39620,12 @@ You can either follow this guide step-by-step or simply deploy the pre-configure
 
 <a
 href="https://railway.com/deploy/bun-react-postgres?referralCode=Bun&utm_medium=integration&utm_source=template&utm_campaign=bun"
-target="\_blank"
+target="_blank"
 
->   <img src="https://railway.com/button.svg" alt="Deploy on Railway" />
-> </a>
+>
+
+  <img src="https://railway.com/button.svg" alt="Deploy on Railway" />
+</a>
 
 ---
 
@@ -40992,7 +40961,7 @@ if (process.env.NODE_ENV === 'production') {
 
 Before the code reaches the JavaScript engine, Bun replaces `process.env.NODE_ENV` with `"production"`.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```ts
 if ('production' === 'production') {
@@ -41009,7 +40978,7 @@ It doesn't stop there. Bun's optimizing transpiler is smart enough to do some ba
 
 Since `"production" === "production"` is always `true`, Bun replaces the entire expression with the `true` value.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```ts
 if (true) {
@@ -45110,11 +45079,12 @@ Source: https://bun.com/docs/guides/ecosystem/upstash
 <Steps>
   <Step title="Create a new project">
     Create a new project by running `bun init`:
-    
+
     ```sh terminal icon="terminal"
     bun init bun-upstash-redis
     cd bun-upstash-redis
     ```
+
   </Step>
   <Step title="Create an Upstash Redis database">
     Go to the [Upstash dashboard](https://console.upstash.com/) and create a new Redis database. After completing the [getting started guide](https://upstash.com/docs/redis/overall/getstarted), you'll see your database page with connection information.
@@ -45291,13 +45261,13 @@ Bun detects when you are running an HTTP server with `Bun.serve()`. It reloads y
 <Note>
 Note that this doesn't reload the page on your browser.
 </Note>
- 
+
 ```ts index.ts icon="/icons/typescript.svg"
 Bun.serve({
-  port: 3000,
-  fetch(req) {
-    return new Response("Hello world");
-  },
+	port: 3000,
+	fetch(req) {
+		return new Response('Hello world');
+	},
 });
 ```
 
@@ -45560,7 +45530,7 @@ First we use the [`.formData()`](https://developer.mozilla.org/en-US/docs/Web/AP
 
 Finally, we write the `Blob` to disk using [`Bun.write()`](/runtime/file-io#writing-files-bun-write).
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```ts index.ts icon="/icons/typescript.svg"
 const server = Bun.serve({
@@ -46518,7 +46488,7 @@ This will add the package to `peerDependencies` in `package.json`.
 
 Running `bun install` will install peer dependencies by default, unless marked optional in `peerDependenciesMeta`.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```json package.json icon="file-json"
 {
@@ -47635,7 +47605,7 @@ const spy = spyOn(leo, 'sayHi');
 
 Once the spy is created, it can be used to write `expect` assertions relating to method calls.
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```ts
 const leo = {
@@ -48370,7 +48340,7 @@ GlobalRegistrator.register();
 
 ---
 
-We need to make sure this file is executed before any of our test files. That's a job for Bun's built-in [_preload_]() functionality. Create a `bunfig.toml` file in the root of your project (if it doesn't already exist) and add the following lines.
+We need to make sure this file is executed before any of our test files. That's a job for Bun's built-in [_preload_](<>) functionality. Create a `bunfig.toml` file in the root of your project (if it doesn't already exist) and add the following lines.
 
 The `./happydom.ts` file should contain the registration code above.
 
@@ -49379,7 +49349,7 @@ await extractLinks('https://bun.com');
 
 When scraping websites, you often want to convert relative URLs (like `/docs`) to absolute URLs. Here's how to handle URL resolution:
 
-{/_ prettier-ignore _/}
+{/* prettier-ignore */}
 
 ```ts extract-links.ts icon="/icons/typescript.svg"
 async function extractLinksFromURL(url: string) {
