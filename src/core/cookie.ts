@@ -1,5 +1,6 @@
 import { applyDelay } from '@/libs/apply-delay';
 import { csvToJson } from '@/libs/csv-parser';
+import { ensurePasswordFocus } from '@/libs/ensure-password-focus';
 import { formatDuration } from '@/libs/format-duration';
 import { launchBrowser } from '@/libs/launch-browser';
 import { readCookies } from '@/libs/read-cookies';
@@ -96,11 +97,13 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 		if (isCookiesExpired) {
 			const typePasswordSelector = 'text=Forgotten password?';
 			await page.locator(typePasswordSelector).wait();
+			await ensurePasswordFocus(page);
 			await page.keyboard.type(account.PASSWORD);
 		} else {
 			await page.keyboard.press('Tab');
 			await page.keyboard.type(account.UID);
 			await page.keyboard.press('Tab');
+			await ensurePasswordFocus(page);
 			await page.keyboard.type(account.PASSWORD);
 		}
 
