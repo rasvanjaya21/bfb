@@ -39,7 +39,7 @@
 		"dev": "bunup --watch",
 		"format": "prettier --write --ignore-path .gitignore .",
 		"lint": "oxlint",
-		"prepare": "bun simple-git-hooks",
+		"prepare": "git config core.hooksPath .githooks || true",
 		"release": "bumpp --commit --push --tag",
 		"test": "bun test",
 		"test:coverage": "bun test --coverage",
@@ -66,10 +66,6 @@
 		"json-server": "0.17.4",
 		"oxlint": "^1.60.0",
 		"prettier": "^3.8.3",
-		"prettier-plugin-organize-imports": "^4.3.0",
-		"simple-git-hooks": "^2.13.1"
-	},
-	"simple-git-hooks": {
-		"pre-commit": "bun run lint && bun run type-check && bun run check"
+		"prettier-plugin-organize-imports": "^4.3.0"
 	}
 }
