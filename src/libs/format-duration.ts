@@ -1,5 +1,5 @@
-function formatDuration(ms: number) {
-	const totalSeconds = Math.floor(ms / 1000);
+function formatDuration(ms: number): string {
+	const totalSeconds = Number.isFinite(ms) && ms > 0 ? Math.floor(ms / 1000) : 0;
 
 	const h = Math.floor(totalSeconds / 3600);
 	const m = Math.floor((totalSeconds % 3600) / 60);
