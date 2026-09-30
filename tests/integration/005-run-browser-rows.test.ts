@@ -4,15 +4,22 @@ import type { Browser, Page } from 'puppeteer-core';
 
 type FakeContext = { id: number; closed: boolean; jar: string[]; failClose: boolean };
 
-function fakeBrowser(options: { failCloseAt?: number } = {}) {
+function fakeBrowser(options: { failCloseAt?: number; failCreateAt?: number; failPageAt?: number } = {}) {
 	const contexts: FakeContext[] = [];
 	const browser = {
 		connected: true,
 		createBrowserContext: async () => {
+			if (contexts.length === options.failCreateAt) {
+				contexts.push({ id: contexts.length, closed: false, jar: [], failClose: false });
+				throw new Error('create failed');
+			}
 			const context: FakeContext = { id: contexts.length, closed: false, jar: [], failClose: contexts.length === options.failCloseAt };
 			contexts.push(context);
 			return {
-				newPage: async () => ({ context }) as unknown as Page,
+				newPage: async () => {
+					if (context.id === options.failPageAt) throw new Error('page failed');
+					return { context } as unknown as Page;
+				},
 				close: async () => {
 					if (context.failClose) throw new Error('close failed');
 					context.closed = true;
@@ -34,6 +41,7 @@ describe('runBrowserRows', () => {
 			context.jar.push(`session-${item}`);
 			seen.push([...context.jar]);
 		});
+		expect(seen.length).toBe(3);
 		expect(seen).toEqual([['session-a'], ['session-b'], ['session-c']]);
 		expect(fake.contexts.map((context) => context.id)).toEqual([0, 1, 2]);
 	});
@@ -98,10 +106,33 @@ describe('runBrowserRows', () => {
 
 	test('opens at most one context per row, however often the page is asked for', async () => {
 		const fake = fakeBrowser();
-		await runBrowserRows(fake.browser, [1], async (openPage) => {
-			expect(await openPage()).toBe(await openPage());
+		const pages: Page[] = [];
+		const result = await runBrowserRows(fake.browser, [1], async (openPage) => {
+			pages.push(await openPage(), await openPage());
 		});
+		expect(result.failed).toBe(0);
+		expect(pages[0]).toBe(pages[1]!);
 		expect(fake.contexts.length).toBe(1);
+	});
+
+	test('counts a row as failed and keeps going when its context cannot be created', async () => {
+		const fake = fakeBrowser({ failCreateAt: 0 });
+		const failures: string[] = [];
+		const result = await runBrowserRows(
+			fake.browser,
+			[1, 2],
+			async (openPage) => void (await openPage()),
+			(message) => failures.push(message),
+		);
+		expect(failures).toEqual(['create failed']);
+		expect(result).toEqual({ done: 1, skipped: 0, failed: 1, stopped: false });
+	});
+
+	test('closes the context when opening its page fails', async () => {
+		const fake = fakeBrowser({ failPageAt: 0 });
+		const result = await runBrowserRows(fake.browser, [1, 2], async (openPage) => void (await openPage()));
+		expect(fake.contexts[0]!.closed).toBe(true);
+		expect(result).toEqual({ done: 1, skipped: 0, failed: 1, stopped: false });
 	});
 
 	test('counts a row as skipped when the task returns false', async () => {

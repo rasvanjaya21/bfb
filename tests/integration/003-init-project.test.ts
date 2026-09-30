@@ -1,7 +1,7 @@
 import { checkInit } from '@/libs/check-init';
 import { initProject } from '@/libs/init-project';
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -27,6 +27,16 @@ describe('initProject', () => {
 		expect(await checkInit()).toBe(true);
 	});
 
+	test('checkInit fails again when any required file is removed', async () => {
+		await initProject();
+		for (const file of ['datas/accounts.csv', 'datas/contents.csv', 'credentials/cookies.json']) {
+			await rm(join(dir, file));
+			expect(await checkInit()).toBe(false);
+			await initProject();
+			expect(await checkInit()).toBe(true);
+		}
+	});
+
 	test('writes the CSV headers and an empty JSON cookie store', async () => {
 		await initProject();
 		expect(await readFile(join(dir, 'datas', 'accounts.csv'), 'utf-8')).toBe('NO;UID;PASSWORD');
@@ -42,6 +52,15 @@ describe('initProject', () => {
 		expect(await mode('datas/accounts.csv')).toBe(0o600);
 		expect(await mode('datas/contents.csv')).toBe(0o600);
 		expect(await mode('credentials/cookies.json')).toBe(0o600);
+	});
+
+	// Windows has no POSIX file modes.
+	test.skipIf(process.platform === 'win32')('tightens folders and files that already existed with looser modes', async () => {
+		await mkdir(join(dir, 'datas'), { mode: 0o755 });
+		await writeFile(join(dir, 'datas', 'accounts.csv'), 'NO;UID;PASSWORD', { mode: 0o644 });
+		await initProject();
+		expect(await mode('datas')).toBe(0o700);
+		expect(await mode('datas/accounts.csv')).toBe(0o600);
 	});
 
 	test('adds a .gitignore that keeps secrets out of git', async () => {
@@ -64,7 +83,11 @@ describe('initProject', () => {
 	test('never overwrites existing files', async () => {
 		await initProject();
 		await writeFile(join(dir, 'datas', 'accounts.csv'), 'NO;UID;PASSWORD\n1;100;secret');
+		await writeFile(join(dir, 'datas', 'contents.csv'), 'NO;COOKIE\n1;100');
+		await writeFile(join(dir, 'credentials', 'cookies.json'), '{"100":[]}');
 		await initProject();
 		expect(await readFile(join(dir, 'datas', 'accounts.csv'), 'utf-8')).toBe('NO;UID;PASSWORD\n1;100;secret');
+		expect(await readFile(join(dir, 'datas', 'contents.csv'), 'utf-8')).toBe('NO;COOKIE\n1;100');
+		expect(await readFile(join(dir, 'credentials', 'cookies.json'), 'utf-8')).toBe('{"100":[]}');
 	});
 });
