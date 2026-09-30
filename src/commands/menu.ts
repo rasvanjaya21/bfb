@@ -5,9 +5,11 @@ import { applyDelay } from '@/libs/apply-delay';
 import { checkActivation } from '@/libs/check-activation';
 import { checkDriver } from '@/libs/check-driver';
 import { checkInit } from '@/libs/check-init';
+import { describeMenu, MENU_LABELS } from '@/libs/describe-menu';
 import { downloadDriver } from '@/libs/download-driver';
 import { initProject } from '@/libs/init-project';
 import { isMenuLocked } from '@/libs/menu-access';
+import { createAuditLogger } from '@/libs/write-audit-log';
 import { MOTIVATIONS, VERSION } from '@/utils/constant';
 import chalk from 'chalk';
 import os from 'os';
@@ -28,20 +30,26 @@ async function menu(): Promise<void> {
 	};
 
 	// holdResult keeps a run's summary on screen until Enter, instead of clearing it straight away.
-	const runTask = async (title: string, task: () => Promise<unknown>, holdResult = false): Promise<void> => {
+	// Returns the task's value, or the message of the error it threw so the menu can record it.
+	async function runTask<T>(title: string, task: () => Promise<T>, holdResult = false): Promise<{ value?: T; error?: string }> {
 		readlineInterface.pause();
 		console.clear();
 		console.log(`${title}\n`);
+		let result: { value?: T; error?: string };
 		try {
-			await task();
+			result = { value: await task() };
 		} catch (error) {
-			console.log(chalk.red((error as Error)?.message ?? String(error)));
+			result = { error: (error as Error)?.message ?? String(error) };
+			console.log(chalk.red(result.error));
 			holdResult = true;
 		}
 		if (holdResult) await readlineInterface.question('Tekan Enter untuk kembali ke menu ');
 		console.clear();
 		readlineInterface.resume();
-	};
+		return result;
+	}
+
+	await createAuditLogger('SESI')(`bfb ${VERSION}`, 'mulai', `${os.platform()} ${os.arch()}`);
 
 	while (true) {
 		const cwd = process.cwd();
@@ -69,43 +77,52 @@ async function menu(): Promise<void> {
 		console.info(`Masa aktif: ${chalk.dim(isActivated ? 'Kiamat' : '-')}\n`);
 
 		console.log('Silakan pilih menu:\n');
-		console.log(' 0. Init project');
-		console.log(' 1. Rawat facebook');
-		console.log(' 2. Follow instagram');
-		console.log(' 3. Tap tiktok');
-		console.log(' 4. Racun shopee');
-		console.log('95. Sinkronisasi cookies');
-		console.log('96. Pasang driver');
-		console.log('97. Aktifasi bfb');
-		console.log('98. Pengaturan');
-		console.log('99. Keluar\n');
+		for (const [number, label] of MENU_LABELS) console.log(`${number.padStart(2)}. ${label}`);
+		console.log('');
 
 		const choice = await readlineInterface.question('Masukkan pilihan anda: ');
+		const { source, action } = describeMenu(choice);
+		const log = createAuditLogger(source);
 
 		const isLocked = isMenuLocked(choice, { isInitialized: Boolean(isInitialized), isDriverInstalled: Boolean(isDriverInstalled), isActivated });
 
+		// Shows a one-screen message and records it with the given result.
+		const showAndLog = async (message: string, result: 'sudah siap' | 'terkunci' | 'belum tersedia'): Promise<void> => {
+			await showMessage(message);
+			await log(action, result, message);
+		};
+
 		if (choice === '0') {
-			if (isInitialized) await showMessage('Init project sudah siap, platform bisa digunakan');
-			else
-				await runTask('Initialize project', async () => {
+			if (isInitialized) await showAndLog('Init project sudah siap, platform bisa digunakan', 'sudah siap');
+			else {
+				const { error } = await runTask('Initialize project', async () => {
 					await applyDelay(1000);
 					await initProject();
 				});
+				await log(action, error === undefined ? 'berhasil' : 'gagal', error);
+			}
 		} else if (choice === '1') {
-			if (isLocked) await showMessage('Fitur masih terkunci, setup terlebih dahulu');
+			if (isLocked) await showAndLog('Fitur masih terkunci, setup terlebih dahulu', 'terkunci');
 			else await runTask('Rawat facebook', facebook, true);
 		} else if (choice === '2' || choice === '3' || choice === '4' || choice === '98') {
-			await showMessage('Belum tersedia, stay tuned');
+			await showAndLog('Belum tersedia, stay tuned', 'belum tersedia');
 		} else if (choice === '95') {
-			if (isLocked) await showMessage('Fitur masih terkunci, setup terlebih dahulu');
+			if (isLocked) await showAndLog('Fitur masih terkunci, setup terlebih dahulu', 'terkunci');
 			else await runTask('Sinkronisasi cookies', () => cookies(readlineInterface), true);
 		} else if (choice === '96') {
-			if (isDriverInstalled) await showMessage('Driver sudah terpasang, platform siap digunakan');
-			else await runTask('Proses instalasi driver', downloadDriver);
+			if (isDriverInstalled) await showAndLog('Driver sudah terpasang, platform siap digunakan', 'sudah siap');
+			else {
+				const { value, error } = await runTask('Proses instalasi driver', () => downloadDriver());
+				await log(action, value?.ok ? 'berhasil' : 'gagal', value?.message ?? error);
+			}
 		} else if (choice === '97') {
-			if (isActivated) await showMessage('Bfb sudah aktif, platform siap digunakan');
-			else await runTask('Proses aktifasi bfb', activateBfb);
+			if (isActivated) await showAndLog('Bfb sudah aktif, platform siap digunakan', 'sudah siap');
+			else {
+				const { value, error } = await runTask('Proses aktifasi bfb', () => activateBfb());
+				await log(action, value?.ok ? 'berhasil' : 'gagal', value?.message ?? error);
+			}
 		} else if (choice === '99') {
+			await log(action, 'selesai');
 			readlineInterface.close();
 			console.clear();
 			console.log('Sampai jumpa\n');
@@ -114,6 +131,7 @@ async function menu(): Promise<void> {
 			process.exit(0);
 		} else {
 			await showMessage('Input tidak valid, coba lagi');
+			await log(action, 'gagal');
 		}
 	}
 }
