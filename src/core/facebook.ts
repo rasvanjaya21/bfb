@@ -10,7 +10,7 @@ import chalk from 'chalk';
 import path from 'path';
 import type { CookieData } from 'puppeteer-core';
 
-// How long Facebook gets to close the composer after Post before the row counts as not sent.
+// How long Facebook gets to enable the Post button, and to close the composer after Post before the row counts as not sent.
 const PUBLISH_TIMEOUT_MS = 30000;
 
 async function facebook(): Promise<void> {
@@ -115,9 +115,12 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<boolean> 
 		console.log('Tombol next tidak ditemukan');
 		console.log('Memvalidasi publish');
 
-		const postSelector = `xpath=//div[@role="button" and .//span[text()="Post"]]`;
+		// Wait until Facebook enables the Post button. The condition lives in the XPath, not in page.evaluate():
+		// the obfuscated build rewrites functions sent to the browser and they fail there with ReferenceError.
+		const postSelector = `xpath=//div[@role="button" and .//span[text()="Post"] and not(@aria-disabled="true")]`;
 		const postTrigger = await page
 			.locator(postSelector)
+			.setTimeout(PUBLISH_TIMEOUT_MS)
 			.waitHandle()
 			.catch(() => null);
 		if (!postTrigger) throw new Error('Publish tidak valid');
