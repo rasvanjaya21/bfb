@@ -1,19 +1,20 @@
 import { applyDelay } from '@/libs/apply-delay';
-import { checkDriver } from '@/libs/check-driver';
+import { contentStatus } from '@/libs/content-status';
 import { csvToJson } from '@/libs/csv-parser';
 import { formatDuration } from '@/libs/format-duration';
+import { launchBrowser } from '@/libs/launch-browser';
 import { readCookies } from '@/libs/read-cookies';
+import { runBrowserRows, type OpenPage } from '@/libs/run-browser-rows';
 import { type Content } from '@/types/global';
 import chalk from 'chalk';
-import puppeteerCore, { Browser, type CookieData } from 'puppeteer-core';
-import { addExtra } from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import path from 'path';
+import type { CookieData } from 'puppeteer-core';
 
-const cwd = process.cwd();
+// How long Facebook gets to close the composer after Post before the row counts as not sent.
+const PUBLISH_TIMEOUT_MS = 30000;
 
-export async function facebook(): Promise<void> {
-	const contentsPath = `${cwd}/datas/contents.csv`;
-	const contents = await csvToJson<Content>(contentsPath);
+async function facebook(): Promise<void> {
+	const contents = await csvToJson<Content>(path.join(process.cwd(), 'datas', 'contents.csv'));
 
 	if (contents.length === 0) {
 		console.clear();
@@ -24,207 +25,135 @@ export async function facebook(): Promise<void> {
 	}
 
 	const start = Date.now();
+	const browser = await launchBrowser();
 
-	const puppeteer = addExtra(puppeteerCore);
-	puppeteer.use(StealthPlugin());
-	const browserPath = await checkDriver();
-	const browser: Browser = await puppeteer.launch({ headless: false, args: ['--start-maximized'], defaultViewport: null, executablePath: browserPath!.executablePath });
-
-	for (const content of contents) await postFeed(browser, content);
-
-	const duration = Date.now() - start;
-
-	console.log('===============================');
-	console.log(`Estimasi durasi: ${formatDuration(duration)}`);
-	console.log('===============================\n');
-
-	process.exit(0);
-}
-
-async function postFeed(browser: Browser, content: Content): Promise<void> {
 	try {
-		console.log('===============================');
-		console.log(`Data konten nomor ${content.NO}`);
-
-		console.log('Mengecek rute upload');
-		if (!content.ROUTE || (content.ROUTE !== 'BM' && content.ROUTE !== 'PERSONAL')) {
-			throw new Error('Rute upload kosong/unsupported');
-		}
-		console.log(`Rute upload ${content.ROUTE.toLowerCase()}`);
-
-		const page = await browser.newPage();
-		const pages = await browser.pages();
-		const initialPage = pages[0];
-		await initialPage?.close();
-
-		// DEFAULT BFB
-		page.setDefaultTimeout(5000);
-
-		// DEFAULT PUPPETEER
-		page.setDefaultNavigationTimeout(30000);
-
-		console.log('Menginject cookies');
-		const cookiesPath = `${cwd}/credentials/cookies.json`;
-		const cookies = await readCookies<CookieData>(cookiesPath, content.COOKIE);
-		await browser.setCookie(...cookies);
-
-		console.log('Membuka facebook');
-		const link = content.ROUTE === 'BM' ? `https://business.facebook.com/latest/composer/?asset_id=${content.IDFANSPAGE}&ref=biz_web_home_create_post` : 'https://web.facebook.com/login.php?next=https://web.facebook.com/profile';
-		const pageOpener = await page.goto(link, { waitUntil: 'networkidle2' }).catch(() => null);
-		if (!pageOpener) {
-			await browser.deleteMatchingCookies(...cookies);
-			throw new Error('Facebook tidak terbuka');
-		}
-		console.log('Facebook terbuka');
-
-		console.log('Memvalidasi cookie');
-		const isInvalidCookies = page.url().includes('login');
-		if (isInvalidCookies) {
-			await browser.deleteMatchingCookies(...cookies);
-			throw new Error('Cookie tidak valid');
-		}
-		console.log('Cookie valid');
-
-		console.log('Mengecek tipe konten');
-		if (!content.TYPE || (content.TYPE !== 'POST' && content.TYPE !== 'FEED' && content.TYPE !== 'REEL' && content.TYPE !== 'STORY')) {
-			await browser.deleteMatchingCookies(...cookies);
-			throw new Error('Tipe konten kosong/unsupported');
-		}
-		console.log(`Tipe konten ${content.TYPE.toLowerCase()}`);
-
-		console.log('Mulai memposting konten');
-
-		// BM
-		if (content.ROUTE === 'BM' && content.TYPE === 'POST') {
-			console.log('Masih dalam tahap pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		if (content.ROUTE === 'BM' && content.TYPE === 'FEED') {
-			console.log('Masih dalam tahap pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		if (content.ROUTE === 'BM' && content.TYPE === 'REEL') {
-			console.log('Tipe konten photo dalam pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		if (content.ROUTE === 'BM' && content.TYPE === 'STORY') {
-			console.log('Masih dalam tahap pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		// PERSONAL
-		if (content.ROUTE === 'PERSONAL' && content.TYPE === 'POST') {
-			console.log('Mencari trigger caption');
-			const captionSelector = `xpath=//div[@role="button" and .//span[text()="What's on your mind?"]]`;
-			const captionTrigger = await page
-				.locator(captionSelector)
-				.waitHandle()
-				.catch(() => null);
-
-			if (!captionTrigger) {
-				await browser.deleteMatchingCookies(...cookies);
-				throw new Error('Trigger caption tidak ditemukan');
-			}
-			await captionTrigger.click();
-			console.log('Trigger caption ditemukan');
-
-			console.log('Menulis caption');
-			const createPostSelector = 'text=Add to your post';
-			await page.locator(createPostSelector).wait();
-			await page.keyboard.type(content.CAPTION + ' ');
-			await page.keyboard.press('Tab');
-
-			console.log('Mencari tombol next');
-			const nextPostSelector = 'text=Next';
-			const nextPostTrigger = await page
-				.locator(nextPostSelector)
-				.waitHandle()
-				.catch(() => null);
-
-			// WITHOUT NEXT CASE
-			if (!nextPostTrigger) {
-				console.log('Tombol next tidak ditemukan');
-				console.log('Memvalidasi publish');
-
-				const postSelector = `xpath=//div[@role="button" and .//span[text()="Post"]]`;
-				const postTrigger = await page
-					.locator(postSelector)
-					.waitHandle()
-					.catch(() => null);
-
-				if (!postTrigger) {
-					await browser.deleteMatchingCookies(...cookies);
-					throw new Error('Publish tidak valid');
-				}
-				await postTrigger.click();
-				console.log('Publish valid');
-			}
-
-			// WITH NEXT CASE
-			if (nextPostTrigger) {
-				await nextPostTrigger.click();
-				console.log('Tombol next ditemukan');
-
-				console.log('Memvalidasi publish');
-				const postPreviewSelector = 'text=Post preview';
-				const postPreviewTrigger = await page
-					.locator(postPreviewSelector)
-					.waitHandle()
-					.catch(() => null);
-
-				if (!postPreviewTrigger) {
-					await browser.deleteMatchingCookies(...cookies);
-					throw new Error('Publish tidak valid');
-				}
-				await postPreviewTrigger.click();
-				await page.keyboard.down('Shift');
-				await page.keyboard.press('Tab');
-				await page.keyboard.up('Shift');
-				await page.keyboard.press('Enter');
-				console.log('Publish valid');
-			}
-		}
-
-		if (content.ROUTE === 'PERSONAL' && content.TYPE === 'FEED') {
-			console.log('Masih dalam tahap pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		if (content.ROUTE === 'PERSONAL' && content.TYPE === 'REEL') {
-			console.log('Masih dalam tahap pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		if (content.ROUTE === 'PERSONAL' && content.TYPE === 'STORY') {
-			console.log('Masih dalam tahap pengembangan');
-			await browser.deleteMatchingCookies(...cookies);
-			return;
-		}
-
-		console.log(chalk.green('Selesai memposting konten'));
-		await browser.deleteMatchingCookies(...cookies);
-	} catch (error) {
-		const message = (error as Error).message;
-		if (message.includes('closed')) {
-			console.log('Koneksi tertutup');
+		const result = await runBrowserRows(browser, contents, postFeed, (message) => {
+			console.log(message.includes('closed') ? 'Koneksi tertutup' : message);
 			console.log(chalk.red('Gagal memposting konten'));
-			console.log('===============================\n');
-			process.exit(0);
-		}
+		});
 
-		console.log(message);
-		console.log(chalk.red('Gagal memposting konten'));
-		return;
+		console.log('===============================');
+		console.log(`Berhasil: ${result.done}, dilewati: ${result.skipped}, gagal: ${result.failed}`);
+		console.log(`Estimasi durasi: ${formatDuration(Date.now() - start)}`);
+		console.log('===============================\n');
+	} finally {
+		await browser.close().catch(() => {});
 	}
 }
 
-export { postFeed };
+async function postFeed(openPage: OpenPage, content: Content): Promise<boolean> {
+	console.log('===============================');
+	console.log(`Data konten nomor ${content.NO}`);
+
+	const status = contentStatus(content);
+
+	console.log('Mengecek rute upload');
+	if (status === 'unsupported-route') throw new Error('Rute upload kosong/unsupported');
+	console.log(`Rute upload ${content.ROUTE.toLowerCase()}`);
+
+	console.log('Mengecek tipe konten');
+	if (status === 'unsupported-type') throw new Error('Tipe konten kosong/unsupported');
+	console.log(`Tipe konten ${content.TYPE.toLowerCase()}`);
+
+	if (status === 'in-development') {
+		console.log('Masih dalam tahap pengembangan');
+		return false;
+	}
+
+	console.log('Menginject cookies');
+	const cookies = await readCookies<CookieData>(path.join(process.cwd(), 'credentials', 'cookies.json'), content.COOKIE);
+	if (cookies.length === 0) throw new Error('Cookie tidak ditemukan');
+
+	const page = await openPage();
+
+	// DEFAULT BFB
+	page.setDefaultTimeout(5000);
+
+	// DEFAULT PUPPETEER
+	page.setDefaultNavigationTimeout(30000);
+
+	await page.browserContext().setCookie(...cookies);
+
+	console.log('Membuka facebook');
+	const pageOpener = await page.goto('https://web.facebook.com/login.php?next=https://web.facebook.com/profile', { waitUntil: 'networkidle2' }).catch(() => null);
+	if (!pageOpener) throw new Error('Facebook tidak terbuka');
+	console.log('Facebook terbuka');
+
+	console.log('Memvalidasi cookie');
+	if (page.url().includes('login')) throw new Error('Cookie tidak valid');
+	console.log('Cookie valid');
+
+	console.log('Mulai memposting konten');
+
+	console.log('Mencari trigger caption');
+	const captionSelector = `xpath=//div[@role="button" and .//span[text()="What's on your mind?"]]`;
+	const captionTrigger = await page
+		.locator(captionSelector)
+		.waitHandle()
+		.catch(() => null);
+	if (!captionTrigger) throw new Error('Trigger caption tidak ditemukan');
+	await captionTrigger.click();
+	console.log('Trigger caption ditemukan');
+
+	console.log('Menulis caption');
+	const createPostSelector = 'text=Add to your post';
+	await page.locator(createPostSelector).wait();
+	await page.keyboard.type(content.CAPTION + ' ');
+	await page.keyboard.press('Tab');
+
+	console.log('Mencari tombol next');
+	const nextPostTrigger = await page
+		.locator('text=Next')
+		.waitHandle()
+		.catch(() => null);
+
+	const postPreviewSelector = 'text=Post preview';
+
+	// WITHOUT NEXT CASE
+	if (!nextPostTrigger) {
+		console.log('Tombol next tidak ditemukan');
+		console.log('Memvalidasi publish');
+
+		const postSelector = `xpath=//div[@role="button" and .//span[text()="Post"]]`;
+		const postTrigger = await page
+			.locator(postSelector)
+			.waitHandle()
+			.catch(() => null);
+		if (!postTrigger) throw new Error('Publish tidak valid');
+		await postTrigger.click();
+		console.log('Publish valid');
+	}
+
+	// WITH NEXT CASE
+	if (nextPostTrigger) {
+		await nextPostTrigger.click();
+		console.log('Tombol next ditemukan');
+
+		console.log('Memvalidasi publish');
+		const postPreviewTrigger = await page
+			.locator(postPreviewSelector)
+			.waitHandle()
+			.catch(() => null);
+		if (!postPreviewTrigger) throw new Error('Publish tidak valid');
+		await postPreviewTrigger.click();
+		await page.keyboard.down('Shift');
+		await page.keyboard.press('Tab');
+		await page.keyboard.up('Shift');
+		await page.keyboard.press('Enter');
+		console.log('Publish valid');
+	}
+
+	// A click is not a sent post: only count it once Facebook has closed the composer.
+	console.log('Menunggu postingan terkirim');
+	for (const selector of [createPostSelector, postPreviewSelector]) {
+		await page.waitForSelector(selector, { hidden: true, timeout: PUBLISH_TIMEOUT_MS }).catch(() => {
+			throw new Error('Postingan belum terkirim');
+		});
+	}
+
+	console.log(chalk.green('Selesai memposting konten'));
+	return true;
+}
+
+export { facebook, postFeed };
