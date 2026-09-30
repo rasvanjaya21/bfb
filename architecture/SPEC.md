@@ -164,7 +164,7 @@ Dari `TODO.md`, butuh keputusan user:
 
 # Spec fitur: audit log
 
-Ditulis lewat `/bfb-spec` pada 2026-10-01. **Status: dibangun (2026-10-01), lihat `architecture/BUILD.md`.** Belum diverifikasi: menu 97 dengan token sungguhan dan menu 1/95 di akun sungguhan (cek manual user).
+Ditulis lewat `/bfb-spec` pada 2026-10-01. **Status: dibangun dan diverifikasi user (2026-10-01), lihat `architecture/BUILD.md`.** Menu 1, 95, dan 97 dicek user di akun dan token sungguhan: token tidak muncul di `audit.log`, baris per akun cocok dengan ringkasan layar, dan jendela `about:blank` tidak lagi muncul.
 
 ## Objective
 
@@ -235,7 +235,7 @@ Error yang tidak tertangkap di dalam task (yang sekarang muncul merah lalu "Teka
 - **Folder kerja:** `logs/audit.log` baru. `checkInit()` tidak berubah (keputusan 2).
 - **Data sensitif:** log tidak pernah berisi password, token, cookie, atau caption (asumsi 3). UID tercatat, sehingga file dikunci `0600`.
 - **Menu (`src/commands/menu.ts`):** setiap cabang memanggil pencatat. Teks, urutan layar, dan jeda 1 detik tidak berubah.
-- **`core/*` dan `runBrowserRows`:** hasil per baris (berhasil / dilewati + alasan / gagal + pesan) harus sampai ke pencatat. Saat ini hanya kegagalan yang dilaporkan lewat `onFailure`.
+- **`core/*` dan `runBrowserRows`:** hasil per baris (berhasil / dilewati + alasan / gagal + pesan) harus sampai ke pencatat. Dibangun lewat `onRow(outcome, row)` di `runBrowserRows` (sebelumnya hanya kegagalan, lewat `onFailure`).
 
 ## Testing Strategy
 
