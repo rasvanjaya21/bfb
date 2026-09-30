@@ -37,12 +37,12 @@ commands/menu.ts ── createAuditLogger('MENU n') ─────────�
     - Acceptance: offset zona waktu benar (termasuk offset negatif dan non-jam penuh seperti +05:30, lewat `Date` dengan offset yang disuntikkan); `MENU 1 ` dan `MENU 97` rata dua karakter; baris baru → spasi dan `|` di dalam teks → `/`; tanpa `note` tidak ada `|` di akhir.
     - Verify: `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`.
     - Dependencies: none. Files: `src/libs/format-audit-line.ts`, `tests/unit/008-format-audit-line.test.ts`. Scope: S.
-- [ ] **Task 2: Penulis `logs/audit.log`**
+- [x] **Task 2: Penulis `logs/audit.log`**
     - Description: `src/libs/write-audit-log.ts` mengekspor `createAuditLogger(source)` yang mengembalikan `(action, result, note?) => Promise<void>`. Pindahkan `ignoreSecrets` dari `init-project.ts` ke `src/libs/ignore-secrets.ts` dan tambahkan `logs` ke daftar folder rahasia.
     - Acceptance: di folder tanpa `logs/`, baris pertama membuat `logs/` `0700` dan `audit.log` `0600`, dan `.gitignore` mendapat `logs/`; baris berikutnya ditambahkan di akhir tanpa menimpa; kalau file tidak bisa ditulis (mis. `logs` berupa file biasa), tidak ada error yang dilempar, satu peringatan tampil, dan baris berikutnya tidak mencoba lagi.
     - Verify: `bun run test:coverage` (termasuk `tests/integration/003-init-project.test.ts` yang tetap hijau setelah pemindahan), `bun run type-check`, `bun run check`.
     - Dependencies: Task 1. Files: `src/libs/write-audit-log.ts`, `src/libs/ignore-secrets.ts`, `src/libs/init-project.ts`, `tests/integration/008-write-audit-log.test.ts`. Scope: M.
-- [ ] **Task 3: Menu 0 membuat `logs/audit.log`**
+- [x] **Task 3: Menu 0 membuat `logs/audit.log`**
     - Description: `initProject` membuat `logs/` (`0700`) dan `audit.log` kosong (`0600`) di samping `datas/` dan `credentials/`, tanpa menimpa log yang sudah ada. `checkInit` tidak berubah.
     - Acceptance: success criterion 1 dan 2 di spec; `audit.log` yang sudah berisi tidak dikosongkan oleh init ulang; folder kerja yang sudah di-init tanpa `logs/` tetap "Siap".
     - Verify: `bun run test:coverage`, `bun run type-check`.
@@ -50,8 +50,8 @@ commands/menu.ts ── createAuditLogger('MENU n') ─────────�
 
 ### Checkpoint: Fondasi
 
-- [ ] `bun run format`, `lint`, `type-check`, `check`, `test:coverage` (100%), `build` hijau
-- [ ] Menu 0 di folder kosong lewat build production: `logs/audit.log` ada dengan mode yang benar
+- [x] `bun run format`, `lint`, `type-check`, `check`, `test:coverage` (100%), `build` hijau
+- [x] Menu 0 di folder kosong lewat build production: `logs/audit.log` ada dengan mode yang benar
 
 ### Fase 2: Mencatat hasil menu
 
