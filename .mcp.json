@@ -2,19 +2,19 @@
 	"mcpServers": {
 		"bun": {
 			"command": "bunx",
-			"args": ["--bun", "mcp-remote", "https://gitmcp.io/oven-sh/bun"]
+			"args": ["--bun", "mcp-remote@0.14.3", "https://gitmcp.io/oven-sh/bun"]
 		},
 		"bunup": {
 			"command": "bunx",
-			"args": ["--bun", "mcp-remote", "https://gitmcp.io/bunup/bunup"]
+			"args": ["--bun", "mcp-remote@0.14.3", "https://gitmcp.io/bunup/bunup"]
 		},
 		"puppeteer": {
 			"command": "bunx",
-			"args": ["--bun", "mcp-remote", "https://gitmcp.io/puppeteer/puppeteer"]
+			"args": ["--bun", "mcp-remote@0.14.3", "https://gitmcp.io/puppeteer/puppeteer"]
 		},
 		"puppeteer-extra": {
 			"command": "bunx",
-			"args": ["--bun", "mcp-remote", "https://gitmcp.io/berstend/puppeteer-extra"]
+			"args": ["--bun", "mcp-remote@0.14.3", "https://gitmcp.io/berstend/puppeteer-extra"]
 		}
 	}
 }
