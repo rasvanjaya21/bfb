@@ -9,7 +9,9 @@ async function launchBrowser(): Promise<Browser> {
 
 	const puppeteer = addExtra(puppeteerCore);
 	puppeteer.use(StealthPlugin());
-	return puppeteer.launch({ headless: false, args: ['--start-maximized'], defaultViewport: null, executablePath: driver.executablePath });
+	// No startup window: every row opens its own browser context (its own window) through runBrowserRows, so the
+	// about:blank window Chrome would open first is never used. Chrome stays alive between rows without it.
+	return puppeteer.launch({ headless: false, args: ['--start-maximized', '--no-startup-window'], waitForInitialPage: false, defaultViewport: null, executablePath: driver.executablePath });
 }
 
 export { launchBrowser };
