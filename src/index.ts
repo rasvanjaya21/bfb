@@ -11,6 +11,7 @@ async function index(): Promise<void> {
 	if (parsed.command === 'unknown') {
 		console.log(`Flag tidak dikenal: '${parsed.flag}'`);
 		console.log("Coba 'bfb help' untuk panduan pemakaian");
+		process.exitCode = 1;
 		return;
 	}
 
