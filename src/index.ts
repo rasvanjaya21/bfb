@@ -1,30 +1,23 @@
 import { showHelp } from '@/commands/help';
 import { menu } from '@/commands/menu';
 import { showVersion } from '@/commands/version';
+import { parseArgs } from '@/libs/parse-args';
 
 async function index(): Promise<void> {
-	const args = process.argv.slice(2);
-	const knownFlags = new Set(['--version', '--help', '-v', '-h']);
+	const parsed = parseArgs(process.argv.slice(2));
 
-	if (args.includes('version') || args.includes('--version') || args.includes('-v')) {
-		showVersion();
+	if (parsed.command === 'version') return showVersion();
+	if (parsed.command === 'help') return showHelp();
+	if (parsed.command === 'unknown') {
+		console.log(`Unknown flag: '${parsed.flag}'`);
+		console.log("Try 'bfb help' for usage information");
 		return;
-	}
-
-	if (args.includes('help') || args.includes('--help') || args.includes('-h')) {
-		showHelp();
-		return;
-	}
-
-	for (const arg of args) {
-		if (!knownFlags.has(arg)) {
-			console.log(`Unknown flag: '${arg}'`);
-			console.log("Try 'bfb help' for usage information");
-			return;
-		}
 	}
 
 	await menu();
 }
 
-index().catch(() => process.exit(1));
+index().catch((error) => {
+	console.error(`Terjadi kesalahan: ${(error as Error)?.message ?? error}`);
+	process.exit(1);
+});
