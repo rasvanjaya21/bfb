@@ -27,6 +27,7 @@ Untuk perbaikan bug, pola Prove-It:
 - Logika keputusan diletakkan di `src/libs/` supaya bisa dites. Pola yang sudah ada: folder temp + `process.chdir` untuk file (`init-project`, `cookies`), `fetch` palsu untuk API aktivasi, stream palsu untuk `hideQuestion`, dan browser palsu untuk `runBrowserRows`. Test yang bergantung pada mode file POSIX pakai `test.skipIf(process.platform === 'win32')`.
 - Alur browser di `src/core/` butuh Chrome dan akun sungguhan, jadi tidak bisa dites otomatis. Pindahkan logika keputusan ke `libs/` supaya bisa dites, dan tulis langkah cek manualnya.
 - `bunfig.toml` mewajibkan coverage 100% baris dan fungsi untuk setiap file yang di-import test. Kode baru di file yang sudah dites wajib ikut dites, termasuk cabang error; `process.exit` dan sejenisnya di-mock (`spyOn(process, 'exit')`). Coverage hanya menghitung file yang di-import di proses test, jadi test lewat `Bun.spawn` tidak menambah angka.
+- `bun test` selalu berjalan dengan `TZ=UTC`: test yang bergantung pada waktu lokal harus menyuntikkan offset. Harness atau percobaan sementara jangan diberi nama `*.test.ts` di dalam repo (termasuk `temp/`), karena `bun test` dan `test:coverage` ikut menjalankannya; hapus segera setelah dipakai.
 - Buktikan test-nya, bukan hanya perbaikannya: jalankan test regresi terhadap kode lama dan lihat gagal karena alasan yang benar.
 - `TODO.md` bagian "Testing" berisi daftar test yang sudah diprioritaskan dari audit.
 
