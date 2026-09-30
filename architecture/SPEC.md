@@ -37,7 +37,7 @@ Semua dibaca dari / ditulis ke `process.cwd()`. CSV dipisah **titik koma**, head
 | `credentials/token.bfb`    | token dari server aktivasi                                         | `0600`                                 |
 | `.gitignore`               | `datas/`, `credentials/` — dibuat, atau dilengkapi kalau sudah ada | default                                |
 
-Aturan CSV: sel dalam tanda kutip boleh berisi `;`, baris baru, dan `""`; spasi di dalam kutip dipertahankan; sel tanpa kutip di-trim; baris kosong atau `;;` dilewati; sel header kosong tidak menggeser kolom; header `__proto__`/`constructor`/`prototype` diabaikan.
+Aturan CSV: tanda kutip hanya membuka sel berkutip di awal sel (setelah spasi); di posisi lain kutip adalah teks biasa; kutip yang tidak ditutup adalah error. Sel dalam tanda kutip boleh berisi `;`, baris baru, dan `""`; spasi di dalam kutip dipertahankan; sel tanpa kutip di-trim; baris kosong atau `;;` dilewati; sel header kosong tidak menggeser kolom; header `__proto__`/`constructor`/`prototype` diabaikan.
 
 ## Fitur dan acceptance criteria
 
@@ -126,7 +126,7 @@ export { showResult };
 - Import selalu lewat alias `@/`; import relatif (termasuk `import type`, `import()`, `require()`) ditolak `check.ts`.
 - Named export di bawah file, return type eksplisit, tab, single quote, `printWidth` 300.
 - Teks untuk operator dalam Bahasa Indonesia, singkat. Log per baris dibungkus `===============================`, sukses `chalk.green`, gagal `chalk.red`.
-- Selector Puppeteer lewat locator `text=...`/`xpath=...`; `::-p-xpath()` tidak dipakai (gagal di Bun).
+- Selector Puppeteer lewat locator `text=...`/`xpath=...`; `::-p-xpath()` tidak dipakai (gagal di Bun). Tidak ada fungsi yang dikirim ke browser (`page.evaluate(fn)` dan sejenisnya): build ter-obfuscate merusaknya; kondisi seperti "tombol aktif" ditulis di XPath.
 
 ## Testing Strategy
 
@@ -156,5 +156,5 @@ Dari `TODO.md`, butuh keputusan user:
 2. Proteksi aktivasi: respons bertanda tangan, atau fungsi penting dipindah ke server?
 3. Backend: ubah status token salah dari 500 ke 401/403?
 4. Ambang coverage minimum berapa?
-5. `src/ignore/index.ts` dan `src/libs/asset-checker.ts`: hapus atau direncanakan?
+5. `src/libs/asset-checker.ts`: hapus atau direncanakan?
 6. Kapan deteksi "postingan terkirim" dan deteksi login (`includes('next')`) diverifikasi di akun sungguhan?
