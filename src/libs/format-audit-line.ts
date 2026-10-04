@@ -1,4 +1,4 @@
-type AuditResult = 'mulai' | 'berhasil' | 'dilewati' | 'gagal' | 'terkunci' | 'belum tersedia' | 'sudah siap' | 'selesai' | 'dihentikan';
+type AuditResult = 'mulai' | 'berhasil' | 'dilewati' | 'gagal' | 'terkunci' | 'belum tersedia' | 'sudah siap' | 'selesai' | 'dihentikan' | 'disetujui';
 type AuditEntry = { date: Date; source: string; action: string; result: AuditResult; note?: string };
 
 const pad = (value: number): string => String(value).padStart(2, '0');
