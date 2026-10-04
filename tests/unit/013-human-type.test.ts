@@ -44,4 +44,24 @@ describe('humanType', () => {
 		await humanType(mockPage, 'a b');
 		expect(recorded.join('')).toBe('a b');
 	});
+
+	test('returns true when the whole text is typed', async () => {
+		const recorded: string[] = [];
+		expect(await humanType(createMockPage(recorded), 'a b', { minDelay: 0, maxDelay: 0, spacePauseMin: 0, spacePauseMax: 0, interrupt: async () => false })).toBe(true);
+		expect(recorded.join('')).toBe('a b');
+	});
+
+	test('stops at the first word boundary where interrupt answers true and returns false', async () => {
+		const recorded: string[] = [];
+		let checks = 0;
+		const typed = await humanType(createMockPage(recorded), 'Halo, dunia ini!', {
+			minDelay: 0,
+			maxDelay: 0,
+			spacePauseMin: 0,
+			spacePauseMax: 0,
+			interrupt: async () => ++checks === 2,
+		});
+		expect(typed).toBe(false);
+		expect(recorded.join('')).toBe('Halo, ');
+	});
 });

@@ -27,6 +27,9 @@ describe('humanClick', () => {
 		} as unknown as Page;
 
 		const mockHandle = {
+			scrollIntoView: async () => {
+				calls.push('scroll');
+			},
 			boundingBox: async () => ({
 				x: 100,
 				y: 200,
@@ -40,7 +43,7 @@ describe('humanClick', () => {
 
 		await humanClick(mockPage, mockHandle);
 
-		expect(calls).toEqual(['move', 'down', 'up']);
+		expect(calls).toEqual(['scroll', 'move', 'down', 'up']);
 		expect(moveSteps).toBeGreaterThanOrEqual(5);
 		expect(moveSteps).toBeLessThanOrEqual(15);
 		expect(targetX).toBeGreaterThanOrEqual(120);
@@ -61,6 +64,9 @@ describe('humanClick', () => {
 		} as unknown as Page;
 
 		const mockHandle = {
+			scrollIntoView: async () => {
+				throw new Error('Node is detached from document');
+			},
 			boundingBox: async () => null,
 			click: async () => void calls.push('fallback-click'),
 		} as unknown as ElementHandle;
