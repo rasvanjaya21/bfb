@@ -1,6 +1,7 @@
 import { applyDelay } from '@/libs/apply-delay';
 import { csvToJson } from '@/libs/csv-parser';
 import { ensurePasswordFocus } from '@/libs/ensure-password-focus';
+import { facebookSelector } from '@/libs/facebook-selectors';
 import { formatDuration } from '@/libs/format-duration';
 import { launchBrowser } from '@/libs/launch-browser';
 import { logRowOutcome } from '@/libs/log-row-outcome';
@@ -84,10 +85,10 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 
 		if (isCookiesExpired) {
 			console.log('Cookie sudah kadaluarsa');
-			loginSelector = 'text=Continue';
+			loginSelector = facebookSelector('loginContinue');
 		} else {
 			console.log('Cookie tidak ditemukan');
-			loginSelector = 'text=Log in to Facebook';
+			loginSelector = facebookSelector('loginFresh');
 		}
 
 		console.log('Login manual');
@@ -106,7 +107,7 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 		}
 
 		if (isCookiesExpired) {
-			const typePasswordSelector = 'text=Forgotten password?';
+			const typePasswordSelector = facebookSelector('forgottenPassword');
 			await page.locator(typePasswordSelector).wait();
 			await ensurePasswordFocus(page);
 			await page.keyboard.type(account.PASSWORD);

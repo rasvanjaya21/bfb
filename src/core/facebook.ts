@@ -1,6 +1,7 @@
 import { applyDelay } from '@/libs/apply-delay';
 import { contentStatus } from '@/libs/content-status';
 import { csvToJson } from '@/libs/csv-parser';
+import { facebookSelector } from '@/libs/facebook-selectors';
 import { formatDuration } from '@/libs/format-duration';
 import { launchBrowser } from '@/libs/launch-browser';
 import { logRowOutcome } from '@/libs/log-row-outcome';
@@ -98,7 +99,7 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<string | 
 	console.log('Mulai memposting konten');
 
 	console.log('Mencari trigger caption');
-	const captionSelector = `xpath=//div[@role="button" and .//span[text()="What's on your mind?"]]`;
+	const captionSelector = facebookSelector('captionTrigger');
 	const captionTrigger = await page
 		.locator(captionSelector)
 		.waitHandle()
@@ -108,18 +109,18 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<string | 
 	console.log('Trigger caption ditemukan');
 
 	console.log('Menulis caption');
-	const createPostSelector = 'text=Add to your post';
+	const createPostSelector = facebookSelector('createPost');
 	await page.locator(createPostSelector).wait();
 	await page.keyboard.type(content.CAPTION + ' ');
 	await page.keyboard.press('Tab');
 
 	console.log('Mencari tombol next');
 	const nextPostTrigger = await page
-		.locator('text=Next')
+		.locator(facebookSelector('nextPost'))
 		.waitHandle()
 		.catch(() => null);
 
-	const postPreviewSelector = 'text=Post preview';
+	const postPreviewSelector = facebookSelector('postPreview');
 
 	// WITHOUT NEXT CASE
 	if (!nextPostTrigger) {
@@ -128,7 +129,7 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<string | 
 
 		// Wait until Facebook enables the Post button. The condition lives in the XPath, not in page.evaluate():
 		// the obfuscated build rewrites functions sent to the browser and they fail there with ReferenceError.
-		const postSelector = `xpath=//div[@role="button" and .//span[text()="Post"] and not(@aria-disabled="true")]`;
+		const postSelector = facebookSelector('publishPost');
 		const postTrigger = await page
 			.locator(postSelector)
 			.setTimeout(PUBLISH_TIMEOUT_MS)
