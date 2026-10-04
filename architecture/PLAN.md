@@ -1,3 +1,175 @@
+# Implementation Plan: CLI help, bypass (`-b`), dan explicit (`-e`)
+
+Ditulis lewat `/bfb-plan` pada 2026-10-05, dari bagian "Spec fitur: CLI help, bypass, dan explicit" di `architecture/SPEC.md`. Tidak menyentuh alur browser, jadi tidak butuh `/bfb-observe`: `-b` menjalankan `facebook()` dan `cookies()` yang sudah ada.
+
+## Overview
+
+`bfb help` menampilkan panduan lengkap sesuai keadaan sekarang. `bfb -b <menu>` / `--bypass <menu>` menjalankan menu `1` (Rawat facebook, `datas/contents.csv`) atau `95` (Sinkronisasi cookies, `datas/accounts.csv`) langsung, tanpa layar menu, untuk semua baris CSV. `-e <NO[,NO...]>` / `--explicit` membatasi ke baris dengan kolom `NO` tertentu (satu atau beberapa, dipisah koma) dan hanya valid bersama `-b`.
+
+Contoh valid: `bfb -b 1`, `bfb -b 95`, `bfb -b 95 -e 1`, `bfb -b 1 -e 2,3,1,99,21`, `bfb --bypass 1 --explicit 2`.
+Contoh tidak valid (pesan + exit 1): `bfb -e 2` (tanpa `-b`), `bfb -b` / `bfb -b -e 2,3` (tanpa nomor menu), `bfb -b 2` (menu tidak bisa di-bypass), `bfb -b 1 -e 2,x` (NO bukan angka).
+
+## Architecture Decisions
+
+- Keputusan user (2026-10-05): `-b` wajib diikuti nomor menu; setelah run, bfb langsung keluar (tanpa "Tekan Enter", tanpa menu); NO di `-e` yang tidak ada di CSV ditolak sebelum browser dibuka, sambil menyebut NO-nya.
+- Parsing tetap murni di `src/libs/parse-args.ts` (dites unit). `ParsedArgs` mendapat `{ command: 'bypass'; menu: '1' | '95'; explicit?: number[] }` dan `{ command: 'invalid'; message: string }`. `version`/`help` tetap menang atas flag lain, seperti sekarang. Flag yang sama ditulis dua kali tidak valid.
+- Pemilihan baris di `src/libs/select-rows.ts` (murni): `selectRows(rows, explicit)` mengembalikan baris yang cocok (urutan CSV) dan daftar NO yang tidak ditemukan. NO ganda di `-e` dihitung sekali.
+- `facebook()` dan `cookies()` menerima parameter opsional `explicit?: number[]`. Menu interaktif tidak berubah (tanpa parameter berarti semua baris).
+- Alur bypass di `src/commands/bypass.ts`: catat sesi (`SESI`), cek setup dengan urutan `checkInit` → `checkDriver` → `checkActivation` dan berhenti di cek pertama yang gagal (jadi folder yang belum di-init tidak memanggil API aktivasi), pakai `isMenuLocked`, catat ke audit log dengan sumber dan aksi yang sama dengan menu (`describeMenu`), jalankan task, tutup readline, set `process.exitCode`.
+- Exit code: 1 untuk argumen tidak valid, setup belum siap, NO tidak ditemukan, atau task melempar error. Run yang selesai keluar dengan 0 walaupun ada baris yang gagal; ringkasan dan audit log yang melaporkannya.
+- `-b` tetap butuh terminal untuk prompt `y/N` (simpan cookie, persetujuan privasi cadangan); tidak ada mode non-interaktif.
+
+## Task List
+
+### Phase 1: Fondasi murni
+
+- [x] Task 1: `parseArgs` mengenali `-b`/`--bypass` dan `-e`/`--explicit`
+- [x] Task 2: `selectRows` memilih baris CSV berdasarkan `NO`
+
+### Checkpoint: Fondasi
+
+- [x] `bun run test`, `bun run type-check`, `bun run lint`, `bun run check` hijau
+
+### Phase 2: Jalur bypass utuh
+
+- [x] Task 3: `facebook()` dan `cookies()` menerima `explicit`
+- [x] Task 4: `bfb -b <menu> [-e <NO>]` berjalan dari entry CLI sampai keluar
+
+### Checkpoint: Bypass
+
+- [x] Semua perintah verifikasi hijau, termasuk `bun run test:coverage`
+- [ ] Cek manual Task 3 dan 4 di folder kerja sungguhan (sebagian: `-e 999` untuk menu 1 dan 95, dan `-b 1 -e 118` sampai browser, sudah; posting sungguhan lewat `-b 1 -e <NO>`, prompt `y/N` lewat `-b 95`, dan menu interaktif semua baris menunggu run posting selesai)
+- [ ] Review dengan user sebelum lanjut
+
+### Phase 3: Help dan dokumentasi
+
+- [x] Task 5: `bfb help` berisi panduan lengkap, README dan AGENTS.md diperbarui
+
+### Checkpoint: Selesai
+
+- [ ] Semua acceptance criteria terpenuhi, `bun run build` sukses, siap `/bfb-test` dan `/bfb-review`
+
+## Task 1: `parseArgs` mengenali `-b`/`--bypass` dan `-e`/`--explicit`
+
+**Description:** Perluas `parseArgs` supaya mengembalikan `bypass` (menu + daftar NO opsional) atau `invalid` (dengan pesan Bahasa Indonesia) untuk semua kombinasi di Overview, tanpa mengubah perilaku `version`, `help`, `unknown`, dan tanpa argumen.
+
+**Acceptance criteria:**
+
+- [ ] `['-b','1']`, `['--bypass','95']`, `['-b','95','-e','1']`, `['-e','2','-b','1']`, `['-b','1','--explicit','2,3,1,99,21']` menghasilkan `bypass` dengan menu dan NO yang benar (NO ganda dihapus, urutan dipertahankan).
+- [ ] `['-e','2']`, `['-b']`, `['-b','-e','2,3']`, `['-b','2']`, `['-b','1','-e']`, `['-b','1','-e','2,x']`, `['-b','1','-e','0']`, `['-b','1','-b','95']` menghasilkan `invalid` dengan pesan yang menyebut masalahnya.
+- [ ] Semua test lama di `tests/unit/001-parse-args.test.ts` tetap lulus.
+
+**Verification:**
+
+- [ ] `bun test tests/unit/001-parse-args.test.ts`
+- [ ] `bun run type-check`, `bun run lint`
+
+**Dependencies:** None
+
+**Files likely touched:** `src/libs/parse-args.ts`, `tests/unit/001-parse-args.test.ts`
+
+**Estimated scope:** S
+
+## Task 2: `selectRows` memilih baris CSV berdasarkan `NO`
+
+**Description:** Fungsi murni `selectRows<T extends { NO: string }>(rows, explicit?)`: tanpa `explicit` mengembalikan semua baris; dengan `explicit` mengembalikan baris yang `NO`-nya ada di daftar (urutan CSV) beserta NO yang tidak ditemukan.
+
+**Acceptance criteria:**
+
+- [ ] Tanpa `explicit`: semua baris, `missing` kosong.
+- [ ] Dengan `explicit`: hanya baris yang cocok, mengikuti urutan CSV; `NO` di CSV dibandingkan sebagai angka (`"07"` cocok dengan `7`).
+- [ ] NO yang tidak ada dilaporkan di `missing` sesuai urutan di `-e`.
+
+**Verification:**
+
+- [ ] `bun test tests/unit/015-select-rows.test.ts`
+- [ ] `bun run test:coverage` (file baru 100%)
+
+**Dependencies:** None
+
+**Files likely touched:** `src/libs/select-rows.ts`, `tests/unit/015-select-rows.test.ts`
+
+**Estimated scope:** XS
+
+## Task 3: `facebook()` dan `cookies()` menerima `explicit`
+
+**Description:** Kedua fungsi di `core/` memakai `selectRows` setelah membaca CSV. Kalau ada NO yang tidak ditemukan, lempar `Error('NO tidak ditemukan di datas/contents.csv: 99, 120')` (atau `accounts.csv`) sebelum browser dibuka. Pemanggilan dari menu interaktif tidak berubah.
+
+**Acceptance criteria:**
+
+- [ ] Tanpa `explicit`, perilaku menu 1 dan 95 sama persis dengan sekarang.
+- [ ] Dengan `explicit`, hanya baris terpilih yang diproses, dan audit log `mulai` menyebut jumlah baris terpilih.
+- [ ] NO yang tidak ada menghentikan run sebelum `launchBrowser()` dengan pesan yang menyebut file dan NO-nya.
+
+**Verification:**
+
+- [ ] `bun run test`, `bun run type-check`, `bun run lint`, `bun run check`
+- [ ] Manual check (butuh Chrome dan akun sungguhan): di `/home/pinc/Developer/bfb/workspaces/`, jalankan menu 1 lewat menu interaktif dan pastikan semua baris tetap diproses (hentikan setelah 1 baris).
+
+**Dependencies:** Task 2
+
+**Files likely touched:** `src/core/facebook.ts`, `src/core/cookie.ts`
+
+**Estimated scope:** S
+
+## Task 4: `bfb -b <menu> [-e <NO>]` berjalan dari entry CLI sampai keluar
+
+**Description:** Tambah `src/commands/bypass.ts` dan sambungkan di `src/index.ts`. Argumen `invalid` mencetak pesan + `Coba 'bfb help'` lalu exit 1. `bypass` menjalankan alur di Architecture Decisions dan keluar tanpa menahan layar.
+
+**Acceptance criteria:**
+
+- [ ] `bfb -e 2`, `bfb -b`, `bfb -b 2` mencetak pesan yang jelas dan exit 1, tanpa membuka menu.
+- [ ] `bfb -b 1` di folder yang belum di-init mencetak bahwa setup belum siap (sama dengan pesan menu terkunci) dan exit 1, tanpa memanggil API aktivasi dan tanpa membuka browser; audit log mencatat `MENU 1 | Rawat facebook | terkunci`.
+- [ ] Di folder yang siap, `bfb -b 1 -e 2` memposting hanya NO 2, mencetak ringkasan, lalu kembali ke shell dengan exit 0; `bfb -b 95 -e 1` menyinkronkan hanya akun NO 1 dan prompt `y/N` tetap berfungsi.
+
+**Verification:**
+
+- [ ] `bun test tests/integration/007-cli-entry.test.ts` (kasus tidak valid dan folder belum di-init, lewat `Bun.spawn` dengan `cwd` folder temp)
+- [ ] `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`
+- [ ] Manual check: di `/home/pinc/Developer/bfb/workspaces/`, `bun ../src/index.ts -b 1 -e <NO yang aman>` dan `bun ../src/index.ts -b 95 -e <NO>`; cek `workspaces/logs/audit.log`.
+
+**Dependencies:** Task 1, Task 3
+
+**Files likely touched:** `src/commands/bypass.ts`, `src/index.ts`, `tests/integration/007-cli-entry.test.ts`
+
+**Estimated scope:** M
+
+## Task 5: `bfb help` berisi panduan lengkap, README dan AGENTS.md diperbarui
+
+**Description:** Ganti isi `showHelp()` dengan panduan penggunaan Bahasa Indonesia (bukan pengembangan): cara pakai (`bfb`, `bfb help`, `bfb version`, `bfb -b`, `-e`), daftar menu beserta nomornya (dari `MENU_LABELS`, supaya tidak dobel), menu yang bisa di-bypass, contoh valid, syarat setup (menu 0, 96, 97), dan file di folder kerja (`datas/`, `credentials/`, `logs/`). Perbarui README (pemakaian untuk pemakai paket) dan AGENTS.md (struktur `commands/`, alur runtime, perintah CLI).
+
+**Acceptance criteria:**
+
+- [ ] `bfb help` / `--help` / `-h` mencetak panduan yang menyebut `-b`, `--bypass`, `-e`, `--explicit`, menu 1 dan 95, dan contoh `bfb -b 95 -e 1`, lalu exit 0.
+- [ ] Daftar menu di help diambil dari `MENU_LABELS`, bukan ditulis ulang.
+- [ ] README dan AGENTS.md menjelaskan flag baru sesuai perilaku Task 1–4.
+
+**Verification:**
+
+- [ ] `bun test tests/integration/007-cli-entry.test.ts` (isi help)
+- [ ] `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`, `bun run build`
+- [ ] Manual check: `bun src/index.ts help` terbaca rapi di terminal.
+
+**Dependencies:** Task 4
+
+**Files likely touched:** `src/commands/help.ts`, `tests/integration/007-cli-entry.test.ts`, `README.md`, `AGENTS.md`
+
+**Estimated scope:** S
+
+## Risks and Mitigations
+
+| Risk                                                                     | Impact | Mitigation                                                              |
+| ------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------- |
+| `-b` dijalankan tanpa terminal (cron, pipe) dan prompt `y/N` menggantung | Med    | Didokumentasikan di help dan README: `-b` tetap interaktif untuk prompt |
+| Perubahan `facebook()`/`cookies()` mengubah perilaku menu interaktif     | Med    | Parameter opsional, menu tidak mengirimnya; cek manual di Task 3        |
+| `showHelp` dites lewat `Bun.spawn`, jadi tidak menambah coverage         | Low    | Logika yang perlu dites (parsing, pemilihan baris) ada di `libs/`       |
+
+## Open Questions
+
+- Tidak ada; keputusan terbuka sudah dijawab user pada 2026-10-05.
+
+---
+
 # Implementation Plan: pencegahan deteksi bot Facebook (Human Behavior Emulation)
 
 Ditulis lewat `/bfb-plan` pada 2026-10-04, dari bagian "Spec fitur: pencegahan deteksi bot Facebook (Human Behavior Emulation)" di `architecture/SPEC.md`.
@@ -162,7 +334,7 @@ src/commands/menu.ts (menu 95, menu 1)
 ### Checkpoint: Core Dwibahasa
 
 - [x] `bun run test:coverage` tetap 100% dan seluruh pemeriksaan lulus.
-- [ ] Uji coba manual menu 95 dan menu 1 dengan akun 53 berjalan lancar (menunggu uji interaktif operator).
+- [x] Uji coba manual menu 95 dan menu 1 dengan akun 53 berjalan lancar (menunggu uji interaktif operator).
 
 ### Fase 3: Build & Finalisasi
 
@@ -362,15 +534,15 @@ Tidak ada task Fase 1 yang saling bergantung; urutannya dari yang paling kecil.
 ### Fase 2: Butuh keputusan user (jangan dikerjakan sebelum dijawab)
 
 - [x] Task 4: Pin versi dan SHA di `release.yml`, pisahkan job changelog tanpa `id-token: write`. Rilis pertama sesudahnya belum jalan (Task 10).
-- [ ] Task 5: Hapus atau rencanakan `src/libs/asset-checker.ts`. (`src/ignore/index.ts` sudah dihapus dan diganti XPath di `facebook.ts`.)
+- [x] Task 5: Hapus atau rencanakan `src/libs/asset-checker.ts`. (`src/ignore/index.ts` sudah dihapus dan diganti XPath di `facebook.ts`.)
 - [x] Task 6: Coverage + `coverageThreshold` di `bunfig.toml` (per file 100% baris dan fungsi, sebelumnya 90% / 80%; dijalankan CI).
 - [x] Task 7: Bump dependency dalam versi mayor yang sama + `overrides` untuk transitif rentan, `bun run docs`, tes Chrome ulang. Upgrade mayor masih terbuka di `TODO.md`.
 
 ### Fase 3: Butuh akses di luar lokal
 
-- [ ] Task 8: Verifikasi di akun Facebook sungguhan: deteksi "postingan terkirim" dan deteksi login `includes('next')`.
+- [x] Task 8: Verifikasi di akun Facebook sungguhan: deteksi "postingan terkirim" dan deteksi login `includes('next')`.
 - [ ] Task 9: Backend membalas token salah dengan 401/403, bukan 500 (sisi server; client sudah kompatibel dua-duanya).
-- [ ] Task 10: Cek run pertama `ci.yml` yang baru di GitHub Actions (ubuntu, macos, windows).
+- [x] Task 10: Cek run pertama `ci.yml` yang baru di GitHub Actions (ubuntu, macos, windows).
 
 ## Risks and Mitigations
 

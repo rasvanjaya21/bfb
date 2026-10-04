@@ -1,3 +1,44 @@
+# Build log: CLI help, bypass (`-b`), dan explicit (`-e`)
+
+Ditulis lewat `/bfb-build auto` pada 2026-10-05. Serah terima untuk "Implementation Plan: CLI help, bypass (`-b`), dan explicit (`-e`)" di `architecture/PLAN.md` dan "Spec fitur: CLI help, bypass, dan explicit" di `architecture/SPEC.md`. Sesuai keputusan user, tidak ada commit per task; commit lewat `/bfb-commit`.
+
+## Task 1: `parseArgs` mengenali `-b`/`--bypass` dan `-e`/`--explicit` — selesai
+
+- **Diimplementasikan:** `src/libs/parse-args.ts` sekarang mengembalikan `bypass` (`menu: '1' | '95'`, `explicit?: number[]`) atau `invalid` (pesan Bahasa Indonesia), selain `menu`/`version`/`help`/`unknown`. Urutan flag bebas; nilai yang diawali `-` dianggap flag berikutnya; NO harus `^[1-9]\d*$`, NO ganda dibuang dengan urutan pertama dipertahankan; flag ganda tidak valid; `version`/`help` tetap menang. `--bypass=1` tetap dilaporkan sebagai flag tidak dikenal.
+- **Dibuktikan oleh:** `tests/unit/001-parse-args.test.ts` (14 test, 9 baru): semua baris valid dan tidak valid di tabel spec. Merah dulu (9 gagal), lalu hijau; 100% baris/fungsi.
+
+## Task 2: `selectRows` memilih baris CSV berdasarkan `NO` — selesai
+
+- **Diimplementasikan:** `src/libs/select-rows.ts`: `selectRows(rows, explicit?)` mengembalikan baris yang cocok (urutan CSV, `NO` dibandingkan sebagai angka) dan `missing` (urutan dari `-e`).
+- **Dibuktikan oleh:** `tests/unit/015-select-rows.test.ts` (4 test). Merah dulu (modul belum ada), lalu hijau; 100%.
+
+## Task 3: `facebook()` dan `cookies()` menerima `explicit` — selesai
+
+- **Diimplementasikan:** parameter opsional `explicit?: number[]` di `src/core/facebook.ts` dan `src/core/cookie.ts`. Setelah CSV dibaca, `selectRows` dipakai; NO yang tidak ada melempar `NO tidak ditemukan di datas/contents.csv: ...` (atau `accounts.csv`) sebelum `launchBrowser()`. Menu interaktif tidak mengirim parameter, jadi perilakunya tidak berubah.
+- **Dibuktikan oleh:** type-check dan seluruh suite; uji nyata di `/home/pinc/Developer/bfb/workspaces/`: `bun ../src/index.ts -b 1 -e 999` dan `-b 95 -e 2,999` berhenti dengan pesan itu, exit 1, tanpa membuka browser, dan tercatat `gagal` di audit log.
+- **Ditunda:** cek manual menu interaktif memproses semua baris; menunggu run posting `bfb-observe` selesai supaya tidak ada dua bot di akun yang sama.
+
+## Task 4: `bfb -b <menu> [-e <NO>]` berjalan dari entry CLI sampai keluar — selesai
+
+- **Diimplementasikan:** `src/commands/bypass.ts` (`bypass(menu, explicit)`): mencatat `SESI`, memeriksa init → driver → aktivasi dengan berhenti di syarat pertama yang gagal, `isMenuLocked`, audit log dengan sumber/aksi dari `describeMenu`, menjalankan `facebook()`/`cookies()` dengan readline sendiri lalu menutupnya, dan mengembalikan apakah run berjalan. `src/index.ts` mencetak pesan `invalid` + `Coba 'bfb help' ...` dengan exit 1, dan memberi exit 1 kalau `bypass` mengembalikan false.
+- **Dibuktikan oleh:** `tests/integration/007-cli-entry.test.ts`: argumen tidak valid (`-e 2`, `-b`, `-b 2`) exit 1 dengan pesannya; `-b 1 -e 2` di folder temp yang belum di-init mencetak "Fitur masih terkunci, setup terlebih dahulu", exit 1, dan audit log mencatat `SESI` serta `MENU 1 | Rawat facebook | terkunci`. Uji nyata: `xvfb-run bun ../src/index.ts -b 1 -e 118` (akun dengan sesi mati) membuka browser, berhenti dengan "Cookie tidak valid", mencetak ringkasan, dan kembali ke shell dengan exit 0. Build ter-obfuscate (`dist/index.js`) berperilaku sama untuk `help`, `-e 2`, dan `-b 1 -e 999`.
+- **Ditunda:** posting sungguhan lewat `-b 1 -e <NO>` dan prompt `Simpan cookie? (y/N)` lewat `-b 95 -e <NO>`; menunggu run posting selesai.
+
+## Task 5: `bfb help` berisi panduan lengkap, README dan AGENTS.md diperbarui — selesai
+
+- **Diimplementasikan:** `src/commands/help.ts` mencetak panduan penggunaan (bukan pengembangan): pemakaian, flag, menu yang bisa di-bypass dan CSV-nya, contoh, catatan prompt `y/N`, daftar menu dari `MENU_LABELS`, syarat setup, file di folder kerja. README (bagian Usage) dan AGENTS.md (struktur `commands/`, alur runtime langkah 6, signature `facebook`/`cookies` di bagian audit log) diperbarui.
+- **Dibuktikan oleh:** `tests/integration/007-cli-entry.test.ts` (`help`, `--help`, `-h`: exit 0, memuat flag, contoh, menu, file, `(y/N)`, dan tidak memuat `bun run`).
+
+## Verifikasi akhir
+
+`bun run test:coverage` 189 pass, 0 fail (exit 0); `bun run type-check`, `bun run lint`, `bun run check` bersih; `bun run format` dijalankan; `bun run build` sukses.
+
+## Di luar task
+
+- Atas permintaan user, baris `logs/` yang tertambah otomatis di `.gitignore` (bfb sempat dijalankan di root repo) dihapus; `.gitignore` kembali sama dengan commit terakhir.
+
+---
+
 # Build log: pencegahan deteksi bot Facebook (Human Behavior Emulation)
 
 Ditulis lewat `/bfb-build auto` pada 2026-10-04. Serah terima untuk task berikutnya di `architecture/PLAN.md` ("Implementation Plan: pencegahan deteksi bot Facebook"). Belum di-commit; commit lewat `/bfb-commit`.

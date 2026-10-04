@@ -1,68 +1,82 @@
-# Ship decision: Human Behavior Emulation
+# Ship
 
-Ditulis lewat `/bfb-ship` pada 2026-10-04. Tiga spesialis dievaluasi: `code-reviewer`, `security-auditor`, `test-engineer`. Tidak ada push, tag, atau `bun run release` tanpa persetujuan eksplisit user.
+Ditulis lewat `/bfb-ship` pada 2026-10-05 untuk perubahan yang belum di-commit sejak `8666fe3` (fix alur posting dari run 180 konten, skill `bfb-observe`, fitur CLI `help`/`-b`/`-e`), di atas 16 commit lokal yang belum di-push sejak `v0.5.2` (`4938a24`). Tiga spesialis berjalan paralel: `code-reviewer`, `security-auditor`, `test-engineer`.
 
-## Ship Decision: **GO**
+## Keputusan: **NO-GO**
 
-Seluruh kriteria rilis dan checklist pra-launch terpenuhi. Tidak ada blocker keamanan atau kualitas kode. Perubahan siap untuk tahap berikutnya (`/bfb-prepare` lalu `/bfb-commit`).
+Kode lulus semua gerbang lokal, tapi belum bisa dirilis: ada empat blocker dan belum ada CI untuk satu pun dari perubahan ini.
 
----
+## Gerbang lokal
 
-### Blockers
+| Cek                                   | Hasil                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `bun run type-check`, `lint`, `check` | bersih                                                                                                       |
+| `bun run test:coverage`               | 189 pass, 0 fail, 100% baris/fungsi untuk 31 file yang di-import test                                        |
+| `bun run build`                       | sukses; build ter-obfuscate diuji untuk `help`, `-e 2`, `-b 1 -e 999`                                        |
+| `bun pm pack --dry-run`               | hanya `package.json`, `LICENSE`, `README.md`, `dist/index.js` (120 KB, ter-obfuscate)                        |
+| `VERSION` vs `package.json`           | `v0.5.2` = `0.5.2` (naik bersama lewat `bun run release`)                                                    |
+| `DRIVER_VERSION`                      | tidak berubah, jadi user tidak perlu memasang ulang driver                                                   |
+| Data sensitif di commit/tarball       | tidak ada; `workspaces/`, `temp/`, `mock/`, `backups/` di-gitignore                                          |
+| CI (`ci.yml`)                         | **belum ada run**: hijau terakhir di `4938a24`; 16 commit lokal dan seluruh perubahan hari ini belum di-push |
 
-Tidak ada (0 blocker).
+## Blocker
 
-### Recommended Fixes
+| #   | Blocker                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Sumber                            | Perbaikan                                                                                                                                                                                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | Belum di-commit, belum di-push, dan CI belum pernah menjalankan 16 commit lokal maupun perubahan hari ini di ubuntu/macOS/Windows.                                                                                                                                                                                                                                                                                                                                 | realitas bfb                      | `/bfb-prepare` → `/bfb-commit` → push → tunggu `ci.yml` hijau.                                                                                                                                                                                             |
+| B2  | Persetujuan privasi otomatis menyalakan **semua** switch yang OFF (`consentToggleOff` = `//input[@role="switch" and @aria-checked="false"]`, `src/libs/facebook-selectors.ts`). Keputusan user mencakup empat item [Wajib] yang diobservasi; switch opsional yang ditambahkan Facebook nanti (personalisasi iklan, dsb.) ikut disetujui atas nama pemilik akun. "Tutup" (`consentDone`) juga cocok dengan tombol "Tutup" mana pun.                                 | code-reviewer I2, security Medium | Batasi ke empat label internal yang diobservasi (atau baris berlabel "[Wajib]"); kalau ada switch OFF lain, jangan diklik dan jatuh ke prompt `y/N`. Batasi `consentDone` ke dialog "Anda sudah siap!".                                                    |
+| B3  | Cek caption salah untuk caption multi-baris (dan kemungkinan NBSP): `captionProbe` mengubah baris baru jadi spasi, padahal `normalize-space(.)` di editor menggabungkan paragraf tanpa spasi. Caption yang benar dianggap belum masuk, diketik ulang, lalu baris gagal "Caption gagal ditulis". Probe juga dipotong per code unit, sehingga emoji di posisi ke-30 terbelah dan selector-nya rusak. Ini regresi: sebelum fix, caption multi-baris tetap terposting. | code-reviewer I1, test-engineer   | Potong probe di `"`, `\r`, `\n`; potong per karakter utuh (`[...s].slice(0, 30)`); tambah test unit untuk baris baru dan emoji; buktikan terhadap dump posting multi-baris.                                                                                |
+| B4  | `bun audit --prod` memunculkan advisory **High** baru `basic-ftp` (GHSA-c475-qrg2-pj4r, DoS di `Client.list()`, ≤ 6.2.0) lewat `@puppeteer/browsers > proxy-agent > pac-proxy-agent > get-uri`. Belum tercatat sebagai risiko yang diterima (hanya `extract-zip` yang diterima).                                                                                                                                                                                   | security Medium                   | Keputusan user: naikkan override ke `"basic-ftp": "^6.2.2"` (cek `get-uri` masih jalan, `bun install`, `bun audit --prod`, test), atau catat sebagai risiko yang diterima di AGENTS.md (eksposur kecil: hanya PAC proxy lewat `ftp://` saat unduh driver). |
 
-Tidak ada.
+## Perbaikan yang disarankan sebelum rilis (bukan blocker)
 
-### Acknowledged Risks
+- **Prompt `y/N` menggantung tanpa terminal** (`src/core/cookie.ts:154`, `src/core/facebook.ts:126`; sudah di TODO.md). `bfb -b` dari cron/pipe diam selamanya dengan Chrome terbuka. Butuh keputusan user: tolak `-b` tanpa TTY, atau anggap stdin tertutup sebagai `N`.
+- **Persetujuan otomatis tidak tercatat di audit log** (code-reviewer I3, security Low). Tulis satu baris per UID saat persetujuan disetujui otomatis atau dikonfirmasi manual.
+- **`dismissPopup` tidak dibatasi ke popup yang diobservasi** ("I understand" belum pernah diobservasi dan biasa dipakai di pemberitahuan pembatasan akun). Hapus "I understand" atau batasi ke dialog yang diketahui.
+- **Test yang tetap lolos walau perilakunya rusak** (test-engineer): `publishPost` tidak menolak `contains(text(), "Posting")`; cabang "Oke" tidak dicek terikat ke panel Reels; daftar `allNames` belum memuat 7 selector baru; test CLI "terkunci" tidak membuktikan urutan berhenti init → driver → aktivasi. `TEST.md` mengklaimnya, jadi klaimnya perlu dikoreksi atau test-nya diperkuat.
+- **Logika yang masih terjebak di `core/`/`commands/`**: urutan cek setup (`bypass.ts`, berbeda dengan `menu.ts` yang tidak berhenti di cek pertama), muat + pilih baris (duplikat di `facebook()`/`cookies()`), keputusan alur persetujuan. Pindahkan ke `libs/` supaya masuk ambang 100%.
+- Lain-lain (Low): `-e` memilih semua baris dengan NO kembar (bisa posting dua kali); fallback "sudah terbit" salah untuk caption sangat pendek; CSV kosong lewat `-b` membersihkan layar lalu keluar 0 tanpa pesan yang tersisa; `bypass` tidak menulis `SESI ... selesai`; Ctrl+C saat `-b` belum diverifikasi menghentikan run; `humanClick` selalu menggulir instan walau elemen sudah di layar.
 
-| Risiko                                                                     | Dampak | Mitigasi                                                                                                                                                  |
-| :------------------------------------------------------------------------- | :----- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Peningkatan total durasi otomasi karena jeda antar baris akun (5–15 detik) | Rendah | Tradeoff yang disengaja untuk mencegah deteksi bot Facebook; kecepatan eksekusi test tetap cepat dengan bypass delay `{ min: 0, max: 0 }`                 |
-| Akun tetap berisiko di-flag jika IP operator kotor / spamming dari 1 IP    | Sedang | Fitur proxy sengaja ditunda (YAGNI) karena operator saat ini menggunakan jaringan WiFi rumah; dapat ditambahkan di masa depan jika kebutuhan proxy muncul |
+## Risiko yang diterima
 
-### Checklist bfb
+- `extract-zip` 2.0.1 (sudah diterima di AGENTS.md).
+- Fallback "sudah terbit" bisa cocok dengan posting lama yang captionnya sama (ditandai `ponytail:`; TODO.md).
+- Langkah "Mematikan boost post", `--disable-frame-rate-limit` di desktop GNOME, caption multi-baris, "Tutup" yang dibatasi, baris audit `disetujui`, dan run `-b`/`-e` sungguhan belum terbukti di akun sungguhan; user menganggapnya uji manual miliknya, bukan temuan.
+- Persetujuan privasi otomatis itu sendiri: keputusan eksplisit user (2026-10-05), tercatat di AGENTS.md. Yang jadi blocker hanya cakupannya (B2).
 
-| Cek                                                         | Hasil                                                                                     |
-| :---------------------------------------------------------- | :---------------------------------------------------------------------------------------- |
-| `type-check`, `lint`, `check`, `test:coverage`, `build`     | Semua hijau (157 pass, coverage 100% baris & fungsi)                                      |
-| `VERSION` vs `package.json`                                 | `v0.5.2` = `0.5.2` (cocok)                                                                |
-| Isi tarball (`bun pm pack --dry-run`)                       | 4 file: `package.json`, `LICENSE`, `README.md`, `dist/index.js` (95.95 KB, ter-obfuscate) |
-| `datas/`, `credentials/`, cookie, token ter-commit/ter-pack | Bersih, tidak ada kredensial yang ikut ter-pack atau ter-stage                            |
-| `DRIVER_VERSION` berubah                                    | Tidak (`147.0.7727.101`); operator tidak perlu mengunduh ulang driver                     |
-| Dist dijalankan                                             | `bun run dist/index.js --version` → `v0.5.2`; flag salah dan bantuan bekerja normal       |
+## Rencana rollback
 
-### Rollback Plan
+Versi npm yang sudah dipublikasikan tidak bisa ditimpa, dan unpublish tidak dipakai.
 
-- **Trigger:** Kegagalan interaksi klik / ketik pada varian Facebook tertentu, atau bug tak terduga pada runtime headless/headful.
-- **Prosedur:**
-    1. Jika dipublikasikan ke npm: `npm deprecate @rasvanjaya21/bfb@<version> "Gunakan versi sebelumnya v0.5.1"`.
-    2. Operator kembali ke versi sebelumnya: `bun add --global @rasvanjaya21/bfb@0.5.1`. Format file data runtime (`accounts.csv`, `contents.csv`, `cookies.json`) tidak berubah dan 100% kompatibel dua arah.
-    3. Perbaikan kode dilakukan di branch utama dengan commit revert atau patch baru.
-- **Waktu pemulihan:** < 5 menit.
+1. **Pemicu:** setelah rilis, run posting gagal massal ("Caption gagal ditulis", "Publish tidak valid", persetujuan privasi), `-b`/`-e` salah memilih baris, atau ada laporan persetujuan yang melampaui item [Wajib].
+2. **Tindakan segera:** `npm deprecate @rasvanjaya21/bfb@<versi baru> "<alasan>, pakai 0.5.2"` (dan `npm dist-tag add @rasvanjaya21/bfb@0.5.2 latest`). User yang terdampak memasang ulang `bun add --global @rasvanjaya21/bfb@0.5.2`.
+3. **Perbaikan:** `git revert` commit bermasalah (atau fix maju), lalu `bun run release` versi patch berikutnya setelah CI hijau.
+4. **Data:** tidak ada migrasi. Format `datas/`, `credentials/`, dan `logs/` tidak berubah, jadi kembali ke 0.5.2 aman. Postingan yang sudah terbit dan persetujuan privasi yang sudah diberikan di Facebook tidak bisa ditarik oleh rollback.
+5. **Waktu:** deprecate dan dist-tag kurang dari 5 menit; rilis patch sekitar 15 menit termasuk CI.
 
----
+## Langkah menuju GO
 
-### Specialist Reports
+1. Perbaiki B2 dan B3 (TDD, lalu buktikan terhadap dump di `temp/`).
+2. Putuskan B4 dan prompt `y/N` tanpa terminal.
+3. `/bfb-prepare` → `/bfb-commit` → push → `ci.yml` hijau di ketiga OS.
+4. Jalankan ulang `/bfb-ship`. `bun run release` hanya dengan persetujuan eksplisit user.
 
-1. **code-reviewer:**
-    - 5-axis review: Correctness, Readability, Architecture, Security, Performance lulus tanpa temuan Critical atau Important.
-    - Checklist mekanis bfb: Tidak ada import relatif, alur browser tetap lewat `runBrowserRows`, tidak ada `process.exit`, teks user konsisten Bahasa Indonesia.
-    - Semua logika acak dan kontrol kursor berjalan di proses host Bun menggunakan Puppeteer native Keyboard & Mouse API tanpa fungsi `page.evaluate()` / `$eval()`, sehingga kebal terhadap kerusakan akibat obfuscator.
+## Status setelah keputusan user (2026-10-05)
 
-2. **security-auditor:**
-    - Credential storage & permissions: Tidak ada perubahan ke format atau permission file `0600`/`0700`.
-    - Token & secrets leakage: Pengetikan UID dan Password akun di `syncCookies` memanfaatkan `humanType` langsung ke browser page tanpa pernah dicetak ke console atau log audit.
-    - Tarball inspection: `bun pm pack --dry-run` memverifikasi hanya 4 file esensial yang dipaketkan. File `datas/`, `credentials/`, dan test files tidak pernah masuk tarball.
-    - Supply chain: Tidak ada dependensi npm baru yang ditambahkan; seluruh fungsionalitas memanfaatkan library terpasang dan API standar.
+Jawaban user atas daftar keputusan diterapkan dan diverifikasi: `bun run test:coverage` 206 pass, 0 fail, exit 0; `type-check`, `lint`, `check` bersih; `bun run build` sukses; `bun pm pack --dry-run` tetap hanya `package.json`, `LICENSE`, `README.md`, `dist/index.js` (127 KB).
 
-3. **test-engineer:**
-    - Coverage: Ambang 100% lines & functions di `bunfig.toml` terpenuhi secara ketat (157 pass dari 24 file test).
-    - Unit test baru:
-        - `tests/unit/012-random-delay.test.ts` (6 test): membuktikan batas range acak, penanganan `min === max`, serta validasi argumen negatif dan terbalik.
-        - `tests/unit/013-human-type.test.ts` (3 test): membuktikan urutan ketikan, penanganan string kosong, dan opsi delay kustom / bawaan.
-        - `tests/unit/014-human-click.test.ts` (2 test): membuktikan interpolasi langkah gerak kursor, offset acak bounding box, serta fallback ke `handle.click()` saat bounding box null.
-    - Integration test: `tests/integration/005-run-browser-rows.test.ts` (17 test) membuktikan jeda cooldown antar baris akun dan proteksi saat browser disconnect.
-    - Build verification: `dist/index.js` ter-obfuscate berjalan normal dengan Bun runtime (`v0.5.2`).
+| Item                                   | Status                                                                                                                                                                                                                                                |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1 commit, push, CI                    | **Masih terbuka**: user menjalankan `/bfb-prepare`, `/bfb-commit`, dan push sendiri.                                                                                                                                                                  |
+| B2 cakupan persetujuan privasi         | **Diterima (keputusan 3b)**: semua switch yang OFF tetap dinyalakan, termasuk switch yang mungkin ditambahkan Facebook nanti; dicatat di AGENTS.md. Tombol "Tutup" (`consentDone`) sekarang dibatasi ke `role="main"` yang memuat "Anda sudah siap!". |
+| B3 probe caption                       | **Diperbaiki**: berhenti di baris baru, spasi ganda/tab, dan tanda kutip; melewati baris kosong di awal; memotong 30 karakter utuh. Test `unit/011` ditulis merah dulu.                                                                               |
+| B4 `basic-ftp`                         | **Diperbaiki (1a)**: override `^6.2.2`; API yang dipakai `get-uri` dicek masih ada; `bun audit --prod` kini hanya `extract-zip` (diterima).                                                                                                           |
+| Prompt `y/N` tanpa terminal            | **Diperbaiki (2b)**: `askYesNo` menganggap input yang tertutup sebagai `N` (`unit/016`).                                                                                                                                                              |
+| Audit log persetujuan                  | **Diperbaiki (4)**: `NO <no> UID <uid> \| disetujui \| Privasi facebook disetujui otomatis` / `oleh operator`.                                                                                                                                        |
+| "I understand" di `dismissPopup`       | **Dihapus (5)**.                                                                                                                                                                                                                                      |
+| Test yang lemah                        | **Diperkuat (11)**: `publishPost` menolak `contains()`, cabang "Oke" terikat ke panel Reels, `allNames` lengkap, help memuat setiap menu dan syarat setup, `-b 95` terkunci tanpa driver, urutan cek setup di `unit/017`. Dua mutasi tertangkap.      |
+| Logika ke `libs/`                      | **Selesai (18)**: `checkSetup`, `loadRows`, `askYesNo`.                                                                                                                                                                                               |
+| `SESI ... selesai`                     | **Selesai (19)**.                                                                                                                                                                                                                                     |
+| Popup baru "Akun Meta Anda sudah siap" | **Diperbaiki** saat run (NO 191): ditutup lewat X, hanya di dialog berjudul itu; NO 191 terposting ulang.                                                                                                                                             |
+
+Keputusan tetap **NO-GO** sampai B1 selesai dan `ci.yml` hijau; lalu jalankan `/bfb-ship` lagi.

@@ -1,84 +1,59 @@
-# Review: Human Behavior Emulation
+# Review
 
-Ditulis lewat `/bfb-review` pada 2026-10-04. Cakupan: implementasi human behavior emulation untuk mencegah deteksi bot Facebook — helper delay acak (`src/libs/random-delay.ts`), ketikan berirama manusiawi (`src/libs/human-type.ts`), pergerakan & klik mouse bertahap (`src/libs/human-click.ts`), cooldown jeda antar baris akun (`src/libs/run-browser-rows.ts`), integrasi ke `src/core/facebook.ts` dan `src/core/cookie.ts`, serta unit & integration test pendukung (`tests/unit/012-random-delay.test.ts`, `tests/unit/013-human-type.test.ts`, `tests/unit/014-human-click.test.ts`, `tests/integration/005-run-browser-rows.test.ts`).
+Ditulis lewat `/bfb-review` pada 2026-10-05. Cakupan: semua perubahan yang belum di-commit sejak `8666fe3` (tidak ada yang di-stage). Isinya dua kelompok:
+
+1. **Fix alur posting dari run 180 konten** (`/bfb-observe`): `src/core/facebook.ts`, `src/libs/facebook-selectors.ts`, `src/libs/human-click.ts`, `src/libs/human-type.ts`, `src/libs/launch-browser.ts`.
+2. **Fitur CLI help, bypass, explicit** (spec dan plan 2026-10-05): `src/libs/parse-args.ts`, `src/libs/select-rows.ts`, `src/commands/bypass.ts`, `src/commands/help.ts`, `src/index.ts`, `src/core/cookie.ts`, `src/commands/menu.ts`.
+
+Ditambah test (`tests/unit/001, 011, 013, 014, 015`, `tests/integration/007`), skill `bfb-observe` dan rute siklus di semua skill, `AGENTS.md`, `README.md`, dan `architecture/*`. Total `src/` + `tests/`: 15 file berubah dan 3 file baru, sekitar 560 baris ditambah.
+
+## Verifikasi
+
+`bun run test:coverage` 189 pass, 0 fail, exit 0; `bun run type-check`, `bun run lint`, `bun run check` bersih; `bun run build` sukses, dan build ter-obfuscate diuji untuk `help`, `-e 2`, `-b 1 -e 999`. Alur posting divalidasi di akun sungguhan lewat run 180 konten (lihat `architecture/OBSERVE.md`). `-b`/`-e` diuji nyata sampai browser (`-b 1 -e 118`, exit 0) dan untuk NO yang tidak ada (exit 1 tanpa browser).
+
+## Critical
+
+Tidak ada.
+
+## Important
+
+| #   | Temuan                                                                                                                                                                                                                                                                                                                                                                                                               | Lokasi                                               | Status                                                                                                                                  |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| I1  | `AGENTS.md` belum mencatat empat jebakan baru `postFeed`: klik textbox sebelum mengetik, panel "Pembaruan Reels" ("Oke"), sesi mati di profil publik (form login), dan persetujuan privasi otomatis beserta keputusan user dan batasnya (tidak diperluas ke checkpoint/verifikasi identitas tanpa izin; jangan `waitForNetworkIdle` di Facebook). Agent lain bisa menghapus atau memperluasnya tanpa tahu alasannya. | `AGENTS.md`, "Jebakan `postFeed`"                    | **Diperbaiki**                                                                                                                          |
+| I2  | `architecture/OBSERVE.md` tidak ada, padahal `/bfb-spec`, `/bfb-plan`, dan `/bfb-build` sekarang wajib mengikuti peta kondisinya. Hasil observasi hari ini hanya tersebar di percakapan dan `temp/`.                                                                                                                                                                                                                 | `architecture/OBSERVE.md`                            | **Diperbaiki**: peta pintu masuk, kondisi P1–P7 dan C1–C3, gangguan, tanda berhasil/gagal, lingkungan, timing, dan "Belum terobservasi" |
+| I3  | Prompt `y/N` menggantung selamanya kalau stdin tertutup. Dibuktikan: `question()` dengan `< /dev/null` tidak pernah selesai dan tidak melempar error. `bfb -b 95` dari cron/pipe akan diam tanpa batas dengan Chrome terbuka.                                                                                                                                                                                        | `src/core/cookie.ts:154`, `src/core/facebook.ts:126` | **Diperbaiki** setelah `/bfb-ship` (keputusan user 2b): `askYesNo` menganggap input yang tertutup sebagai `N`.                          |
+
+## Suggestion
+
+| #   | Temuan                                                                                                                                                                                                                                                                                                             | Lokasi                                                           | Status                    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- | ------------------------- |
+| S1  | Cek cadangan "sudah terbit" (`feedCaptionSelector`) juga cocok dengan posting lama yang captionnya sama. Sudah ditandai `ponytail:` di kode dan dicatat di AGENTS.                                                                                                                                                 | `src/core/facebook.ts:241`                                       | TODO.md (Low)             |
+| S2  | Langkah "Mematikan boost post" belum pernah terpakai di akun sungguhan; selector hanya terbukti terhadap dump.                                                                                                                                                                                                     | `src/core/facebook.ts:217`                                       | TODO.md (Low)             |
+| S3  | `--disable-frame-rate-limit` belum diuji di desktop GNOME dan beban CPU-nya belum diukur.                                                                                                                                                                                                                          | `src/libs/launch-browser.ts:16`                                  | TODO.md (Low)             |
+| S4  | `dismissPopup(page, 2000)` menambah 2 detik di setiap baris, padahal popup biasanya muncul saat mengetik dan sudah ditangani `interrupt`. Ukur dulu sebelum dihapus.                                                                                                                                               | `src/core/facebook.ts:143`                                       | TODO.md (Low)             |
+| S5  | Label "I agree"/"Close" di alur persetujuan UI Inggris belum terobservasi.                                                                                                                                                                                                                                         | `src/libs/facebook-selectors.ts` (`consentAgree`, `consentDone`) | TODO.md (Low)             |
+| S6  | `src/core/facebook.ts` tumbuh ke 349 baris dengan lima helper baru (`dismissPopup`, `acceptConsent`, `composerClosed`, `clearFocusedField`, `captionInComposer`). Masih jauh di bawah batas ukuran file yang sehat; kalau alur persetujuan bertambah, pindahkan `acceptConsent` ke `src/core/facebook-consent.ts`. | `src/core/facebook.ts`                                           | Tidak dikerjakan sekarang |
+
+## Per sumbu
+
+- **Correctness.** Perilaku CLI sesuai tabel di spec (dibuktikan test unit dan integration, ditambah dua mutasi yang tertangkap). Alur posting menangani setiap kondisi di `OBSERVE.md`. Setiap jalur yang menunggu punya batas waktu (`PUBLISH_TIMEOUT_MS`, loop `deadline`, maksimal 3 putaran × 8 switch). NO yang tidak ada ditolak sebelum `launchBrowser()`. Menu interaktif tidak berubah, karena parameter `explicit` opsional dan menu tidak mengirimnya.
+- **Readability.** Setiap helper baru diberi komentar yang menjelaskan alasan (kenapa scroll, kenapa klik textbox, kenapa "Tutup", kenapa bukan `waitForNetworkIdle`), bukan langkahnya. Pesan error Bahasa Indonesia dan menyebut flag atau NO yang salah.
+- **Architecture.** Logika murni ada di `libs/` (`parseArgs`, `selectRows`, selektor, `composerCaptionSelector`, `feedCaptionSelector`) dan dites 100%. `bypass.ts` di `commands/` memakai ulang `isMenuLocked`, `describeMenu`, `createAuditLogger`, `facebook()`, `cookies()` tanpa menduplikasi alur menu. Semua baris tetap lewat `runBrowserRows()`, tidak ada `process.exit` baru di `core/*`, dan tidak ada import relatif.
+- **Security.** Tidak ada password, cookie, token, atau caption yang dicetak atau masuk audit log. Persetujuan privasi otomatis adalah tindakan atas nama pemilik akun; dilakukan atas keputusan eksplisit user, tercatat di `AGENTS.md`, dan dibatasi ke halaman itu saja. Probe XPath dari caption memotong di tanda kutip pertama, jadi tidak bisa merusak ekspresi. Caption adalah data operator sendiri.
+- **Performance.** Tidak ada loop tanpa batas. `page.$` dipanggil sekali per tanda jeda saat mengetik (sekitar 20 panggilan CDP per caption). Alur persetujuan turun dari 46 ke 21 detik setelah `waitForNetworkIdle` diganti dengan menunggu tanda di halaman.
+
+## Cek khusus bfb
+
+- Import relatif: tidak ada (`bun run check`).
+- Loop browser di luar `runBrowserRows()`: tidak ada.
+- `process.exit` baru di `core/*`: tidak ada. Error tidak ditelan; setiap kegagalan punya pesan.
+- Kredensial di console/log: tidak ada. Penulisan cookie tetap lewat `saveCookies` (`0600`).
+- Header CSV vs `src/types/global.ts`: tidak berubah.
+- Teks untuk user: Bahasa Indonesia. `bfb help` hanya berisi panduan penggunaan.
+- Dependency runtime baru: tidak ada.
+- `VERSION` (`v0.5.2`) sama dengan `package.json` (`0.5.2`).
+- Klaim `AGENTS.md`: signature `facebook`/`cookies` di bagian audit log diperbarui saat build; jebakan baru ditambahkan (I1).
 
 ## Verdict
 
-**Approve.** Perubahan bersih, modular, dan sepenuhnya berjalan di proses host Bun menggunakan Puppeteer native Keyboard dan Mouse API. Tidak ada injeksi fungsi ke browser (`page.evaluate`) sehingga 100% aman terhadap build obfuscator. Seluruh checklist mekanis bfb terpenuhi dan cakupan test tetap 100% baris & fungsi (157 test pass).
-
-## Checklist bfb (mekanis)
-
-| Cek                                                 | Hasil                                                                    |
-| :-------------------------------------------------- | :----------------------------------------------------------------------- |
-| Import relatif                                      | tidak ada (`bun run check` lolos)                                        |
-| Loop browser di `core/*` di luar `runBrowserRows()` | tidak ada; alur tetap menggunakan `runBrowserRows()`                     |
-| `process.exit` di `core/*`                          | tidak ada                                                                |
-| Password/cookie/token tercetak ke console           | tidak ada (`humanType` menerima string tanpa logging)                    |
-| Tulis data sensitif tanpa `0600`                    | tidak ada perubahan penulisan file kredensial                            |
-| Header CSV vs `src/types/global.ts`                 | cocok, format CSV dipertahankan (YAGNI proxy)                            |
-| Dependency runtime vs `external` bunup              | tidak ada dependency runtime baru (murni Puppeteer bawaan & Math.random) |
-| `VERSION` vs `package.json`                         | `v0.5.2` = `0.5.2`                                                       |
-| Teks untuk user bukan Bahasa Indonesia              | seluruh pesan error dan log layar tetap Bahasa Indonesia konsisten       |
-| Klaim `AGENTS.md` / skill yang jadi salah           | tidak ada; context isolation & lifecycle tetap valid                     |
-
-## Review Lima Sumbu
-
-### 1. Correctness
-
-- **Kesesuaian Spec:** Seluruh kebutuhan yang disepakati di `architecture/SPEC.md` telah diimplementasikan:
-    - `randomDelay` menghasilkan delay acak dengan distribusi seragam dalam batas min-max.
-    - `humanType` mengetik per karakter dengan jeda acak 40–120ms dan jeda ekstra 150–350ms pada spasi/tanda baca.
-    - `humanClick` menghitung bounding box elemen, mengambil titik acak 20%–80%, menggerakkan kursor kustom 5–15 langkah, jeda hover, klik mouse down/up dengan durasi tahan, dan fallback ke `handle.click()` jika bounding box null.
-    - `interRowDelay` memberikan jeda istirahat akun 5–15 detik antar baris CSV, tanpa menunda setelah baris terakhir atau saat terputus.
-- **Penanganan Edge Case:**
-    - `min > max` atau nilai negatif pada `randomInt` melempar Error deskriptif.
-    - `humanType` pada string kosong langsung selesai tanpa error.
-    - Elemen tanpa bounding box (inline / pseudo-element) di-fallback dengan aman ke click bawaan puppeteer.
-    - Disconnect browser di tengah alur atau saat cooldown tertangani segera.
-- **Obfuscator Safety:** 100% bebas dari `page.evaluate()` atau `$eval()`. Logika acak dan kalkulasi titik kursor dijalankan di proses Bun.
-
-### 2. Readability & Simplicity
-
-- Penamaan fungsi sangat jelas dan intuitif: `randomDelay`, `randomInt`, `humanType`, `humanClick`, `interRowDelay`.
-- Modul-modul baru berukuran ringkas (20–30 baris per file) dan terfokus pada satu tanggung jawab.
-- Menghindari dependensi eksternal (seperti ghost-cursor atau bezier-curve library) sesuai filosofi _ponytail_: native interpolation puppeteer `steps` sudah memadai.
-
-### 3. Architecture
-
-- Struktur mengikuti pemisahan tanggung jawab bfb: pembantu otomasi di `src/libs/`, orkestrasi posting di `src/core/facebook.ts`, dan login di `src/core/cookie.ts`.
-- Ambang coverage 100% lines & functions pada `bunfig.toml` tetap terpenuhi tanpa kompromi (157 test pass).
-- Delay antar baris dapat di-bypass pada test otomatis (`{ min: 0, max: 0 }`), menjaga kecepatan test suite tetap tinggi (~22s untuk seluruh suite).
-
-### 4. Security
-
-- Password akun pada `syncCookies` diketik via `humanType` langsung ke browser context tanpa menyentuh log, audit log, atau standard output.
-- Tidak ada data kredensial atau payload CSV yang bocor ke log trace.
-- Tidak ada evaluasi script dinamis di konteks browser.
-
-### 5. Performance
-
-- Delay acak berada dalam rentang wajar (milidetik pada ketikan, detik pada transisi akun).
-- Tidak ada loop tanpa batas atau alokasi memori berlebih.
-- Kecepatan unit & integration test suite terjaga berkat konfigurasi delay yang fleksibel pada pengujian.
-
-## Temuan
-
-### Critical
-
-Tidak ada.
-
-### Important
-
-Tidak ada.
-
-### Suggestion
-
-1. **Uji Coba Headful Langsung:** Operator disarankan menjalankan menu `1` (Rawat facebook) atau menu `95` (Sinkronisasi cookies) pada browser headful nyata untuk mengamati secara visual kehalusan pergerakan mouse dan variasi kecepatan pengetikan.
-
-## Verifikasi Akhir
-
-- `bun run type-check`: 0 error (`tsgo --noEmit`).
-- `bun run lint`: 0 warning, 0 error (`oxlint`).
-- `bun run check`: 0 relative import (`check.ts`).
-- `bun run test:coverage`: 157 pass (100% lines & functions coverage pada seluruh file yang di-import).
-- `bun run build`: build `dist/index.js` sukses ter-bundle dan ter-obfuscate tanpa error.
+**Approve.** I1 dan I2 sudah diperbaiki. I3 dan semua suggestion tercatat di `TODO.md`. Lanjutkan ke `/bfb-ship`.

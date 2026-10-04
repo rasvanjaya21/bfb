@@ -1,6 +1,6 @@
 # Spec: bfb (Bot for billy) — as-built
 
-Ditulis lewat `/bfb-spec` pada 2026-09-30. Spec ini mendokumentasikan bfb **apa adanya** di v0.4.0 setelah perbaikan audit. Fitur baru ditulis sebagai bagian terpisah di akhir file ini (saat ini: [audit log](#spec-fitur-audit-log)).
+Ditulis lewat `/bfb-spec` pada 2026-09-30. Spec ini mendokumentasikan bfb **apa adanya** di v0.4.0 setelah perbaikan audit. Fitur baru ditulis sebagai bagian terpisah di akhir file ini.
 
 ## Asumsi
 
@@ -438,3 +438,89 @@ Helper baru diletakkan di `src/libs/` mengikuti pola 1 fungsi per file:
 ## Open Questions
 
 Tidak ada pertanyaan terbuka yang memblokir.
+
+# Spec fitur: CLI help, bypass, dan explicit
+
+Ditulis lewat `/bfb-spec` pada 2026-10-05. Tidak mengubah alur browser: `-b` menjalankan `facebook()` dan `cookies()` yang sudah ada, jadi tidak butuh `/bfb-observe`.
+
+## Objective
+
+Operator yang menjalankan `bfb` di folder kerjanya ingin (1) membaca panduan pemakaian dari terminal, (2) menjalankan menu yang memproses CSV tanpa melewati layar menu interaktif, dan (3) membatasi run ke baris CSV tertentu, misalnya untuk mengulang beberapa baris yang gagal tanpa memproses ulang seluruh file.
+
+## Keputusan user (2026-10-05)
+
+- `bfb help` / `--help` / `-h` berisi panduan sesuai keadaan sekarang (saat ini hanya "Belum tersedia").
+- `-b <menu>` / `--bypass <menu>` langsung menjalankan menu. Hanya menu `1` (Rawat facebook, `datas/contents.csv`) dan `95` (Sinkronisasi cookies, `datas/accounts.csv`) yang bisa di-bypass. Tanpa `-e`, semua baris CSV diproses.
+- `-e <NO[,NO...]>` / `--explicit` membatasi ke baris dengan kolom `NO` tertentu, satu nomor atau beberapa nomor dipisah koma. `-e` hanya valid bersama `-b`.
+- `-b` wajib diikuti nomor menu (`bfb -b -e 2,3` tidak valid).
+- Setelah run lewat `-b` selesai, bfb langsung keluar ke shell: tanpa "Tekan Enter", tanpa membuka menu.
+- NO di `-e` yang tidak ada di CSV ditolak sebelum browser dibuka, dengan menyebut NO-nya.
+
+## Asumsi
+
+1. Pemisah daftar NO adalah koma (`2,3,1,99,21`), sesuai contoh user. Spasi di sekitar koma tidak diterima, karena shell sudah memisahkan argumen di spasi.
+2. Urutan flag bebas (`bfb -e 2 -b 1` sama dengan `bfb -b 1 -e 2`). Nilai ditulis sebagai argumen berikutnya; bentuk `--bypass=1` tidak didukung dan dilaporkan sebagai flag tidak dikenal.
+3. `version` dan `help` tetap menang atas flag lain, seperti sekarang (`bfb -b 1 -h` menampilkan help).
+4. Flag yang sama ditulis dua kali (`-b 1 -b 95`, `-e 2 -e 3`) tidak valid.
+5. NO harus bilangan bulat positif. NO ganda di `-e` dihitung sekali. Baris diproses mengikuti urutan CSV, bukan urutan di `-e`. Kolom `NO` di CSV dibandingkan sebagai angka (`07` cocok dengan `7`).
+6. Run lewat `-b` tetap interaktif untuk prompt yang sudah ada ("Simpan cookie? (y/N)", "Sudah menyetujui privasi? (y/N)"); tidak ada mode non-interaktif.
+7. Syarat setup sama dengan menu: menu 1 dan 95 terkunci sampai init, driver, dan aktivasi siap. Pengecekan berhenti di syarat pertama yang gagal, sehingga folder yang belum di-init tidak memanggil API aktivasi.
+8. Audit log sama dengan run lewat menu: baris `SESI ... mulai`, lalu sumber `MENU 1` / `MENU 95` dengan aksi `Rawat facebook` / `Sinkronisasi cookies` (`mulai`, satu baris per baris CSV, `selesai`/`dihentikan`, atau `terkunci`/`gagal`).
+9. Exit code 1 untuk argumen tidak valid, setup belum siap, NO tidak ditemukan, atau error yang menghentikan run. Run yang selesai keluar dengan 0 walaupun ada baris yang gagal; ringkasan di layar dan audit log yang melaporkannya.
+10. Menu interaktif (`bfb` tanpa argumen) tidak berubah.
+
+## Perintah
+
+| Perintah                                                   | Hasil                                                       |
+| ---------------------------------------------------------- | ----------------------------------------------------------- |
+| `bfb`                                                      | menu interaktif (tidak berubah)                             |
+| `bfb help`, `bfb --help`, `bfb -h`                         | panduan, exit 0                                             |
+| `bfb version`, `bfb --version`, `bfb -v`                   | versi, exit 0 (tidak berubah)                               |
+| `bfb -b 1`, `bfb --bypass 1`                               | Rawat facebook untuk semua baris `datas/contents.csv`       |
+| `bfb -b 95`                                                | Sinkronisasi cookies untuk semua baris `datas/accounts.csv` |
+| `bfb -b 1 -e 2`, `bfb -b 95 -e 1`                          | hanya baris dengan `NO` tersebut                            |
+| `bfb -b 1 -e 2,3,1,99,21`, `bfb --bypass 1 --explicit 2,3` | hanya baris-baris tersebut                                  |
+
+Tidak valid, dengan pesan Bahasa Indonesia dan `Coba 'bfb help' untuk panduan pemakaian`, exit 1:
+
+| Perintah                                          | Pesan (inti)                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------- |
+| `bfb -e 2`                                        | `-e/--explicit` butuh `-b/--bypass`                            |
+| `bfb -b`, `bfb -b -e 2,3`                         | `-b/--bypass` butuh nomor menu (1 atau 95)                     |
+| `bfb -b 2`                                        | menu 2 tidak bisa di-bypass, pilih 1 atau 95                   |
+| `bfb -b 1 -e`, `bfb -b 1 -e 2,x`, `bfb -b 1 -e 0` | `-e/--explicit` butuh NO berupa angka positif, contoh `-e 2,3` |
+| `bfb -b 1 -b 95`                                  | flag ditulis lebih dari sekali                                 |
+| `bfb -b 1 -e 999` (NO tidak ada)                  | `NO tidak ditemukan di datas/contents.csv: 999`                |
+
+## Isi `bfb help`
+
+Hanya panduan **penggunaan** untuk operator, bukan pengembangan: tidak ada perintah `bun run ...`, struktur repo, cara berkontribusi, atau tooling agent. Bahasa Indonesia, singkat, berisi: cara pakai setiap perintah di atas; daftar menu beserta nomornya (diambil dari `MENU_LABELS`, tidak ditulis ulang); menu yang bisa di-bypass dan CSV-nya; syarat setup (menu 0 init, 96 driver, 97 aktivasi); file di folder kerja (`datas/accounts.csv`, `datas/contents.csv`, `credentials/`, `logs/audit.log`); contoh `bfb -b 1`, `bfb -b 95 -e 1`, `bfb -b 1 -e 2,3,1,99,21`; catatan bahwa prompt `y/N` tetap muncul saat `-b`.
+
+## Data dan dampak
+
+- Tidak ada kolom CSV baru dan tidak ada perubahan `src/types/global.ts`.
+- Tidak ada perubahan pada cara `credentials/cookies.json` dan `token.bfb` dibaca atau ditulis; `-b 95` menulis cookie lewat jalur yang sama dengan menu 95.
+- `src/commands/menu.ts` tidak berubah perilakunya. `facebook()` dan `cookies()` mendapat parameter opsional untuk daftar NO.
+
+## Testing Strategy
+
+- Unit (`bun test`, ambang coverage 100%): parsing argumen (`tests/unit/001-parse-args.test.ts`) untuk semua baris di tabel valid/tidak valid; pemilihan baris berdasarkan NO (`tests/unit/015-select-rows.test.ts`).
+- Integration lewat `Bun.spawn` (`tests/integration/007-cli-entry.test.ts`): exit code dan pesan untuk argumen tidak valid; `bfb -b 1` di folder temp yang belum di-init (terkunci, exit 1, tanpa jaringan dan browser); isi `bfb help`.
+- Manual (butuh Chrome dan akun sungguhan) di `/home/pinc/Developer/bfb/workspaces/`: `bun ../src/index.ts -b 1 -e <NO>`, `bun ../src/index.ts -b 95 -e <NO>`, dan menu interaktif tetap memproses semua baris.
+
+## Boundaries
+
+- Always: validasi semua argumen sebelum membaca CSV atau membuka browser; pesan error menyebut flag atau NO yang salah; audit log sama dengan menu.
+- Ask first: menambah menu lain yang bisa di-bypass; mode non-interaktif untuk prompt `y/N`.
+- Never: mengubah perilaku menu interaktif; membuka browser saat argumen tidak valid, setup belum siap, atau NO tidak ditemukan; mencatat isi CSV, cookie, atau token ke audit log.
+
+## Success Criteria
+
+- Setiap baris di tabel Perintah menghasilkan perilaku dan exit code yang tertulis, dibuktikan oleh test unit/integration (kecuali run sungguhan, yang dicek manual).
+- `bfb help` memuat semua perintah, menu, dan contoh di bagian Isi `bfb help`.
+- `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`, dan `bun run build` hijau.
+- README dan AGENTS.md menjelaskan flag baru.
+
+## Open Questions
+
+- Tidak ada; keputusan terbuka sudah dijawab user pada 2026-10-05.
