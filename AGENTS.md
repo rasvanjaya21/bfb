@@ -68,7 +68,7 @@ clean.ts          script pembersihan
 Repo ini disiapkan untuk dua agent: Claude Code dan Antigravity (`agy`).
 
 ```
-skills/            6 skill siklus proyek (bfb-spec, bfb-plan, bfb-build, bfb-test, bfb-review, bfb-ship) + bfb-commit, bfb-prepare
+skills/            8 skill dalam siklus proyek (bfb-prepare, bfb-spec, bfb-plan, bfb-build, bfb-test, bfb-review, bfb-ship, bfb-commit)
 .claude/skills  -> ../skills     tempat Claude mencari skill
 .agents/skills  -> ../skills     tempat Antigravity mencari skill
 docs/              dokumentasi resmi offline per teknologi, sesuai versi yang dipakai (bun.md, bunup.md, puppeteer.md, puppeteer-extra.md)
@@ -76,18 +76,19 @@ architecture/      hasil tiap skill /bfb-<verb>, satu file per verb (SPEC.md, PL
 graphify-out/      knowledge graph repo; hanya GRAPH_REPORT.md, graph.html, graph.json yang di-commit
 ```
 
-Siklus proyek, satu skill per tahap:
+Siklus proyek:
 
 ```
-  DEFINE          PLAN           BUILD          VERIFY         REVIEW          SHIP
- ┌──────┐       ┌──────┐       ┌──────┐       ┌───────┐       ┌──────┐       ┌──────┐
- │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test  │ ───▶ │  QA  │ ───▶ │  Go  │
- │Refine│       │  PRD │       │ Impl │       │ Debug │       │ Gate │       │ Live │
- └──────┘       └──────┘       └──────┘       └───────┘       └──────┘       └──────┘
- /bfb-spec      /bfb-plan      /bfb-build     /bfb-test      /bfb-review     /bfb-ship
+ PREPARE         DEFINE          PLAN           BUILD          VERIFY         REVIEW          SHIP         PREPARE         COMMIT
+ ┌──────┐       ┌──────┐       ┌──────┐       ┌──────┐       ┌───────┐       ┌──────┐       ┌──────┐       ┌──────┐       ┌──────┐
+ │ Repo │ ───▶ │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test  │ ───▶ │  QA  │ ───▶ │  Go  │ ───▶ │ Clean│ ───▶ │ Git  │
+ │ Sync │       │Refine│       │  PRD │       │ Impl │       │ Debug │       │ Gate │       │ Live │       │ Polish│       │ Record│
+ └──────┘       └──────┘       └──────┘       └──────┘       └───────┘       └──────┘       └──────┘       └──────┘       └──────┘
+/bfb-prepare   /bfb-spec      /bfb-plan      /bfb-build     /bfb-test      /bfb-review     /bfb-ship    /bfb-prepare   /bfb-commit
 ```
 
-- Keenam skill adalah fork dari `addyosmani/agent-skills` pada commit `2686b62`. Setiap `SKILL.md` berisi bagian khusus bfb di atas, lalu `# Method` yang di-vendor dari skill upstream (`spec-driven-development`, `planning-and-task-breakdown`, `incremental-implementation`, `test-driven-development`, `code-review-and-quality`, `shipping-and-launch`). Bagian bfb menang setiap kali keduanya bertentangan.
+- Rute siklus: `/bfb-prepare` (awal) → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` (akhir) → `/bfb-commit`.
+- Enam skill inti (spec, plan, build, test, review, ship) adalah fork dari `addyosmani/agent-skills` pada commit `2686b62`. Setiap `SKILL.md` berisi bagian khusus bfb di atas, lalu `# Method` yang di-vendor dari skill upstream (`spec-driven-development`, `planning-and-task-breakdown`, `incremental-implementation`, `test-driven-development`, `code-review-and-quality`, `shipping-and-launch`). Bagian bfb menang setiap kali keduanya bertentangan.
 - Saat user menjalankan skill, kerjakan setiap langkahnya persis seperti tertulis, walaupun terlihat tidak perlu (mis. `graphify update` saat kode tidak berubah). Langkah hanya boleh dilewati kalau skill itu sendiri yang menyuruh melewatinya.
 - Setiap folder skill hanya berisi satu `SKILL.md`, tanpa subfolder. Checklist yang dirujuk skill (Definition of Done, Testing Patterns, Security/Performance/Accessibility Checklist, referensi gaya commit) ditempel di bagian `# Reference` di akhir `SKILL.md`.
 - `.claude/` dan `.agents/` hanya berisi symlink lokal dan di-gitignore; cara membuatnya ada di `CONTRIBUTING.md` bagian "Agent Tooling". Kalau menambah symlink atau server MCP baru, perbarui instruksi di sana juga. `README.md` ikut dipublikasikan ke npm, jadi isinya hanya untuk pemakai paket (sama dengan versi 0.4.0); instruksi untuk developer dan agent masuk `CONTRIBUTING.md`.
