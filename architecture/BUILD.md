@@ -1,3 +1,56 @@
+# Build log: pencegahan deteksi bot Facebook (Human Behavior Emulation)
+
+Ditulis lewat `/bfb-build auto` pada 2026-10-04. Serah terima untuk task berikutnya di `architecture/PLAN.md` ("Implementation Plan: pencegahan deteksi bot Facebook"). Belum di-commit; commit lewat `/bfb-commit`.
+
+## Task 1: Helper jeda acak `src/libs/random-delay.ts` — selesai
+
+- **Diimplementasikan:** `src/libs/random-delay.ts` mengekspor fungsi `randomDelay(minMs, maxMs)` yang mengembalikan Promise<number> durasi tunggu riil dan `randomInt(min, max)` yang menghasilkan integer acak inklusif. Melempar error jika `min > max` atau bernilai negatif.
+- **Dibuktikan oleh:** `tests/unit/012-random-delay.test.ts` (6 test): validasi batas rentang integer acak, kasus `min === max`, error saat `min > max` dan input negatif, serta verifikasi jeda asinkron riil. Merah dulu (modul belum ada), lalu hijau.
+- **Hasil:** `bun run test:coverage` coverage 100% / 100% pada `random-delay.ts`.
+
+## Task 2: Helper pengetikan humanis `src/libs/human-type.ts` — selesai
+
+- **Diimplementasikan:** `src/libs/human-type.ts` mengekspor `humanType(page, text, options?)` dan tipe `HumanTypeOptions`. Mengetik per karakter menggunakan Puppeteer `page.keyboard.type(char)` dengan jeda acak per karakter (default 40–120ms) dan jeda berpikir alami ekstra pada karakter spasi dan tanda baca (` `, `,`, `.`, `!`, `?`, `;`, `:`, `\n`) sebesar 150–350ms. Zero `page.evaluate()`.
+- **Dibuktikan oleh:** `tests/unit/013-human-type.test.ts` (3 test): urutan seluruh karakter diketik utuh, penanganan string kosong tanpa error, dan penggunaan opsi default delay saat opsi tidak disertakan. Merah dulu (modul belum ada), lalu hijau.
+- **Hasil:** Coverage 100% / 100% pada `human-type.ts`.
+
+## Task 3: Helper pergerakan kursor dan klik realistis `src/libs/human-click.ts` — selesai
+
+- **Diimplementasikan:** `src/libs/human-click.ts` mengekspor `humanClick(page, handle)`. Mengambil koordinat bounding box elemen via `handle.boundingBox()`. Jika koordinat tersedia: menghitung target acak di 20%–80% lebar dan tinggi elemen, menggerakkan kursor bertahap via `page.mouse.move(x, y, { steps: randomInt(5, 15) })`, jeda hover (100–250ms), tekan (`page.mouse.down()`), jeda tahan (50–120ms), dan lepas (`page.mouse.up()`). Fallback otomatis ke `handle.click()` jika bounding box bernilai null. Zero `page.evaluate()`.
+- **Dibuktikan oleh:** `tests/unit/014-human-click.test.ts` (2 test): urutan interaksi mouse move ber-step + hover + down + up dalam batas 20%–80% bounding box, serta verifikasi pemanggilan fallback `handle.click()` saat bounding box null. Merah dulu (modul belum ada), lalu hijau.
+- **Hasil:** Coverage 100% / 100% pada `human-click.ts`.
+
+## Checkpoint: Fondasi Helper — lolos
+
+- `bun run test:coverage` (100%), `bun run type-check`, `bun run lint`, `bun run check` hijau.
+
+## Task 4: Cooldown antar-baris di `src/libs/run-browser-rows.ts` — selesai
+
+- **Diimplementasikan:** `src/libs/run-browser-rows.ts` menambahkan parameter `interRowDelay: InterRowDelay = { min: 5000, max: 15000 }` dan tipe `InterRowDelay`. Setelah context akun ditutup dan sebelum baris berikutnya dibuka, jeda acak diaplikasikan jika masih ada baris berikutnya dan browser masih terhubung.
+- **Dibuktikan oleh:** `tests/integration/005-run-browser-rows.test.ts` (17 test): seluruh 15 test eksisting berjalan cepat dengan helper `runFast` (0ms delay), ditambah 2 test baru untuk membuktikan jeda cooldown antar baris diaplikasikan (tetapi tidak setelah baris terakhir) dan tidak menunggu bila browser terputus.
+- **Hasil:** Coverage 100% / 100% pada `run-browser-rows.ts`.
+
+## Checkpoint: Cooldown Antar-Baris — lolos
+
+- `bun run test:coverage` (100%), `bun run type-check`, `bun run lint`, `bun run check` hijau.
+
+## Task 5: Integrasi emulasi humanis di posting Facebook (`src/core/facebook.ts`) — selesai
+
+- **Diimplementasikan:** `src/core/facebook.ts` mengintegrasikan `humanClick` pada caption trigger, next trigger, post preview trigger, dan publish trigger. Penulisan caption menggunakan `humanType` dengan jeda natural. Jeda tetap digantikan `randomDelay` saat menunggu respons modal.
+- **Dibuktikan oleh:** Seluruh test suite lolos; type-check, lint, dan relative import check bersih.
+
+## Task 6: Integrasi emulasi humanis di sinkronisasi cookie (`src/core/cookie.ts`) — selesai
+
+- **Diimplementasikan:** `src/core/cookie.ts` mengintegrasikan `humanClick` pada tombol login trigger dan `humanType` pada pengisian password dan UID. Pengetikan password tetap terproteksi via `ensurePasswordFocus`.
+- **Dibuktikan oleh:** Seluruh test suite lolos; type-check, lint, dan relative import check bersih.
+
+## Task 7: Build production, verifikasi akhir, dan audit coverage — selesai
+
+- **Diimplementasikan:** Menjalankan build rilis production lewat `bun run build` (bunup + javascript-obfuscator). Bundling dan obfuscation berhasil menghasilkan `dist/index.js` (21.52 KB raw).
+- **Dibuktikan oleh:** Uji eksekusi langsung `bun run dist/index.js --version` (v0.5.2) dan `--help` berjalan sukses tanpa syntax/reference error. Seluruh gate pre-commit (`oxlint`, `tsgo`, `check.ts`, `prettier`) dan `bun run test:coverage` (157 pass, 100% coverage garis & fungsi) lulus tanpa error.
+
+---
+
 # Build log: bilingual Facebook UI (Inggris & Indonesia)
 
 Ditulis lewat `/bfb-build` pada 2026-10-04. Serah terima untuk task berikutnya di `architecture/PLAN.md` ("Implementation Plan: bilingual Facebook UI"). Belum di-commit; commit lewat `/bfb-commit`.

@@ -1,10 +1,10 @@
 # Prepare
 
-Ditulis lewat `/bfb-prepare` pada 2026-10-04, setelah 7 commit rilis dwibahasa Facebook (`98e6117`). Cakupan: penyelarasan instruksi backend `gemini` untuk pelabelan graphify, verifikasi seluruh suite dan build, serta pembaruan knowledge graph via Gemini.
+Ditulis lewat `/bfb-prepare` pada 2026-10-04, di akhir siklus fitur Human Behavior Emulation (setelah `/bfb-ship` dengan status GO). Cakupan: pembaruan catatan coverage di TODO.md, dokumentasi konvensi emulasi interaksi manusiawi di AGENTS.md, verifikasi seluruh suite test dan build, pembaruan graphify dan pelabelan komunitas via claude-cli backend.
 
 ## 1. TODO.md
 
-- Tidak ada item baru atau dihapus. Seluruh 11 temuan terbuka masih akurat dan sesuai kondisi kode saat ini.
+- Memperbarui rasio file yang tercakup dalam laporan test coverage dari 27/37 menjadi 30/40 file `src/` (menambahkan modul baru `random-delay.ts`, `human-type.ts`, `human-click.ts`).
 
 ## 2. Memory Claude dan Antigravity
 
@@ -12,36 +12,37 @@ Dilewati (aturan 0): Knowledge Items agy (`~/.gemini/antigravity-cli/knowledge/`
 
 ## 3. Yang usang
 
-Tidak ada file usang atau kode mati.
+Tidak ada file usang atau kode mati di `src/` maupun `architecture/`.
 
 ## 4. Sisa debug
 
-Bersih: tidak ada log debug, breakpoint, `.only`/`.skip`, atau file coretan untracked.
+- Tidak ada log debug, breakpoint, `.only`, atau platform `.skip` yang tidak semestinya di `src/` maupun `tests/`.
 
 ## 5. Docs
 
-- `AGENTS.md`: opsi pelabelan komunitas `graphify label` diperbarui untuk mencantumkan alternatif `--backend=gemini` bila `GOOGLE_API_KEY` terpasang.
-- `docs/`: versi mirror tetap cocok dengan `.bumrc` dan `bun.lock`.
+- `AGENTS.md`: Diperbarui pada bagian alur runtime (penerapan cooldown antar baris akun `interRowDelay` 5–15 detik) dan konvensi kode (kewajiban penggunaan `humanClick`, `humanType`, dan `randomDelay` pada interaksi browser di `core/*`).
+- `README.md` dan `CONTRIBUTING.md` tetap akurat dan mutakhir.
+- `docs/`: versi mirror tetap cocok dengan `.bumrc` (Bun 1.4.2) dan `bun.lock`.
 
 ## 6. Skills
 
-`skills/bfb-prepare/SKILL.md` langkah 9 diperbarui untuk mencantumkan opsi `--backend=gemini` di samping `--backend=claude-cli`.
+Seluruh file di `skills/bfb-*/SKILL.md` sudah sinkron dan sesuai konvensi serta alur kerja repo.
 
 ## 7. Pengetahuan
 
-Pola integrasi `graphify` dengan backend Gemini terverifikasi: membutuhkan `graphifyy[openai]` dan environment variable `GOOGLE_API_KEY` (Free Tier Google AI Studio).
+Pengetahuan baru terkait Human Behavior Emulation (penghindaran deteksi bot Facebook secara host-side lewat native Puppeteer Keyboard dan Mouse API tanpa `page.evaluate`) didokumentasikan langsung di `AGENTS.md`.
 
 ## 8. Perintah
 
-| Perintah             | Hasil                                     |
-| -------------------- | ----------------------------------------- |
-| `bun run format`     | exit 0                                    |
-| `bun run lint`       | exit 0 (0 warning, 0 error)               |
-| `bun run type-check` | exit 0                                    |
-| `bun run check`      | exit 0 (bebas import relatif)             |
-| `bun run test`       | exit 0, 144 pass, 0 fail, 21 file         |
-| `bun run build`      | exit 0, bunup + obfuscate `dist/index.js` |
+| Perintah             | Hasil                                                               |
+| :------------------- | :------------------------------------------------------------------ |
+| `bun run format`     | exit 0                                                              |
+| `bun run lint`       | exit 0 (0 warning, 0 error)                                         |
+| `bun run type-check` | exit 0 (`tsgo --noEmit`)                                            |
+| `bun run check`      | exit 0 (0 import relatif)                                           |
+| `bun run test`       | exit 0, 157 pass, 0 fail, 24 file (100% coverage lines & functions) |
+| `bun run build`      | exit 0, bunup + obfuscate `dist/index.js` (21.52 KB raw)            |
 
 ## 9. Graphify
 
-`graphify update .` lalu `graphify label . --backend=gemini`: **878 node, 1228 edge, 45 komunitas**, seluruhnya berhasil terlabel melalui Gemini backend. `bun run format` dijalankan ulang sesudahnya.
+`graphify update .` lalu `graphify label . --backend=claude-cli`: **924 node, 1342 edge, 59 komunitas**, seluruhnya berhasil terlabel. `bun run format` dijalankan ulang sesudahnya.

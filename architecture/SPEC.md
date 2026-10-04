@@ -331,3 +331,110 @@ Membuat alur sinkronisasi cookie (`src/core/cookie.ts`, menu 95) dan alur postin
 ## Open Questions
 
 1. Apakah ada variasi dialek/frasa lain pada akun Facebook operator (misalnya Bahasa Melayu atau Bahasa Indonesia varian mobile/desktop) yang pernah ditemui?
+
+---
+
+# Spec fitur: pencegahan deteksi bot Facebook (Human Behavior Emulation)
+
+Ditulis lewat `/bfb-spec` pada 2026-10-04.
+
+## Objective
+
+Facebook memiliki sistem deteksi perilaku bot dan spammer berbasis telemetri browser (kecepatan ketik tidak realistis/instan, ketiadaan pergerakan kursor mouse sebelum klik, klik seketika di titik pusat elemen, pola jeda statis/tetap, dan pergantian sesi akun yang terlalu cepat tanpa jeda istirahat).
+
+Fitur ini melengkapi `puppeteer-extra-plugin-stealth` dengan modul **Human Behavior Emulation** yang membuat interaksi browser menyerupai manusia sungguhan secara organik:
+
+1. **Pengetikan Humanis (Human-like Typing Cadence):** Mengetik teks per karakter dengan interval acak bervariasi (40–120ms) disertai jeda berpikir alami pada spasi dan tanda baca (150–350ms).
+2. **Pergerakan Mouse & Klik Realistis (Human-like Mouse Trajectory & Click):** Menggerakkan kursor secara bertahap menuju elemen target ke titik acak di dalam bounding box (bukan titik tengah kaku), melakukan hover singkat, lalu menekan dengan durasi tahan realistis (50–120ms) sebelum melepas klik.
+3. **Jeda Acak Antar-Aksi (Random Jitter Delays):** Mengganti jeda statis (`applyDelay(1000)`, `applyDelay(2000)`) dengan variasi interval acak (`randomDelay(min, max)`).
+4. **Jeda Antar-Akun / Baris (Inter-row Cooldown):** Memberikan jeda istirahat acak otomatis (5–15 detik) antar baris akun di `runBrowserRows()` tanpa mengubah struktur CSV, mencegah lonjakan request beruntun dari IP dan mesin yang sama.
+
+## Keputusan User (2026-10-04)
+
+1. **Tingkat Emulasi:** Lengkap (pengetikan acak bertahap, pergerakan mouse & hover realistis, jeda acak antar-aksi, dan jeda antar-akun/baris).
+2. **Jeda Antar-Akun:** Otomatis dengan rentang acak moderat (5–15 detik) secara default, tanpa menambah atau mengubah kolom CSV.
+
+## Asumsi
+
+1. Tidak ada perubahan pada format atau header file CSV (`datas/accounts.csv`, `datas/contents.csv`).
+2. Semua emulasi manusia dieksekusi melalui API resmi Puppeteer (`page.keyboard`, `page.mouse`) di level proses Bun. **TIDAK PERNAH** mengirim fungsi callback JavaScript ke browser (`page.evaluate()`) karena akan dirusak oleh `javascript-obfuscator`.
+3. Jeda antar-akun (5–15 detik) hanya berlaku jika masih ada baris berikutnya dalam antrean yang akan diproses dan browser masih terhubung.
+4. Jeda antar-akun dapat disetel menjadi 0 ms dalam lingkungan pengujian otomatis (`tests/`) agar test suite tetap berjalan sangat cepat.
+
+## Arsitektur & Helper Baru
+
+Helper baru diletakkan di `src/libs/` mengikuti pola 1 fungsi per file:
+
+1. `src/libs/random-delay.ts`
+    - `randomDelay(minMs: number, maxMs: number): Promise<number>`
+    - `randomInt(min: number, max: number): number`
+    - Menghasilkan jeda waktu asinkron acak di antara rentang `minMs` dan `maxMs`.
+
+2. `src/libs/human-type.ts`
+    - `humanType(page: Page, text: string, options?: HumanTypeOptions): Promise<void>`
+    - Mengetik string karakter per karakter dengan jeda acak:
+        - Karakter standar: 40ms – 120ms.
+        - Spasi / tanda baca (` `, `,`, `.`, `!`, `?`): 150ms – 350ms.
+    - Menggantikan panggilan langsung `page.keyboard.type(text)`.
+
+3. `src/libs/human-click.ts`
+    - `humanClick(page: Page, handle: ElementHandle): Promise<void>`
+    - Mengambil `handle.boundingBox()`.
+    - Jika koordinat tersedia:
+        - Hitung koordinat acak di rentang 20%–80% lebar dan tinggi elemen (menghindari tepi terluar atau titik pusat persis).
+        - Gerakkan mouse via `page.mouse.move(x, y, { steps: randomInt(5, 15) })`.
+        - Jeda hover alami (100–250ms).
+        - Tekan mouse (`page.mouse.down()`), jeda klik (50–120ms), lalu lepas (`page.mouse.up()`).
+    - Fallback: jika bounding box null (misal elemen inline atau display khusus), fallback ke `handle.click()`.
+
+4. `src/libs/run-browser-rows.ts`
+    - Penambahan opsi jeda antar baris `interRowDelay?: { min: number; max: number }` (default `{ min: 5000, max: 15000 }`).
+    - Setelah context akun ditutup dan sebelum baris berikutnya dibuka, jalankan jeda acak jika baris saat ini bukan baris terakhir.
+    - Tes integrasi dapat mengirim `{ min: 0, max: 0 }` untuk mematikan jeda pada test runner.
+
+## Integrasi Alur Kerja
+
+- **Posting Facebook (`src/core/facebook.ts`):**
+    - Mengganti `page.keyboard.type(content.CAPTION + ' ')` dengan `humanType(page, content.CAPTION + ' ')`.
+    - Mengganti pemanggilan `.click()` pada `captionTrigger`, `nextPostTrigger`, `postTrigger`, dan `postPreviewTrigger` dengan `humanClick(page, handle)`.
+    - Mengganti jeda tetap dengan `randomDelay(800, 1500)` saat menunggu respons modal atau preview.
+- **Sinkronisasi Cookie (`src/core/cookie.ts`):**
+    - Menggunakan `humanType` saat mengetik password pada form login.
+    - Menggunakan `humanClick` saat menekan tombol Lanjut / Masuk.
+
+## Data dan Dampak
+
+- **CSV & Interface Global:** Tidak berubah.
+- **Data Sensitif (`credentials/`):** Tidak berubah.
+- **Menu CLI (`src/commands/menu.ts`):** Tidak berubah.
+- **Audit Log (`logs/audit.log`):** Tidak berubah.
+
+## Testing Strategy
+
+- **Unit (`tests/unit/`):**
+    - `randomDelay` & `randomInt`: memverifikasi output selalu berada dalam rentang `min` dan `max`, dan melempar error bila `min > max` atau bernilai negatif.
+    - `humanType`: menggunakan mock `Page` / `Keyboard` untuk memverifikasi seluruh karakter diketik secara berurutan dengan jeda antar karakter yang bervariasi.
+    - `humanClick`: menggunakan mock `Page` / `Mouse` dan mock `ElementHandle` untuk memverifikasi `mouse.move` dipanggil dengan multi-steps dan bounding box dihitung, serta fallback ke `.click()` jika bounding box null.
+- **Integration (`tests/integration/`):**
+    - `005-run-browser-rows.test.ts`: memverifikasi opsi `interRowDelay` dipatuhi antar-baris tanpa mematahkan isolasi browser context per baris.
+- **Manual:**
+    - Verifikasi posting feed di akun nyata untuk mengamati kelancaran pergerakan kursor dan pengetikan caption yang natural di layar Chrome headful.
+
+## Boundaries
+
+- **Always:** Semua emulasi dilakukan via Puppeteer Mouse & Keyboard API dari sisi host Bun.
+- **Ask first:** Mengubah durasi rentang jeda antar-baris di luar 5–15 detik.
+- **Never:** Menggunakan `page.evaluate()` untuk manipulasi event browser; mengubah skema CSV; menambahkan dependency eksternal baru.
+
+## Success Criteria
+
+1. Pengetikan caption dan kredensial berjalan dengan jeda acak per karakter (bukan sekaligus/instan).
+2. Klik tombol pada alur posting dan cookie sync didahului pergerakan mouse bertahap ke posisi elemen.
+3. Antrean baris CSV di `runBrowserRows` memiliki jeda istirahat 5–15 detik antar-baris (di lingkungan produksi/manual) dan 0ms di unit test.
+4. Tidak ada error `ReferenceError` saat aplikasi dibuild dan di-obfuscate.
+5. `bun run test:coverage` tetap 100% pada semua helper baru di `src/libs/`.
+6. Seluruh pemeriksaan `bun run lint`, `type-check`, `check`, `test`, `build` lulus hijau.
+
+## Open Questions
+
+Tidak ada pertanyaan terbuka yang memblokir.
