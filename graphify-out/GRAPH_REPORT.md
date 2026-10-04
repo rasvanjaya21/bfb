@@ -8,64 +8,64 @@
 
 - 847 nodes · 1022 edges · 52 communities (44 shown, 7 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.88)
-- Token cost: 40,998 input · 663 output
+- Token cost: 41,300 input · 680 output
 
 ## Graph Freshness
 
-- Built from commit: `5f02b28b`
+- Built from commit: `bf1abd57`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 
-- Interactive Menu and Status Checks
-- Project Overview and CI
-- TypeScript Compiler Config
+- Interactive Menu Loop
+- Repo Tooling Overview
+- TypeScript Config
 - Package Scripts
 - Dev Dependencies
-- TDD Test Skill
+- TDD Skill
 - Prettier Config
 - Runtime Dependencies
 - MCP Server Config
 - Performance Checklist
 - Performance Checklist (Duplicate)
-- Cookie Sync and CSV Parsing
-- Shipping and Launch Method
+- Cookie Sync and CSV
+- Shipping and Launch
 - Relative Import Checker
-- Issue Templates and Stale Bot
-- Cleanup Script
+- Bug Reports and Stale Issues
+- Clean Script
 - Feature Request Template
 - Question Issue Template
-- As-Built Product Spec
-- Audit Log and Project Init
-- Offline Docs Generator
+- As-Built Spec
+- Audit Log and Init
+- Docs Mirror Generator
 - Prepare Skill
-- Ship Skill Accessibility Checklist
-- Pre-Commit Hook
-- Audit Log Implementation Plan
+- Ship Skill Accessibility
+- Pre-commit Hook
+- Audit Log Plan
 - Code Review Report
-- CLI Entry and Arguments
+- CLI Entry and Args
 - Test Report
-- Audit Log Build Report
+- Audit Log Build Log
 - Package Metadata
 - Prepare Report
 - Release Ship Decision
 - Hidden Input Prompt
-- Package Keywords
-- Commit Report
+- Bunup Config and Keywords
+- Commit Log
 - Security Checklist
 - Published Package Files
 - Repository Metadata
-- Token Activation Flow
-- Dependency Security Overrides
+- Token Activation
+- Dependency Overrides
 - Facebook Posting Flow
-- CLI Exit Code Tests
+- CLI Entry Tests
 - Browser Row Runner
 - Menu Access Locking
-- Incremental Build Skill
+- Build Skill
 - Chrome Driver Launch
-- Commit Message Conventions
-- Planning Skill
+- Commit Skill Conventions
+- Plan Skill
 - Code Review Skill
 - Security Checklist (Duplicate)
 - Spec Skill
@@ -108,17 +108,17 @@
 
 ## Communities (52 total, 7 thin omitted)
 
-### Community 0 - "Interactive Menu and Status Checks"
+### Community 0 - "Interactive Menu Loop"
 
 Cohesion: 0.23
 Nodes (10): menu(), cookies(), applyDelay(), checkActivation(), checkInit(), describeMenu(), MENU_LABELS, downloadDriver() (+2 more)
 
-### Community 1 - "Project Overview and CI"
+### Community 1 - "Repo Tooling Overview"
 
 Cohesion: 0.07
 Nodes (39): Pull Request Template, CI Workflow (build, type-check, lint, test on ubuntu/macos/windows), changelogithub, Release Workflow (tag v* -> npm + GitHub Packages), Token Activation Check (bfb.blackfriday.my.id API), @/ Alias Import Rule (no relative imports, enforced by check.ts), bfb CLI (@rasvanjaya21/bfb), Bun Toolchain (bunup, tsgo, oxlint, prettier, bun test) (+31 more)
 
-### Community 2 - "TypeScript Compiler Config"
+### Community 2 - "TypeScript Config"
 
 Cohesion: 0.05
 Nodes (36): bunup.config.ts, DOM, ES2022, node_modules, src/**/\*, tests/**/*, *.ts, compilerOptions (+28 more)
@@ -133,7 +133,7 @@ Nodes (16): scripts, auto, build, check, clean, dev, docs, format (+8 more)
 Cohesion: 0.11
 Nodes (19): bumpp, bunup, javascript-obfuscator, json-server, oxlint, devDependencies, bumpp, bunup (+11 more)
 
-### Community 5 - "TDD Test Skill"
+### Community 5 - "TDD Skill"
 
 Cohesion: 0.04
 Nodes (46): API / Integration Testing, /bfb-test, Browser Testing with DevTools, Common Assertions, Common Rationalizations, DAMP Over DRY in Tests, Decision Guide, Discover the Stack First (+38 more)
@@ -163,12 +163,12 @@ Nodes (26): API, Backend Checklist, Cache checklist, Caching Strategies, Common 
 Cohesion: 0.08
 Nodes (26): API, Backend Checklist, Cache checklist, Caching Strategies, Common Anti-Patterns, Connection pooling, Core Web Vitals Targets, CSS (+18 more)
 
-### Community 11 - "Cookie Sync and CSV Parsing"
+### Community 11 - "Cookie Sync and CSV"
 
 Cohesion: 0.17
 Nodes (14): syncCookies(), Cell, csvToJson(), emptyCell(), parseRows(), ensurePasswordFocus(), isReservedKey(), RESERVED_KEYS (+6 more)
 
-### Community 12 - "Shipping and Launch Method"
+### Community 12 - "Shipping and Launch"
 
 Cohesion: 0.08
 Nodes (25): Accessibility, Code Quality, Common Rationalizations, Documentation, Error Budget Release Gate, Error Reporting, Feature Flag Strategy, Infrastructure (+17 more)
@@ -178,17 +178,17 @@ Nodes (25): Accessibility, Code Quality, Common Rationalizations, Documentation,
 Cohesion: 0.36
 Nodes (6): hasRelativeImport(), relativeImportChecker(), ROOTS, transpilers, walk(), ./e
 
-### Community 19 - "As-Built Product Spec"
+### Community 19 - "As-Built Spec"
 
 Cohesion: 0.07
 Nodes (29): Aktivasi (menu 97), Asumsi, Asumsi, Boundaries, Boundaries, Code Style, Commands, Data dan dampak (+21 more)
 
-### Community 20 - "Audit Log and Project Init"
+### Community 20 - "Audit Log and Init"
 
 Cohesion: 0.13
 Nodes (17): AuditEntry, AuditResult, clean(), formatAuditLine(), pad(), ignoreSecrets(), initProject(), writeIfMissing() (+9 more)
 
-### Community 21 - "Offline Docs Generator"
+### Community 21 - "Docs Mirror Generator"
 
 Cohesion: 0.11
 Nodes (21): browsers, bun, bunPages(), bunup, bunupPages(), checkout(), Doc, docs (+13 more)
@@ -198,12 +198,12 @@ Nodes (21): browsers, bun, bunPages(), bunup, bunupPages(), checkout(), Doc, doc
 Cohesion: 0.17
 Nodes (11): 10. Ringkasan, 1. TODO.md, 2. Selaraskan memory Claude dan Antigravity, 3. Hapus yang usang, 4. Hapus sisa debug, 5. Update docs, 6. Update skills, 7. Update pengetahuan kamu (+3 more)
 
-### Community 23 - "Ship Skill Accessibility Checklist"
+### Community 23 - "Ship Skill Accessibility"
 
 Cohesion: 0.06
 Nodes (33): Accessibility Checklist, Accessible Lists, ARIA Roles, /bfb-ship, Buttons vs. Links, Common Anti-Patterns, Common HTML Patterns, Content (+25 more)
 
-### Community 25 - "Audit Log Implementation Plan"
+### Community 25 - "Audit Log Plan"
 
 Cohesion: 0.08
 Nodes (25): Architecture Decisions, Architecture Decisions, Checkpoint: Fase 1, Checkpoint: Fitur lengkap, Checkpoint: Fondasi, Checkpoint: Menu sederhana, Dependency graph, Dependency graph (+17 more)
@@ -213,7 +213,7 @@ Nodes (25): Architecture Decisions, Architecture Decisions, Checkpoint: Fase 1, 
 Cohesion: 0.17
 Nodes (11): Checklist bfb (mekanis), Critical, Ditemukan saat verifikasi review, Important, Nit, Review: seluruh perubahan sejak `f05d14a` (v0.4.0), Suggestion, Temuan dan penyelesaian (+3 more)
 
-### Community 27 - "CLI Entry and Arguments"
+### Community 27 - "CLI Entry and Args"
 
 Cohesion: 0.27
 Nodes (7): showHelp(), showVersion(), index(), HELP_ARGS, parseArgs(), ParsedArgs, VERSION_ARGS
@@ -223,7 +223,7 @@ Nodes (7): showHelp(), showVersion(), index(), HELP_ARGS, parseArgs(), ParsedArg
 Cohesion: 0.20
 Nodes (9): Apa yang dibuktikan setiap suite, Belum dites otomatis sama sekali, Bukti bahwa test benar-benar menjaga perilaku, Coverage (`bun run test:coverage`), Placeholder, Putaran kedua (setelah `/bfb-review`), Saran berikutnya, Struktur (+1 more)
 
-### Community 29 - "Audit Log Build Report"
+### Community 29 - "Audit Log Build Log"
 
 Cohesion: 0.09
 Nodes (22): Build log: audit log, Build sebelumnya: menutup spec as-built, Checkpoint Fase 1, Checkpoint: Fitur lengkap — lolos, Checkpoint Fondasi — lolos, Checkpoint: Menu sederhana — disetujui user, Ditunda, Fase 1 — selesai (+14 more)
@@ -236,7 +236,7 @@ Nodes (15): bin, bfb, bugs, url, description, engines, bun, exports (+7 more)
 ### Community 31 - "Prepare Report"
 
 Cohesion: 0.18
-Nodes (10): 1. TODO.md, 2. Memory Claude dan Antigravity, 3. Usang, 4. Sisa debug, 5. Docs, 6. Skills, 7. Pengetahuan, 8. Formatter, linter, test, build (+2 more)
+Nodes (10): 1. TODO.md, 2. Memory Claude dan Antigravity, 3. Yang usang, 4. Sisa debug, 5. Docs, 6. Skills, 7. Pengetahuan, 8. Perintah (+2 more)
 
 ### Community 32 - "Release Ship Decision"
 
@@ -248,12 +248,12 @@ Nodes (8): Acknowledged risks (boleh ikut rilis), Blockers (wajib diperbaiki seb
 Cohesion: 0.40
 Nodes (3): HiddenInput, HiddenOutput, hideQuestion()
 
-### Community 34 - "Package Keywords"
+### Community 34 - "Bunup Config and Keywords"
 
 Cohesion: 0.29
 Nodes (6): bun, keywords, automation, bunup, puppeteer, typescript
 
-### Community 35 - "Commit Report"
+### Community 35 - "Commit Log"
 
 Cohesion: 0.40
 Nodes (4): Alasan pengelompokan, Commit log, Pre-commit hook, Tidak di-commit
@@ -273,12 +273,12 @@ Nodes (4): files, dist, LICENSE, README.md
 Cohesion: 0.67
 Nodes (3): repository, type, url
 
-### Community 39 - "Token Activation Flow"
+### Community 39 - "Token Activation"
 
 Cohesion: 0.15
 Nodes (7): activateBfb(), showResult(), ActivationResult, requestActivation(), Outcome, realCwd, realCwd
 
-### Community 40 - "Dependency Security Overrides"
+### Community 40 - "Dependency Overrides"
 
 Cohesion: 0.40
 Nodes (5): overrides, basic-ftp, brace-expansion, ip-address, ws
@@ -298,17 +298,17 @@ Nodes (8): logRowOutcome(), RESULT_WORDS, OpenPage, RowOutcome, RowsResult, runB
 Cohesion: 0.40
 Nodes (4): isMenuLocked(), LOCKED_UNTIL_READY, SetupStatus, ready
 
-### Community 45 - "Incremental Build Skill"
+### Community 45 - "Build Skill"
 
 Cohesion: 0.05
 Nodes (38): Aturan bfb yang mengalahkan saran generik, /bfb-build, Common Rationalizations, Contract-First Slicing, Correctness, Definition of Done, Definition of Done vs. Acceptance Criteria, Documentation (+30 more)
 
-### Community 47 - "Commit Message Conventions"
+### Community 47 - "Commit Skill Conventions"
 
 Cohesion: 0.07
 Nodes (28): Ad-hoc types (one-offs, not to be reproduced), Aturan pesan, Backend / data, /bfb-commit, Canonical types, `chore` — 276 uses (16%), Commit Message Conventions — rasvanjaya21, Core shape (+20 more)
 
-### Community 58 - "Planning Skill"
+### Community 58 - "Plan Skill"
 
 Cohesion: 0.06
 Nodes (31): /bfb-plan, Common Rationalizations, Correctness, Definition of Done, Definition of Done vs. Acceptance Criteria, Documentation, How to Apply, Integration (+23 more)
@@ -338,17 +338,17 @@ Nodes (15): /bfb-spec, Common Rationalizations, Keeping the Spec Alive, Method, 
 
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Reference` connect `Ship Skill Accessibility Checklist` to `Performance Checklist (Duplicate)`, `Security Checklist (Duplicate)`?**
+- **Why does `Reference` connect `Ship Skill Accessibility` to `Performance Checklist (Duplicate)`, `Security Checklist (Duplicate)`?**
   _High betweenness centrality (0.011) - this node is a cross-community bridge._
-- **Why does `Performance Checklist` connect `Performance Checklist (Duplicate)` to `Ship Skill Accessibility Checklist`?**
+- **Why does `Performance Checklist` connect `Performance Checklist (Duplicate)` to `Ship Skill Accessibility`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
-- **Why does `Shipping and Launch` connect `Shipping and Launch Method` to `Ship Skill Accessibility Checklist`?**
+- **Why does `Shipping and Launch` connect `Shipping and Launch` to `Ship Skill Accessibility`?**
   _High betweenness centrality (0.006) - this node is a cross-community bridge._
 - **What connects `Cell`, `AuditEntry`, `AuditState` to the rest of the system?**
   _519 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Project Overview and CI` be split into smaller, more focused modules?**
+- **Should `Repo Tooling Overview` be split into smaller, more focused modules?**
   _Cohesion score 0.07422402159244265 - nodes in this community are weakly interconnected._
-- **Should `TypeScript Compiler Config` be split into smaller, more focused modules?**
+- **Should `TypeScript Config` be split into smaller, more focused modules?**
   _Cohesion score 0.05405405405405406 - nodes in this community are weakly interconnected._
 - **Should `Package Scripts` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
