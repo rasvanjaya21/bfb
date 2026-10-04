@@ -1,11 +1,12 @@
 import { applyDelay } from '@/libs/apply-delay';
-import { csvToJson } from '@/libs/csv-parser';
+import { askYesNo } from '@/libs/ask-yes-no';
 import { ensurePasswordFocus } from '@/libs/ensure-password-focus';
 import { facebookSelector } from '@/libs/facebook-selectors';
 import { formatDuration } from '@/libs/format-duration';
 import { humanClick } from '@/libs/human-click';
 import { humanType } from '@/libs/human-type';
 import { launchBrowser } from '@/libs/launch-browser';
+import { loadRows } from '@/libs/load-rows';
 import { logRowOutcome } from '@/libs/log-row-outcome';
 import { readCookies } from '@/libs/read-cookies';
 import { runBrowserRows, type OpenPage } from '@/libs/run-browser-rows';
@@ -18,8 +19,9 @@ import type { CookieData } from 'puppeteer-core';
 import readline from 'readline/promises';
 
 // log records the run under the menu's action: the start, one line per account, and the summary.
-async function cookies(readlineInterface: readline.Interface, log: AuditLogger, action: string): Promise<void> {
-	const accounts = await csvToJson<Account>(path.join(process.cwd(), 'datas', 'accounts.csv'));
+// explicit limits the run to the rows with those NO values; a NO that is not in the CSV stops the run before the browser opens.
+async function cookies(readlineInterface: readline.Interface, log: AuditLogger, action: string, explicit?: number[]): Promise<void> {
+	const accounts = await loadRows<Account>(process.cwd(), 'accounts.csv', explicit);
 
 	if (accounts.length === 0) {
 		console.clear();
@@ -148,9 +150,7 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 			await humanType(page, account.PASSWORD);
 		}
 
-		const answer = await readlineInterface.question('Simpan cookie? (y/N) ');
-
-		if (answer.trim().toLowerCase() !== 'y') {
+		if (!(await askYesNo(readlineInterface, 'Simpan cookie? (y/N) '))) {
 			console.log('Cookie tidak di simpan');
 			return 'Cookie tidak di simpan';
 		}
