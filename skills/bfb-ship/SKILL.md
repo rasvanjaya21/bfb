@@ -31,8 +31,9 @@ Keluarkan `GO` atau `NO-GO` dengan blocker, perbaikan yang disarankan, risiko ya
 ## Realitas bfb yang harus dicek sebelum GO
 
 - `bun run type-check`, `bun run lint`, `bun run check`, `bun run test:coverage` (ambang 100%), dan `bun run build` semuanya lolos.
-- `VERSION` di `src/utils/constant.ts` sama dengan versi yang akan di-bump; bumpp hanya mengubah `package.json`.
-- Isi tarball dicek dengan `bun pm pack --dry-run` atau `npm pack --dry-run`: hanya `dist`, `README.md`, `LICENSE`, dan semua JS yang dipublikasikan sudah di-obfuscate.
+- CI (`ci.yml`) untuk commit yang akan dirilis sudah hijau di ubuntu/macos/windows. `bun run release` ikut mem-push commit yang belum di-push, jadi push dan tunggu CI dulu sebelum rilis.
+- `VERSION` di `src/utils/constant.ts` sama dengan `version` di `package.json`; `bun run release` menaikkan keduanya di commit yang sama.
+- Isi tarball dicek dengan `bun pm pack --dry-run` (sama dengan CI; `bun publish --dry-run` gagal tanpa auth registry): hanya `dist`, `README.md`, `LICENSE`, dan semua JS yang dipublikasikan sudah di-obfuscate.
 - Tidak ada isi `datas/`, `credentials/`, cookie, atau token yang ikut ter-commit atau ter-pack.
 - `DRIVER_VERSION` berubah? Catat di rilis bahwa user harus memasang ulang driver (menu 96).
 - Rollback npm: versi yang sudah dipublikasikan tidak bisa ditimpa. Rencananya adalah `npm deprecate` versi bermasalah lalu rilis patch, bukan unpublish.

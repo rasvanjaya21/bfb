@@ -29,7 +29,7 @@ Untuk perbaikan bug, pola Prove-It:
 - `bunfig.toml` mewajibkan coverage 100% baris dan fungsi untuk setiap file yang di-import test. Kode baru di file yang sudah dites wajib ikut dites, termasuk cabang error; `process.exit` dan sejenisnya di-mock (`spyOn(process, 'exit')`). Coverage hanya menghitung file yang di-import di proses test, jadi test lewat `Bun.spawn` tidak menambah angka.
 - `bun test` selalu berjalan dengan `TZ=UTC`: test yang bergantung pada waktu lokal harus menyuntikkan offset. Harness atau percobaan sementara jangan diberi nama `*.test.ts` di dalam repo (termasuk `temp/`), karena `bun test` dan `test:coverage` ikut menjalankannya; hapus segera setelah dipakai.
 - Buktikan test-nya, bukan hanya perbaikannya: jalankan test regresi terhadap kode lama dan lihat gagal karena alasan yang benar.
-- `TODO.md` bagian "Testing" berisi daftar test yang sudah diprioritaskan dari audit.
+- `TODO.md` bagian "Tooling & CI" mencatat file `src/` yang belum masuk laporan coverage.
 
 Tulis gambaran coverage ke `architecture/TEST.md`: apa yang dibuktikan setiap suite, jalur mana yang belum dites, dan placeholder mana yang masih ada.
 
