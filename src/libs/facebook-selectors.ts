@@ -6,7 +6,7 @@ const SELECTORS: Record<FacebookSelectorName, string> = {
 	nextPost: `xpath=//*[(self::div[@role="button"] or self::button or self::span) and (text()="Next" or text()="Berikutnya" or text()="Lanjut")]`,
 	postPreview: `xpath=//*[contains(text(), "Post preview") or contains(text(), "Pratinjau postingan") or contains(text(), "Pratinjau kiriman")]`,
 	publishPost: `xpath=//div[@role="button" and .//span[(text()="Post" or text()="Posting" or text()="Kirim" or contains(text(), "Posting") or contains(text(), "Kirim"))] and not(@aria-disabled="true")]`,
-	loginContinue: `xpath=//*[text()="Continue" or text()="Lanjutkan" or contains(text(), "Continue") or contains(text(), "Lanjutkan")]`,
+	loginContinue: `xpath=//*[(self::div[@role="button"] or self::button) and (contains(@aria-label, "Continue") or contains(@aria-label, "Lanjutkan") or contains(., "Continue") or contains(., "Lanjutkan"))]`,
 	loginFresh: `xpath=//*[text()="Log in to Facebook" or text()="Masuk ke Facebook" or text()="Log In" or text()="Masuk"]`,
 	forgottenPassword: `xpath=//*[contains(text(), "Forgotten password?") or contains(text(), "Forgot password?") or contains(text(), "Lupa kata sandi?")]`,
 };
