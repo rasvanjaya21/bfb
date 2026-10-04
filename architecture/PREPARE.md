@@ -1,36 +1,35 @@
 # Prepare
 
-Ditulis lewat `/bfb-prepare` pada 2026-10-04, setelah `/bfb-ship` (keputusan GO untuk fitur bilingual Facebook UI). Cakupan: sinkronisasi cookies dan post feed Facebook bilingual (EN & ID), ekstraksi `src/libs/facebook-selectors.ts`, pengujian `tests/unit/011-facebook-selectors.test.ts`, pembaruan alur siklus 8 tahap, dan pembersihan repo sebelum `/bfb-commit`.
+Ditulis lewat `/bfb-prepare` pada 2026-10-04, setelah 7 commit rilis dwibahasa Facebook (`98e6117`). Cakupan: penyelarasan instruksi backend `gemini` untuk pelabelan graphify, verifikasi seluruh suite dan build, serta pembaruan knowledge graph via Gemini.
 
 ## 1. TODO.md
 
-- **Diperbarui:** angka cakupan file di `TODO.md` disesuaikan dari 26/36 menjadi 27 dari 37 file `src/` menyusul penambahan `src/libs/facebook-selectors.ts` yang di-import dan dites oleh `tests/unit/011-facebook-selectors.test.ts`.
-- Temuan lain tidak berubah (total 11 item terbuka).
+- Tidak ada item baru atau dihapus. Seluruh 11 temuan terbuka masih akurat dan sesuai kondisi kode saat ini.
 
 ## 2. Memory Claude dan Antigravity
 
-Dilewati (aturan 0): Knowledge Items agy (`~/.gemini/antigravity-cli/knowledge/`) hanya berisi `knowledge.lock`. Tidak ada item memory baru yang bertentangan atau perlu disinkronkan.
+Dilewati (aturan 0): Knowledge Items agy (`~/.gemini/antigravity-cli/knowledge/`) hanya berisi `knowledge.lock`. Tidak ada memory yang perlu diselaraskan.
 
 ## 3. Yang usang
 
-Tidak ada kode mati, file sementara yang usang, atau konfigurasi usang.
+Tidak ada file usang atau kode mati.
 
 ## 4. Sisa debug
 
-Bersih: tidak ada `console.debug`/`console.dir`, `debugger`, `.only`/`.skip` di test suite, atau file untracked yang tidak diinginkan.
+Bersih: tidak ada log debug, breakpoint, `.only`/`.skip`, atau file coretan untracked.
 
 ## 5. Docs
 
-- `AGENTS.md`: diagram dan daftar siklus diperbarui ke alur 8 tahap (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
-- `docs/`: versi mirror (`bun.md`, `bunup.md`, `puppeteer.md`, `puppeteer-extra.md`) cocok dengan `.bumrc` dan `bun.lock`.
+- `AGENTS.md`: opsi pelabelan komunitas `graphify label` diperbarui untuk mencantumkan alternatif `--backend=gemini` bila `GOOGLE_API_KEY` terpasang.
+- `docs/`: versi mirror tetap cocok dengan `.bumrc` dan `bun.lock`.
 
 ## 6. Skills
 
-Semua 8 skill di `skills/bfb-*/SKILL.md` diselaraskan ke rute 8 tahap: `bfb-prepare` (awal) → `bfb-spec` → `bfb-plan` → `bfb-build` → `bfb-test` → `bfb-review` → `bfb-ship` → `bfb-prepare` (akhir) → `bfb-commit`.
+`skills/bfb-prepare/SKILL.md` langkah 9 diperbarui untuk mencantumkan opsi `--backend=gemini` di samping `--backend=claude-cli`.
 
 ## 7. Pengetahuan
 
-Pola selektor bilingual Facebook berbasis XPath union tanpa `page.evaluate()` (menjaga kompatibilitas penuh dengan `javascript-obfuscator`) dan rute siklus 8 tahap resmi dicatat di `AGENTS.md` dan skills.
+Pola integrasi `graphify` dengan backend Gemini terverifikasi: membutuhkan `graphifyy[openai]` dan environment variable `GOOGLE_API_KEY` (Free Tier Google AI Studio).
 
 ## 8. Perintah
 
@@ -45,4 +44,4 @@ Pola selektor bilingual Facebook berbasis XPath union tanpa `page.evaluate()` (m
 
 ## 9. Graphify
 
-`graphify update .` lalu `graphify label . --backend=claude-cli`: **878 node, 1228 edge, 45 komunitas**, seluruh komunitas terlabel deskriptif. `bun run format` dijalankan ulang sesudahnya.
+`graphify update .` lalu `graphify label . --backend=gemini`: **878 node, 1228 edge, 45 komunitas**, seluruhnya berhasil terlabel melalui Gemini backend. `bun run format` dijalankan ulang sesudahnya.
