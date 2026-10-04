@@ -3,6 +3,8 @@ import { csvToJson } from '@/libs/csv-parser';
 import { ensurePasswordFocus } from '@/libs/ensure-password-focus';
 import { facebookSelector } from '@/libs/facebook-selectors';
 import { formatDuration } from '@/libs/format-duration';
+import { humanClick } from '@/libs/human-click';
+import { humanType } from '@/libs/human-type';
 import { launchBrowser } from '@/libs/launch-browser';
 import { logRowOutcome } from '@/libs/log-row-outcome';
 import { readCookies } from '@/libs/read-cookies';
@@ -103,20 +105,20 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 			isCookiesExpired = false;
 			console.log('Login bermasalah');
 		} else {
-			await loginTrigger.click();
+			await humanClick(page, loginTrigger);
 		}
 
 		if (isCookiesExpired) {
 			const typePasswordSelector = facebookSelector('forgottenPassword');
 			await page.locator(typePasswordSelector).wait();
 			await ensurePasswordFocus(page);
-			await page.keyboard.type(account.PASSWORD);
+			await humanType(page, account.PASSWORD);
 		} else {
 			await page.keyboard.press('Tab');
-			await page.keyboard.type(account.UID);
+			await humanType(page, account.UID);
 			await page.keyboard.press('Tab');
 			await ensurePasswordFocus(page);
-			await page.keyboard.type(account.PASSWORD);
+			await humanType(page, account.PASSWORD);
 		}
 
 		const answer = await readlineInterface.question('Simpan cookie? (y/N) ');

@@ -3,8 +3,11 @@ import { contentStatus } from '@/libs/content-status';
 import { csvToJson } from '@/libs/csv-parser';
 import { facebookSelector } from '@/libs/facebook-selectors';
 import { formatDuration } from '@/libs/format-duration';
+import { humanClick } from '@/libs/human-click';
+import { humanType } from '@/libs/human-type';
 import { launchBrowser } from '@/libs/launch-browser';
 import { logRowOutcome } from '@/libs/log-row-outcome';
+import { randomDelay } from '@/libs/random-delay';
 import { readCookies } from '@/libs/read-cookies';
 import { runBrowserRows, type OpenPage } from '@/libs/run-browser-rows';
 import type { AuditLogger } from '@/libs/write-audit-log';
@@ -105,13 +108,15 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<string | 
 		.waitHandle()
 		.catch(() => null);
 	if (!captionTrigger) throw new Error('Trigger caption tidak ditemukan');
-	await captionTrigger.click();
+	await humanClick(page, captionTrigger);
 	console.log('Trigger caption ditemukan');
 
 	console.log('Menulis caption');
 	const createPostSelector = facebookSelector('createPost');
 	await page.locator(createPostSelector).wait();
-	await page.keyboard.type(content.CAPTION + ' ');
+	await randomDelay(400, 800);
+	await humanType(page, content.CAPTION + ' ');
+	await randomDelay(200, 400);
 	await page.keyboard.press('Tab');
 
 	console.log('Mencari tombol next');
@@ -136,13 +141,13 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<string | 
 			.waitHandle()
 			.catch(() => null);
 		if (!postTrigger) throw new Error('Publish tidak valid');
-		await postTrigger.click();
+		await humanClick(page, postTrigger);
 		console.log('Publish valid');
 	}
 
 	// WITH NEXT CASE
 	if (nextPostTrigger) {
-		await nextPostTrigger.click();
+		await humanClick(page, nextPostTrigger);
 		console.log('Tombol next ditemukan');
 
 		console.log('Memvalidasi publish');
@@ -151,7 +156,7 @@ async function postFeed(openPage: OpenPage, content: Content): Promise<string | 
 			.waitHandle()
 			.catch(() => null);
 		if (!postPreviewTrigger) throw new Error('Publish tidak valid');
-		await postPreviewTrigger.click();
+		await humanClick(page, postPreviewTrigger);
 		await page.keyboard.down('Shift');
 		await page.keyboard.press('Tab');
 		await page.keyboard.up('Shift');
