@@ -42,7 +42,7 @@ bun run release      # bumpp --commit --push --tag
 bun run mock         # json-server dari mock/ (area coretan lokal, tidak di-commit)
 ```
 
-Pre-commit hook ada di `.githooks/pre-commit` dan menjalankan `lint && type-check && check`; `bun install` memasangnya lewat script `prepare` (`git config core.hooksPath .githooks`). Jangan kembali ke `simple-git-hooks`: postinstall-nya memanggil `node ./postinstall.js` langsung, sehingga `bun install` gagal (exit 126) di mesin tanpa Node, dan `[run] bun = true` tidak berlaku untuk script lifecycle dependency. CI (`.github/workflows/ci.yml`) menjalankan `install --frozen-lockfile`, type-check, lint, check, `test:coverage`, build, dan `bun publish --dry-run` di ubuntu/macos/windows.
+Pre-commit hook ada di `.githooks/pre-commit` dan menjalankan `lint && type-check && check`; `bun install` memasangnya lewat script `prepare` (`git config core.hooksPath .githooks`). Jangan kembali ke `simple-git-hooks`: postinstall-nya memanggil `node ./postinstall.js` langsung, sehingga `bun install` gagal (exit 126) di mesin tanpa Node, dan `[run] bun = true` tidak berlaku untuk script lifecycle dependency. CI (`.github/workflows/ci.yml`) menjalankan `install --frozen-lockfile`, type-check, lint, check, `test:coverage`, build, dan `bun pm pack --dry-run` di ubuntu/macos/windows. Jangan pakai `bun publish --dry-run`: di Bun 1.4.2 perintah itu tetap meminta auth registry dan gagal dengan `missing authentication` di CI.
 
 ## Struktur
 
