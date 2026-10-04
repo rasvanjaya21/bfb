@@ -1,7 +1,10 @@
 import { randomDelay, randomInt } from '@/libs/random-delay';
 import type { ElementHandle, Page } from 'puppeteer-core';
 
+// The mouse can only hit what is inside the viewport: bring the element into view first, otherwise an element
+// below the fold (e.g. the composer under a tall profile cover) gets clicked at off-screen coordinates and nothing happens.
 async function humanClick(page: Page, handle: ElementHandle): Promise<void> {
+	await handle.scrollIntoView().catch(() => {});
 	const box = await handle.boundingBox();
 	if (!box) {
 		await handle.click();
