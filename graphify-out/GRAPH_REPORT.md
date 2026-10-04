@@ -8,22 +8,22 @@
 
 - 878 nodes · 1228 edges · 45 communities (36 shown, 9 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 98 edges (avg confidence: 0.93)
-- Token cost: 2,456 input · 500 output
+- Token cost: 2,456 input · 514 output
 
 ## Graph Freshness
 
-- Built from commit: `ddbbcf96`
+- Built from commit: `98e6117c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 
 - Core Utilities and Drivers
-- CI/CD and Repository Rules
+- CI/CD and Repository Standards
 - TypeScript Configuration
 - Development Scripts
 - Development Dependencies
-- Test-Driven Development Standards
+- Test-Driven Development Guide
 - Prettier Formatting Rules
 - Production Dependencies
 - MCP and Puppeteer Config
@@ -33,34 +33,34 @@
 - Shipping and Quality Standards
 - Import and Coverage Checks
 - Issue Management Workflows
-- CLI Binary Entry
+- Binary Executables
 - Bug Reporting Links
 - Feature Request Templates
 - Question Templates
-- Feature Specifications
+- Feature Specifications and Requirements
 - Audit Logging System
-- Documentation and Browser Tools
-- Project Preparation Tasks
-- Accessibility Standards
-- Bilingual UI Architecture
+- Documentation Generation Tools
+- Project Preparation Workflow
+- Accessibility and ARIA Standards
+- Bilingual UI Architecture Plan
 - Code Review Reports
-- Project Architecture Planning
-- Runtime Engine Requirements
-- Build Progress Tracking
-- Package Metadata
-- Maintenance and Cleanup Guide
-- Release Decision Records
+- Project Architecture and Planning
+- Engine Requirements
+- Build and Verification Logs
+- Package Metadata and Publishing
+- Maintenance and Cleanup Tasks
+- Release and Ship Decisions
 - Package Exports
-- Bunup Configuration
-- Commit Logging Rules
+- Bunup Tool Configuration
+- Commit Logging and Hooks
 - Repository Configuration
 - Dependency Overrides
 - Bilingual UI Implementation
-- Incremental Build Methodology
+- Incremental Implementation Rules
 - Commit Message Conventions
 - Planning and Integration Methods
 - Code Review Guidelines
-- Security and LLM Safety
+- LLM and Security Checklist
 - Specification Lifecycle Management
 
 ## God Nodes (most connected - your core abstractions)
@@ -106,7 +106,7 @@
 Cohesion: 0.06
 Nodes (31): Task 4: Aktivasi dan pasang driver mengembalikan hasilnya — selesai, Fase 2: Mencatat hasil menu, paths, @puppeteer/browsers, menu(), runTask(), activateBfb(), showResult() (+23 more)
 
-### Community 1 - "CI/CD and Repository Rules"
+### Community 1 - "CI/CD and Repository Standards"
 
 Cohesion: 0.07
 Nodes (31): Pull Request Template, CI Workflow (build, type-check, lint, test on ubuntu/macos/windows), changelogithub, Release Workflow (tag v* -> npm + GitHub Packages), Token Activation Check (bfb.blackfriday.my.id API), bfb CLI (@rasvanjaya21/bfb), Bun Toolchain (bunup, tsgo, oxlint, prettier, bun test), Credentials (cookies.json, token.bfb) (+23 more)
@@ -126,7 +126,7 @@ Nodes (16): scripts, auto, build, check, clean, dev, docs, format (+8 more)
 Cohesion: 0.20
 Nodes (10): devDependencies, bumpp, bunup, javascript-obfuscator, json-server, oxlint, prettier, prettier-plugin-organize-imports (+2 more)
 
-### Community 5 - "Test-Driven Development Standards"
+### Community 5 - "Test-Driven Development Guide"
 
 Cohesion: 0.04
 Nodes (45): API / Integration Testing, /bfb-test, Browser Testing with DevTools, Common Assertions, Common Rationalizations, DAMP Over DRY in Tests, Decision Guide, Discover the Stack First (+37 more)
@@ -171,7 +171,7 @@ Nodes (42): Accessibility, /bfb-ship, Code Quality, Common Rationalizations, Cor
 Cohesion: 0.31
 Nodes (6): Coverage (`bun run test:coverage`), hasRelativeImport(), relativeImportChecker(), ROOTS, transpilers, walk()
 
-### Community 19 - "Feature Specifications"
+### Community 19 - "Feature Specifications and Requirements"
 
 Cohesion: 0.07
 Nodes (29): 1. Sinkronisasi Cookie (`src/core/cookie.ts` - Menu 95), 2. Posting Facebook (`src/core/facebook.ts` - Menu 1), Aktivasi (menu 97), Asumsi, Asumsi, Boundaries, Boundaries, Code Style (+21 more)
@@ -181,22 +181,22 @@ Nodes (29): 1. Sinkronisasi Cookie (`src/core/cookie.ts` - Menu 95), 2. Posting 
 Cohesion: 0.06
 Nodes (42): Build log: audit log, Checkpoint: Fitur lengkap — lolos, Checkpoint Fondasi — lolos, Checkpoint: Menu sederhana — disetujui user, Noticed but not touching, Task 1: Format satu baris audit — selesai, Task 2: Penulis `logs/audit.log` — selesai, Task 3: Menu 0 membuat `logs/audit.log` — selesai (+34 more)
 
-### Community 21 - "Documentation and Browser Tools"
+### Community 21 - "Documentation Generation Tools"
 
 Cohesion: 0.11
 Nodes (21): browsers, bun, bunPages(), bunup, bunupPages(), checkout(), Doc, docs (+13 more)
 
-### Community 22 - "Project Preparation Tasks"
+### Community 22 - "Project Preparation Workflow"
 
 Cohesion: 0.17
 Nodes (11): 10. Ringkasan, 1. TODO.md, 2. Selaraskan memory Claude dan Antigravity, 3. Hapus yang usang, 4. Hapus sisa debug, 5. Update docs, 6. Update skills, 7. Update pengetahuan kamu (+3 more)
 
-### Community 23 - "Accessibility Standards"
+### Community 23 - "Accessibility and ARIA Standards"
 
 Cohesion: 0.12
 Nodes (16): Accessibility Checklist, Accessible Lists, ARIA Roles, Buttons vs. Links, Common Anti-Patterns, Common HTML Patterns, Content, Essential Checks (+8 more)
 
-### Community 25 - "Bilingual UI Architecture"
+### Community 25 - "Bilingual UI Architecture Plan"
 
 Cohesion: 0.17
 Nodes (12): Architecture Decisions, Checkpoint: Core Dwibahasa, Checkpoint: Fondasi Selektor, Dependency Graph, Fase 1: Fondasi Selektor Dwibahasa, Fase 2: Integrasi Alur Core, Fase 3: Build & Finalisasi, Implementation Plan: bilingual Facebook UI (Inggris & Indonesia) (+4 more)
@@ -206,32 +206,32 @@ Nodes (12): Architecture Decisions, Checkpoint: Core Dwibahasa, Checkpoint: Fond
 Cohesion: 0.13
 Nodes (14): 1. Correctness, 2. Readability & Simplicity, 3. Architecture, 4. Security, 5. Performance, Checklist bfb (mekanis), Critical, Important (+6 more)
 
-### Community 27 - "Project Architecture Planning"
+### Community 27 - "Project Architecture and Planning"
 
 Cohesion: 0.06
 Nodes (32): Architecture Decisions, Architecture Decisions, Checkpoint: Fase 1, Checkpoint: Fitur lengkap, Checkpoint: Fondasi, Checkpoint: Menu sederhana, Dependency graph, Dependency graph (+24 more)
 
-### Community 29 - "Build Progress Tracking"
+### Community 29 - "Build and Verification Logs"
 
 Cohesion: 0.22
 Nodes (8): Build sebelumnya: menutup spec as-built, Checkpoint Fase 1, Ditunda, Fase 1 — selesai, Noticed but not touching, Task 1: Parsing argumen CLI bisa dites, Task 2: Aturan kunci menu bisa dites, Task 3: Penyimpanan token aktivasi dites
 
-### Community 30 - "Package Metadata"
+### Community 30 - "Package Metadata and Publishing"
 
 Cohesion: 0.10
 Nodes (19): description, files, homepage, keywords, license, module, name, type (+11 more)
 
-### Community 31 - "Maintenance and Cleanup Guide"
+### Community 31 - "Maintenance and Cleanup Tasks"
 
 Cohesion: 0.18
 Nodes (10): 1. TODO.md, 2. Memory Claude dan Antigravity, 3. Yang usang, 4. Sisa debug, 5. Docs, 6. Skills, 7. Pengetahuan, 8. Perintah (+2 more)
 
-### Community 32 - "Release Decision Records"
+### Community 32 - "Release and Ship Decisions"
 
 Cohesion: 0.22
 Nodes (8): Acknowledged Risks, Blockers, Checklist bfb, Recommended Fixes, Rollback Plan, Ship decision: bilingual Facebook UI (Inggris & Indonesia), Ship Decision: **GO**, Specialist Reports
 
-### Community 35 - "Commit Logging Rules"
+### Community 35 - "Commit Logging and Hooks"
 
 Cohesion: 0.40
 Nodes (4): Alasan pengelompokan, Commit log, Pre-commit hook, Tidak di-commit
@@ -251,7 +251,7 @@ Nodes (5): overrides, basic-ftp, brace-expansion, ip-address, ws
 Cohesion: 0.07
 Nodes (38): Build log: bilingual Facebook UI (Inggris & Indonesia), Checkpoint: Core Dwibahasa — lolos, Setelah build (permintaan user, 2026-10-01), Task 1: Definisi selektor dwibahasa di `src/libs/facebook-selectors.ts` — selesai, Task 2: Alur sinkronisasi cookie dwibahasa (`src/core/cookie.ts`) — selesai, Task 3: Alur posting feed dwibahasa (`src/core/facebook.ts`) — selesai, Task 4: Build production dan verifikasi akhir — selesai, Task 6: `runBrowserRows` melaporkan setiap baris — selesai (+30 more)
 
-### Community 45 - "Incremental Build Methodology"
+### Community 45 - "Incremental Implementation Rules"
 
 Cohesion: 0.05
 Nodes (37): /bfb-build, Common Rationalizations, Contract-First Slicing, Correctness, Definition of Done, Definition of Done vs. Acceptance Criteria, Documentation, How to Apply (+29 more)
@@ -271,7 +271,7 @@ Nodes (31): /bfb-plan, Common Rationalizations, Correctness, Definition of Done,
 Cohesion: 0.07
 Nodes (29): 1. Correctness, 2. Readability & Simplicity, 3. Architecture, 4. Security, 5. Performance, Change Descriptions, Change Sizing, Code Review and Quality (+21 more)
 
-### Community 61 - "Security and LLM Safety"
+### Community 61 - "LLM and Security Checklist"
 
 Cohesion: 0.12
 Nodes (17): AI / LLM Security, Authentication, Authorization, CORS Configuration, Data Protection, Dependency Security, Destructive Path Operations, Error Handling (+9 more)
@@ -291,7 +291,7 @@ Nodes (15): /bfb-spec, Common Rationalizations, Keeping the Spec Alive, Method, 
 
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `runBrowserRows()` connect `Bilingual UI Implementation` to `Release Decision Records`, `Security and API Best Practices`, `Feature Specifications`, `Audit Logging System`, `Code Review Reports`, `Project Architecture Planning`?**
+- **Why does `runBrowserRows()` connect `Bilingual UI Implementation` to `Release and Ship Decisions`, `Security and API Best Practices`, `Feature Specifications and Requirements`, `Audit Logging System`, `Code Review Reports`, `Project Architecture and Planning`?**
   _High betweenness centrality (0.217) - this node is a cross-community bridge._
 - **Why does `Yang wajib dicek, yang terlewat oleh review generik` connect `Security and API Best Practices` to `Bilingual UI Implementation`?**
   _High betweenness centrality (0.100) - this node is a cross-community bridge._
@@ -301,7 +301,7 @@ _Questions this graph is uniquely positioned to answer:_
   _509 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Core Utilities and Drivers` be split into smaller, more focused modules?**
   _Cohesion score 0.06025039123630673 - nodes in this community are weakly interconnected._
-- **Should `CI/CD and Repository Rules` be split into smaller, more focused modules?**
+- **Should `CI/CD and Repository Standards` be split into smaller, more focused modules?**
   _Cohesion score 0.07422402159244265 - nodes in this community are weakly interconnected._
 - **Should `TypeScript Configuration` be split into smaller, more focused modules?**
   _Cohesion score 0.07142857142857142 - nodes in this community are weakly interconnected._
