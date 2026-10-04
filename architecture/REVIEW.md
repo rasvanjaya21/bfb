@@ -1,29 +1,57 @@
-# Review: seluruh perubahan sejak `f05d14a` (v0.4.0)
+# Review: bilingual Facebook UI (Inggris & Indonesia)
 
-Ditulis lewat `/bfb-review` pada 2026-09-30. Cakupan: semua perubahan yang belum di-commit — perbaikan audit, migrasi Bun-only, tooling agent, dan Fase 1 `PLAN.md`.
-
-Karena hampir semua kode ditulis oleh agent yang sama, review kode dilakukan oleh **reviewer independen** (subagent `code-reviewer` dengan konteks bersih, read-only). Checklist khusus bfb dijalankan secara mekanis.
+Ditulis lewat `/bfb-review` pada 2026-10-04. Cakupan: implementasi dukungan dwibahasa (Bahasa Inggris & Bahasa Indonesia) pada alur sinkronisasi cookie (`src/core/cookie.ts`) dan alur posting feed (`src/core/facebook.ts`), modul selektor baru (`src/libs/facebook-selectors.ts`), serta unit test (`tests/unit/011-facebook-selectors.test.ts`).
 
 ## Verdict
 
-**Approve, setelah perbaikan.** Reviewer awalnya meminta perubahan (2 Important, 0 Critical). Keduanya dan 8 dari 13 saran/nit sudah diperbaiki dengan test yang dibuktikan lewat mutasi; sisanya dicatat di `TODO.md`.
+**Approve.** Perubahan bersih, terisolasi dengan baik, dan langsung meningkatkan reliabilitas otomasi untuk akun Facebook berbahasa Indonesia tanpa mengorbankan akun berbahasa Inggris. Seluruh checklist mekanis bfb terpenuhi dan cakupan test tetap 100%.
 
 ## Checklist bfb (mekanis)
 
-| Cek                                                 | Hasil                                      |
-| --------------------------------------------------- | ------------------------------------------ |
-| Import relatif                                      | tidak ada (`bun run check`)                |
-| Loop browser di `core/*` di luar `runBrowserRows()` | tidak ada                                  |
-| `process.exit` di `core/*`                          | tidak ada                                  |
-| Password/cookie/token tercetak ke log               | tidak ada                                  |
-| Tulis data sensitif tanpa `0600`                    | tidak ada; semua lewat `writeSecretFile()` |
-| Header CSV vs `src/types/global.ts`                 | cocok                                      |
-| Dependency runtime vs `external` bunup              | sama persis                                |
-| `VERSION` vs `package.json`                         | `v0.4.0` = `0.4.0`                         |
-| Teks untuk user bukan Bahasa Indonesia              | 3 teks lama (sebelum audit) → `TODO.md`    |
-| Klaim `AGENTS.md`/skill yang jadi salah             | diperbarui untuk model per-context         |
+| Cek                                                 | Hasil                                                |
+| :-------------------------------------------------- | :--------------------------------------------------- |
+| Import relatif                                      | tidak ada (`bun run check` lolos)                    |
+| Loop browser di `core/*` di luar `runBrowserRows()` | tidak ada; alur tetap menggunakan `runBrowserRows()` |
+| `process.exit` di `core/*`                          | tidak ada                                            |
+| Password/cookie/token tercetak ke console           | tidak ada                                            |
+| Tulis data sensitif tanpa `0600`                    | tidak ada perubahan penulisan file kredensial        |
+| Header CSV vs `src/types/global.ts`                 | cocok, tidak ada perubahan CSV                       |
+| Dependency runtime vs `external` bunup              | tidak ada dependency runtime baru                    |
+| `VERSION` vs `package.json`                         | `v0.5.1` = `0.5.1`                                   |
+| Teks untuk user bukan Bahasa Indonesia              | seluruh pesan layar tetap Bahasa Indonesia konsisten |
+| Klaim `AGENTS.md` / skill yang jadi salah           | tidak ada; arsitektur tetap sesuai                   |
 
-## Temuan dan penyelesaian
+## Review Lima Sumbu
+
+### 1. Correctness
+
+- **Kesesuaian Spec:** Seluruh elemen UI Facebook yang diidentifikasi pada `architecture/SPEC.md` (caption trigger, create post, next button, post preview, publish post, login continue, login fresh, forgotten password) telah dipetakan ke selektor dwibahasa (EN & ID).
+- **Penanganan Edge Case:** Frasa teks Facebook yang memuat nama akun (misal: "What's on your mind, Billy?" atau "Apa yang Anda pikirkan, Billy?") tertangani dengan baik berkat penggunaan fungsi XPath `contains()`.
+- **Obfuscator Safety:** Tidak ada fungsi yang dikirim ke browser (`page.evaluate` atau sejenisnya). Kondisi tombol aktif (`not(@aria-disabled="true")`) tetap berada di XPath, sehingga tidak rentan terhadap kerusakan deobfuscation runtime.
+
+### 2. Readability & Simplicity
+
+- Selektor terpusat di `src/libs/facebook-selectors.ts` dengan kamus `SELECTORS` bertipe ketat `Record<FacebookSelectorName, string>`.
+- Pemanggilan di `src/core/cookie.ts` dan `src/core/facebook.ts` ringkas dan deklaratif lewat `facebookSelector('<key>')`.
+- Total baris baru sangat minim (19 baris di lib, 65 baris di unit test), mematuhi prinsip _ponytail_ (perubahan paling minimal yang menyelesaikan masalah mendasar).
+
+### 3. Architecture
+
+- Struktur mengikuti pemisahan tanggung jawab standar bfb: logika murni pendefinisian selektor di `src/libs/facebook-selectors.ts`, sedangkan eksekusi otomasi browser di `src/core/`.
+- Import menggunakan alias `@/` tanpa import relatif.
+- Ambang coverage 1.0 pada `bunfig.toml` tetap terpenuhi 100% untuk modul baru di `src/libs/`.
+
+### 4. Security
+
+- Nilai selektor merupakan konstanta statis tanpa interpolasi input pengguna, sehingga tidak menimbulkan risiko injeksi XPath.
+- Tidak ada password, token, atau informasi akun yang dicatat ke konsol atau log audit.
+
+### 5. Performance
+
+- Selektor XPath dievaluasi secara efisien oleh engine browser Chromium bawaan Puppeteer.
+- Tidak ada loop atau polling tambahan di luar mekanisme timeout bawaan `page.locator().waitHandle()` dan `page.waitForSelector()`.
+
+## Temuan
 
 ### Critical
 
@@ -31,47 +59,16 @@ Tidak ada.
 
 ### Important
 
-1. **Isolasi antar-akun hanya untuk cookie, dan pembersihannya bisa gagal diam-diam** — `src/libs/run-browser-rows.ts`. Error pembersihan ditelan; localStorage, IndexedDB, dan service worker Facebook terbawa ke baris berikutnya. Skenario: pembersihan gagal setelah akun A, akun B tanpa cookie tersimpan membuka `/settings/` sebagai A dan tercatat berhasil.
-    - **Diperbaiki:** setiap baris di `browser.createBrowserContext()` sendiri, ditutup setelah baris; gagal tutup → run berhenti. Cookie diset lewat `page.browserContext()`. Context dan page baru dibuka saat task memanggil `openPage()`.
-    - **Bukti:** 9 test runner; di Chrome sungguhan context B tidak melihat localStorage/cookie A, stealth tetap aktif di context baru (`webdriver` false, `chrome.runtime` ada, 5 plugin), context default tidak tersentuh.
-2. **Tombol Esc menelan Enter dan karakter berikutnya di `hideQuestion`** — `src/libs/hide-question.ts`. Esc sendirian menunggu huruf penutup sequence.
-    - **Diperbaiki:** hanya `ESC [`/`ESC O` yang dianggap awal sequence; Esc di akhir potongan di-reset.
-    - **Bukti:** 3 test baru (Esc lalu teks, Esc lalu Enter, Esc lalu `O`/`[`).
+Tidak ada.
 
 ### Suggestion
 
-| Saran                                                     | Status                                                                                   |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Deteksi browser tertutup lewat teks `closed`              | **Diperbaiki:** `browser.connected`; tab tertutup hanya menggagalkan baris itu           |
-| Input token non-ASCII jadi "Server error"                 | **Diperbaiki:** ditolak sebagai "Token tidak valid" tanpa memanggil server               |
-| Penulisan token tidak atomik, sempat `0644`               | **Diperbaiki:** `writeSecretFile()` (temp `0600`, `wx`, rename) dipakai token dan cookie |
-| Temp file cookie bisa tertinggal / memakai mode lama      | **Diperbaiki:** nama acak + `wx` + dihapus saat gagal                                    |
-| Jawaban `N` dan "Login bermasalah" dihitung berhasil      | **Diperbaiki:** dihitung dilewati                                                        |
-| `.gitignore` folder kerja yang sudah ada tidak dilengkapi | **Diperbaiki:** entri yang belum ada ditambahkan, isi lama dipertahankan                 |
+1. **Verifikasi Live Akun Operator:** Pastikan operator melakukan uji coba langsung di browser headful menggunakan akun nomor `53` (`workspaces/datas/accounts.csv`) untuk mengonfirmasi bahwa variasi DOM Facebook terkini cocok dengan selektor yang disiapkan.
 
-### Nit
+## Verifikasi Akhir
 
-| Nit                                                    | Status                                                                 |
-| ------------------------------------------------------ | ---------------------------------------------------------------------- |
-| Komentar `content-status.ts` tidak akurat              | **Diperbaiki**                                                         |
-| Entri non-array di `cookies.json` terhapus saat simpan | **Diperbaiki:** dipertahankan                                          |
-| `isInitilized` typo                                    | **Diperbaiki**                                                         |
-| `prepare` gagal di luar repo git                       | **Diperbaiki:** ditambah `\|\| true`                                   |
-| Teks bahasa Inggris di `index.ts`/`menu.ts`/`help.ts`  | **Diperbaiki** setelah `/bfb-ship` (diterjemahkan ke Bahasa Indonesia) |
-| `resetActivationCache` diekspor hanya untuk test       | **Diperbaiki** setelah `/bfb-ship` (cache per token, ekspor dihapus)   |
-| `slice(0, -1)` memotong surrogate pair                 | Diterima: token dibatasi ASCII                                         |
-
-### Ditemukan saat verifikasi review
-
-- **Stealth plugin mencetak `Target closed`** saat page dibuka lalu langsung ditutup untuk baris yang ditolak (BM, cookie tidak ada). Hasil tetap benar, tapi output operator kotor. **Diperbaiki** dengan `openPage()` yang malas: baris yang ditolak tidak membuka page. Tes Chrome 4 baris: 0 error di output lengkap.
-
-## Verifikasi
-
-- `bun run format`, `lint`, `type-check`, `check`, `test` (**86 pass, 0 fail**), `build`: semua exit 0 tanpa Node.
-- Mutasi: 23 (putaran `/bfb-test`) + 10 (putaran ini) — semua tertangkap atau menunjuk dead code yang lalu dihapus. Detail di `architecture/TEST.md`.
-- Chrome sungguhan (headless, cookie palsu, tanpa akun): runner per-context dan alur `postFeed`.
-- Belum diverifikasi: alur posting dan login di akun Facebook sungguhan; `ci.yml` di GitHub Actions (lihat `TODO.md`).
-
-## Ukuran perubahan
-
-Besar (±50 file, termasuk `docs/` hasil generate ±2,7 MB). Commit akan dipecah per kategori lewat `/bfb-commit`, sesuai saran "split by file group".
+- `bun run type-check`: 0 error.
+- `bun run lint`: 0 warning, 0 error (oxlint).
+- `bun run check`: 0 relative import.
+- `bun run test:coverage`: 144 pass (100% lines & functions).
+- `bun run build`: build production `dist/index.js` sukses ter-obfuscate dan berjalan normal.

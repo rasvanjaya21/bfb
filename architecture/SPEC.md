@@ -263,3 +263,71 @@ Error yang tidak tertangkap di dalam task (yang sekarang muncul merah lalu "Teka
 ## Open Questions
 
 Tidak ada yang memblokir. Asumsi 1–6 di atas perlu dikonfirmasi.
+
+---
+
+# Spec fitur: bilingual Facebook UI (Inggris & Indonesia)
+
+Ditulis lewat `/bfb-spec` pada 2026-10-04.
+
+## Objective
+
+Membuat alur sinkronisasi cookie (`src/core/cookie.ts`, menu 95) dan alur posting feed (`src/core/facebook.ts`, menu 1) mendukung antarmuka Facebook dwibahasa (Bahasa Inggris dan Bahasa Indonesia). Saat ini selektor berbasis teks hanya mendukung Bahasa Inggris, sehingga akun Facebook yang disetel ke Bahasa Indonesia gagal/error saat mencari tombol atau trigger. Dukungan dwibahasa bekerja otomatis tanpa perlu konfigurasi manual dari operator.
+
+## Asumsi
+
+1. Bahasa UI ditentukan oleh preferensi akun Facebook operator (Inggris atau Indonesia), bukan parameter browser.
+2. Tidak ada penambahan kolom bahasa di `datas/accounts.csv` atau `datas/contents.csv`. Selektor bekerja serentak mencocokkan teks Bahasa Inggris atau Bahasa Indonesia.
+3. Hanya Bahasa Inggris dan Bahasa Indonesia yang didukung. Bahasa lain tetap di luar cakupan saat ini.
+4. Nilai teks elemen Facebook dapat bervariasi antara huruf besar/kecil atau menyertakan nama akun (misal: "What's on your mind, Billy?" atau "Apa yang Anda pikirkan?"), sehingga selektor menggunakan kondisi XPath yang fleksibel (`text() = ...` atau `contains(text(), ...)`).
+
+## Pemetaan Elemen UI Dwibahasa
+
+### 1. Sinkronisasi Cookie (`src/core/cookie.ts` - Menu 95)
+
+| Elemen / Aksi                      | Bahasa Inggris (EN)                        | Bahasa Indonesia (ID)                   | Selektor XPath                                                                                                                       |
+| :--------------------------------- | :----------------------------------------- | :-------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------- |
+| Tombol lanjut (cookie kedaluwarsa) | `Continue` / `Continue as...`              | `Lanjutkan` / `Lanjutkan sebagai...`    | `xpath=//*[text()="Continue" or text()="Lanjutkan" or contains(text(), "Continue") or contains(text(), "Lanjutkan")]`                |
+| Tombol login (cookie kosong)       | `Log in to Facebook` / `Log In`            | `Masuk ke Facebook` / `Masuk`           | `xpath=//*[text()="Log in to Facebook" or text()="Masuk ke Facebook" or text()="Log In" or text()="Masuk"]`                          |
+| Form password (cookie kedaluwarsa) | `Forgotten password?` / `Forgot password?` | `Lupa kata sandi?` / `Lupa Kata Sandi?` | `xpath=//*[contains(text(), "Forgotten password?") or contains(text(), "Forgot password?") or contains(text(), "Lupa kata sandi?")]` |
+
+### 2. Posting Facebook (`src/core/facebook.ts` - Menu 1)
+
+| Elemen / Aksi                                      | Bahasa Inggris (EN)                                       | Bahasa Indonesia (ID)                                     | Selektor XPath                                                                                                                                                                              |
+| :------------------------------------------------- | :-------------------------------------------------------- | :-------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Trigger modal caption                              | `What's on your mind?`                                    | `Apa yang Anda pikirkan?`                                 | `xpath=//div[@role="button" and .//span[contains(text(), "What's on your mind") or contains(text(), "Apa yang Anda pikirkan") or contains(text(), "Apa yang anda pikirkan")]]`              |
+| Indikator modal buat postingan                     | `Add to your post`                                        | `Tambahkan ke postingan Anda` / `Tambahkan ke postingan`  | `xpath=//*[contains(text(), "Add to your post") or contains(text(), "Tambahkan ke postingan") or contains(text(), "Tambahkan ke kiriman")]`                                                 |
+| Tombol langkah berikutnya (jika ada)               | `Next`                                                    | `Berikutnya` / `Lanjut`                                   | `xpath=//*[(self::div[@role="button"] or self::button or self::span) and (text()="Next" or text()="Berikutnya" or text()="Lanjut")]`                                                        |
+| Indikator preview posting                          | `Post preview`                                            | `Pratinjau postingan` / `Pratinjau kiriman`               | `xpath=//*[contains(text(), "Post preview") or contains(text(), "Pratinjau postingan") or contains(text(), "Pratinjau kiriman")]`                                                           |
+| Tombol publish/post aktif                          | `Post`                                                    | `Kirim` / `Posting`                                       | `xpath=//div[@role="button" and .//span[(text()="Post" or text()="Posting" or text()="Kirim" or contains(text(), "Posting") or contains(text(), "Kirim"))] and not(@aria-disabled="true")]` |
+| Validasi modal tertutup (`waitForSelector hidden`) | Menggunakan indikator modal dan preview dwibahasa di atas | Menggunakan indikator modal dan preview dwibahasa di atas | Evaluasi `waitForSelector` hidden dengan ekspresi XPath dwibahasa                                                                                                                           |
+
+## Data dan Dampak
+
+- **CSV (`datas/accounts.csv`, `datas/contents.csv`) & `src/types/global.ts`:** Tidak berubah. Format tetap dipisahkan titik koma tanpa kolom baru.
+- **Data sensitif (`credentials/`):** Tidak berubah.
+- **Menu CLI (`src/commands/menu.ts`):** Tidak berubah.
+- **Audit log (`logs/audit.log`):** Format dan pesan log tetap konsisten dalam Bahasa Indonesia.
+
+## Testing Strategy
+
+- **Unit (`tests/unit/`):** Pengujian selektor atau fungsi pembantu selektor (jika diekstraksi ke helper) untuk memastikan ekspresi XPath valid dan mencakup seluruh variasi kata kunci EN dan ID.
+- **Integration (`tests/integration/`):** Simulasi halaman HTML statis (mock content) berisi DOM Facebook dengan teks Bahasa Inggris dan Bahasa Indonesia untuk memverifikasi `locator` dan `waitForSelector(..., { hidden: true })` berhasil menemukan dan mendeteksi penutupan modal pada kedua bahasa.
+- **Manual:** Verifikasi langsung menggunakan Chrome headful terhadap akun Facebook yang disetel ke Bahasa Indonesia (contoh referensi uji: akun nomor `53` di `workspaces/datas/accounts.csv` / `workspaces/datas/contents.csv`) dan akun yang disetel ke Bahasa Inggris.
+
+## Boundaries
+
+- **Always:** Gunakan selektor berbasis XPath yang mendukung kedua bahasa dalam satu ekspresi tanpa mengirim fungsi ke browser (`page.evaluate()`) demi keamanan obfuscator.
+- **Ask first:** Menambah dukungan bahasa ketiga atau mengubah toleransi substring teks jika terjadi konflik elemen UI Facebook.
+- **Never:** Mengubah header/kolom CSV; mengirim fungsi callback Javascript ke konteks browser; mengubah teks menu CLI atau format audit log.
+
+## Success Criteria
+
+1. Akun Facebook dengan pengaturan Bahasa Indonesia dapat menyelesaikan alur sinkronisasi cookie (menu 95) baik saat cookie kedaluwarsa maupun belum ada.
+2. Akun Facebook dengan pengaturan Bahasa Indonesia dapat memposting feed (menu 1) tanpa error 'Trigger caption tidak ditemukan', 'Tombol next tidak ditemukan' (bila ada langkah next), atau 'Publish tidak valid'.
+3. Akun Facebook dengan pengaturan Bahasa Inggris tetap berfungsi normal tanpa regresi pada menu 95 dan menu 1.
+4. `bun run test:coverage` tetap 100% dan seluruh pengecekan `bun run check`, `bun run lint`, dan `bun run type-check` lulus tanpa error.
+
+## Open Questions
+
+1. Apakah ada variasi dialek/frasa lain pada akun Facebook operator (misalnya Bahasa Melayu atau Bahasa Indonesia varian mobile/desktop) yang pernah ditemui?

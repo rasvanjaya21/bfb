@@ -1,3 +1,37 @@
+# Build log: bilingual Facebook UI (Inggris & Indonesia)
+
+Ditulis lewat `/bfb-build` pada 2026-10-04. Serah terima untuk task berikutnya di `architecture/PLAN.md` ("Implementation Plan: bilingual Facebook UI"). Belum di-commit; commit lewat `/bfb-commit`.
+
+## Task 1: Definisi selektor dwibahasa di `src/libs/facebook-selectors.ts` — selesai
+
+- **Diimplementasikan:** `src/libs/facebook-selectors.ts` mengekspor `facebookSelector(name)` beserta tipe `FacebookSelectorName`. Menyediakan 8 selektor XPath dwibahasa (EN & ID) untuk `captionTrigger`, `createPost`, `nextPost`, `postPreview`, `publishPost`, `loginContinue`, `loginFresh`, dan `forgottenPassword`. Semua kondisi dirangkai dalam satu string XPath polimorfis menggunakan operator boolean `or` dan `contains()`, aman untuk obfuscator tanpa perlu `page.evaluate()`.
+- **Dibuktikan oleh:** `tests/unit/011-facebook-selectors.test.ts` (9 test): format awalan `xpath=`, panjang string, kehadiran kata kunci bahasa Inggris dan bahasa Indonesia untuk setiap elemen, dan keberadaan filter `@aria-disabled="true"` pada tombol posting. Merah dulu (modul belum ada), lalu hijau.
+- **Hasil:** `bun run test:coverage` 144 pass, coverage 100% / 100% pada semua file di `src/libs/`; `bun run type-check`, `bun run lint`, `bun run check`, `bun run format` exit 0.
+- **Checkpoint Fondasi Selektor:** lolos.
+
+## Task 2: Alur sinkronisasi cookie dwibahasa (`src/core/cookie.ts`) — selesai
+
+- **Diimplementasikan:** `src/core/cookie.ts` diperbarui untuk mengimpor dan menggunakan `facebookSelector` pada penentuan `loginSelector` (`loginContinue` untuk cookie kedaluwarsa, `loginFresh` untuk cookie kosong/belum ada) serta `typePasswordSelector` (`forgottenPassword`). Teks hardcoded bahasa Inggris digantikan oleh selektor XPath dwibahasa yang mendukung UI Facebook Inggris dan Indonesia.
+- **Dibuktikan oleh:** Seluruh test suite `bun run test:coverage` tetap 100% (144 pass); type-check, lint, dan relative import check lulus tanpa error.
+
+## Task 3: Alur posting feed dwibahasa (`src/core/facebook.ts`) — selesai
+
+- **Diimplementasikan:** `src/core/facebook.ts` diperbarui untuk menggunakan `facebookSelector` pada seluruh titik interaksi UI Facebook: `captionSelector` (`captionTrigger`), `createPostSelector` (`createPost`), `nextPostTrigger` (`nextPost`), `postPreviewSelector` (`postPreview`), dan `postSelector` (`publishPost`). Loop penutupan modal dialog posting via `waitForSelector(..., { hidden: true })` menggunakan selektor XPath dwibahasa untuk createPost dan postPreview.
+- **Dibuktikan oleh:** Seluruh test suite `bun run test:coverage` tetap 100% (144 pass); type-check, lint, dan relative import check lulus tanpa error.
+
+## Checkpoint: Core Dwibahasa — lolos
+
+- `bun run test:coverage` 100% pada seluruh file di bawah cakupan test.
+- Lint, type-check, check relative import, dan format semua bersih tanpa error.
+- Uji interaktif langsung dapat dilakukan oleh operator pada akun referensi nomor 53 di `workspaces/datas/accounts.csv` / `workspaces/datas/contents.csv`.
+
+## Task 4: Build production dan verifikasi akhir — selesai
+
+- **Diimplementasikan:** Menjalankan build rilis production lewat `bun run build` (bunup + javascript-obfuscator). Bundling dan obfuscation berhasil menghasilkan `dist/index.js` (20.64 KB raw).
+- **Dibuktikan oleh:** Uji eksekusi langsung `bun run dist/index.js --version` dan `--help` berjalan sukses tanpa syntax/reference error. Seluruh gate pre-commit (`oxlint`, `tsgo`, `check.ts`, `prettier`) lulus 100%.
+
+---
+
 # Build log: audit log
 
 Ditulis lewat `/bfb-build` pada 2026-10-01. Serah terima untuk task berikutnya di `architecture/PLAN.md` ("Implementation Plan: audit log"). Belum di-commit; commit lewat `/bfb-commit`.

@@ -1,3 +1,84 @@
+# Implementation Plan: bilingual Facebook UI (Inggris & Indonesia)
+
+Ditulis lewat `/bfb-plan` pada 2026-10-04, dari bagian "Spec fitur: bilingual Facebook UI" di `architecture/SPEC.md`.
+
+## Overview
+
+Membuat alur sinkronisasi cookie (`src/core/cookie.ts`, menu 95) dan alur posting feed (`src/core/facebook.ts`, menu 1) mendukung antarmuka Facebook dwibahasa (Bahasa Inggris dan Bahasa Indonesia). Seluruh konstanta selektor XPath dwibahasa diekstrak ke modul murni `src/libs/facebook-selectors.ts` dengan unit test 100% coverage, lalu dihubungkan ke `src/core/cookie.ts` dan `src/core/facebook.ts`. Verifikasi live menggunakan akun referensi nomor `53` di `workspaces/datas/accounts.csv` dan `workspaces/datas/contents.csv`.
+
+## Dependency Graph
+
+```
+src/libs/facebook-selectors.ts ◄── tests/unit/011-facebook-selectors.test.ts
+       ▲                  ▲
+       │                  │
+src/core/cookie.ts   src/core/facebook.ts
+       ▲                  ▲
+       │                  │
+src/commands/menu.ts (menu 95, menu 1)
+```
+
+## Architecture Decisions
+
+- **Ekstraksi selektor ke `src/libs/facebook-selectors.ts`:** Sesuai aturan `AGENTS.md`, logika murni dipisah ke `libs/` (satu fungsi/konstanta per modul, export camelCase) sehingga dapat diuji unit test dengan ambang coverage 1.0 tanpa memerlukan browser live Facebook.
+- **Ekspresi XPath dwibahasa:** Menggunakan format locator `xpath=...` dengan operator boolean XPath (`or`, `contains`) yang mengevaluasi variasi teks EN dan ID dalam satu ekspresi atomik. Kondisi disematkan di XPath tanpa `page.evaluate()` demi kepatuhan obfuscator.
+- **Kompatibilitas `waitForSelector` hidden:** Menggunakan ekspresi XPath dwibahasa yang kompatibel dengan opsi `{ hidden: true }` pada Puppeteer untuk memastikan modal pembuatan postingan terdeteksi saat tertutup.
+- **Tanpa perubahan format CSV:** Tidak ada penambahan kolom baru di `datas/accounts.csv` atau `datas/contents.csv`.
+
+## Task List
+
+### Fase 1: Fondasi Selektor Dwibahasa
+
+- [x] **Task 1: Definisi selektor dwibahasa di `src/libs/facebook-selectors.ts`**
+    - Description: Buat modul `src/libs/facebook-selectors.ts` yang mengekspor selektor XPath dwibahasa (EN & ID) untuk caption trigger, indikator create post, tombol next, preview post, tombol publish/post aktif, tombol login continue, tombol login utama, dan link forgotten password.
+    - Acceptance: Setiap selektor mencakup variasi teks Bahasa Inggris dan Bahasa Indonesia; ekspresi XPath valid; return type eksplisit; lolos coverage 100%.
+    - Verify: `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`.
+    - Dependencies: None. Files: `src/libs/facebook-selectors.ts`, `tests/unit/011-facebook-selectors.test.ts`. Scope: S.
+
+### Checkpoint: Fondasi Selektor
+
+- [x] `bun run test:coverage` (100%), `bun run type-check`, `bun run lint`, `bun run check` hijau.
+
+### Fase 2: Integrasi Alur Core
+
+- [x] **Task 2: Alur sinkronisasi cookie dwibahasa (`src/core/cookie.ts`)**
+    - Description: Perbarui `src/core/cookie.ts` agar menggunakan selektor dari `facebook-selectors.ts` untuk `loginSelector` (kondisi cookie expired dan cookie baru) serta `typePasswordSelector`.
+    - Acceptance: Akun Facebook dengan UI Bahasa Indonesia atau Bahasa Inggris dapat mengenali tombol lanjut/login dan link password; tidak ada error sintaks locator; alur prompt dan audit log tetap sama.
+    - Verify: `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`; manual: menu 95 dengan akun 53 di `workspaces/datas/accounts.csv`.
+    - Dependencies: Task 1. Files: `src/core/cookie.ts`. Scope: S.
+- [x] **Task 3: Alur posting feed dwibahasa (`src/core/facebook.ts`)**
+    - Description: Perbarui `src/core/facebook.ts` agar menggunakan selektor dari `facebook-selectors.ts` untuk `captionSelector`, `createPostSelector`, `nextPostTrigger`, `postPreviewSelector`, `postSelector`, dan penutupan modal via `waitForSelector(..., { hidden: true })`.
+    - Acceptance: Modal caption, tombol next/preview, tombol publish, dan penutupan modal berhasil dideteksi pada akun Facebook UI Bahasa Indonesia maupun Inggris; tidak ada pesan error 'Trigger caption tidak ditemukan' atau 'Publish tidak valid' palsu.
+    - Verify: `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`; manual: menu 1 dengan baris konten akun 53 di `workspaces/datas/contents.csv`.
+    - Dependencies: Task 1. Files: `src/core/facebook.ts`. Scope: S.
+
+### Checkpoint: Core Dwibahasa
+
+- [x] `bun run test:coverage` tetap 100% dan seluruh pemeriksaan lulus.
+- [ ] Uji coba manual menu 95 dan menu 1 dengan akun 53 berjalan lancar (menunggu uji interaktif operator).
+
+### Fase 3: Build & Finalisasi
+
+- [x] **Task 4: Build production dan verifikasi akhir**
+    - Description: Jalankan `bun run build` untuk memverifikasi build obfuscated berhasil dan tidak ada syntax error / reference error; perbarui checklist di `architecture/PLAN.md`.
+    - Acceptance: `dist/index.js` berhasil dibuat; pre-commit gates (`bun run lint && bun run type-check && bun run check && bun run test:coverage`) hijau.
+    - Verify: `bun run build`, `bun run test:coverage`, `bun run type-check`, `bun run lint`, `bun run check`.
+    - Dependencies: Task 2, Task 3. Files: `architecture/PLAN.md`. Scope: S.
+
+## Risks and Mitigations
+
+| Risk                                                                  | Impact | Mitigation                                                                |
+| :-------------------------------------------------------------------- | :----- | :------------------------------------------------------------------------ |
+| Variasi teks Facebook berbeda huruf besar/kecil atau tata bahasa      | Med    | Gunakan kondisi `contains()` dan toleransi variasi huruf kapital di XPath |
+| Obfuscator merusak runtime                                            | High   | Selektor murni string XPath, tanpa `page.evaluate()`                      |
+| `waitForSelector({ hidden: true })` timeout jika selector tidak cocok | High   | Selektor modal penutupan diuji kecocokannya terhadap XPath yang sama      |
+
+## Open Questions
+
+Tidak ada yang memblokir.
+
+---
+
 # Implementation Plan: audit log
 
 Ditulis lewat `/bfb-plan` pada 2026-10-01, dari bagian "Spec fitur: audit log" di `architecture/SPEC.md`. Rencana sebelumnya (task 5, 8, 9, 10 masih terbuka) dipindah ke bawah tanpa diubah, sesuai keputusan user.
