@@ -37,11 +37,13 @@ const failuresInto = (failures: string[]) => (outcome: RowOutcome) => {
 	if (outcome.status === 'failed') failures.push(outcome.message ?? '');
 };
 
+const runFast: typeof runBrowserRows = (browser, rows, task, onRow, delay = { min: 0, max: 0 }) => runBrowserRows(browser, rows, task, onRow, delay);
+
 describe('runBrowserRows', () => {
 	test('gives every row its own browser context, so no cookie or storage crosses rows', async () => {
 		const fake = fakeBrowser();
 		const seen: string[][] = [];
-		await runBrowserRows(fake.browser, ['a', 'b', 'c'], async (openPage, item) => {
+		await runFast(fake.browser, ['a', 'b', 'c'], async (openPage, item) => {
 			const context = contextOf(await openPage());
 			context.jar.push(`session-${item}`);
 			seen.push([...context.jar]);
@@ -53,7 +55,7 @@ describe('runBrowserRows', () => {
 
 	test('closes the context after every row, including rows that fail', async () => {
 		const fake = fakeBrowser();
-		const result = await runBrowserRows(fake.browser, [1, 2, 3], async (openPage, item) => {
+		const result = await runFast(fake.browser, [1, 2, 3], async (openPage, item) => {
 			await openPage();
 			if (item === 2) throw new Error('Trigger caption tidak ditemukan');
 		});
@@ -64,7 +66,7 @@ describe('runBrowserRows', () => {
 	test('stops the whole run when a context cannot be closed', async () => {
 		const fake = fakeBrowser({ failCloseAt: 0 });
 		const failures: string[] = [];
-		const result = await runBrowserRows(fake.browser, [1, 2, 3], async (openPage) => void (await openPage()), failuresInto(failures));
+		const result = await runFast(fake.browser, [1, 2, 3], async (openPage) => void (await openPage()), failuresInto(failures));
 		expect(fake.contexts.length).toBe(1);
 		expect(failures).toEqual(['Sesi akun gagal dibersihkan, proses dihentikan']);
 		expect(result.stopped).toBe(true);
@@ -73,7 +75,7 @@ describe('runBrowserRows', () => {
 	test('stops the loop when the browser disconnects', async () => {
 		const fake = fakeBrowser();
 		const seen: number[] = [];
-		const result = await runBrowserRows(fake.browser, [1, 2, 3], async (openPage, item) => {
+		const result = await runFast(fake.browser, [1, 2, 3], async (openPage, item) => {
 			await openPage();
 			seen.push(item);
 			if (item === 2) {
@@ -87,7 +89,7 @@ describe('runBrowserRows', () => {
 
 	test('keeps going when only a tab closes and the browser is still connected', async () => {
 		const fake = fakeBrowser();
-		const result = await runBrowserRows(fake.browser, [1, 2], async (_openPage, item) => {
+		const result = await runFast(fake.browser, [1, 2], async (_openPage, item) => {
 			if (item === 1) throw new Error('Target closed');
 		});
 		expect(result).toEqual({ done: 1, skipped: 0, failed: 1, stopped: false });
@@ -95,7 +97,7 @@ describe('runBrowserRows', () => {
 
 	test('never opens a context for a row that does not ask for a page', async () => {
 		const fake = fakeBrowser();
-		const result = await runBrowserRows(fake.browser, [1, 2, 3], async (openPage, item) => {
+		const result = await runFast(fake.browser, [1, 2, 3], async (openPage, item) => {
 			if (item === 2) return 'Masih dalam tahap pengembangan';
 			if (item === 3) throw new Error('Cookie tidak ditemukan');
 			await openPage();
@@ -107,7 +109,7 @@ describe('runBrowserRows', () => {
 	test('opens at most one context per row, however often the page is asked for', async () => {
 		const fake = fakeBrowser();
 		const pages: Page[] = [];
-		const result = await runBrowserRows(fake.browser, [1], async (openPage) => {
+		const result = await runFast(fake.browser, [1], async (openPage) => {
 			pages.push(await openPage(), await openPage());
 		});
 		expect(result.failed).toBe(0);
@@ -118,28 +120,28 @@ describe('runBrowserRows', () => {
 	test('counts a row as failed and keeps going when its context cannot be created', async () => {
 		const fake = fakeBrowser({ failCreateAt: 0 });
 		const failures: string[] = [];
-		const result = await runBrowserRows(fake.browser, [1, 2], async (openPage) => void (await openPage()), failuresInto(failures));
+		const result = await runFast(fake.browser, [1, 2], async (openPage) => void (await openPage()), failuresInto(failures));
 		expect(failures).toEqual(['create failed']);
 		expect(result).toEqual({ done: 1, skipped: 0, failed: 1, stopped: false });
 	});
 
 	test('closes the context when opening its page fails', async () => {
 		const fake = fakeBrowser({ failPageAt: 0 });
-		const result = await runBrowserRows(fake.browser, [1, 2], async (openPage) => void (await openPage()));
+		const result = await runFast(fake.browser, [1, 2], async (openPage) => void (await openPage()));
 		expect(fake.contexts[0]!.closed).toBe(true);
 		expect(result).toEqual({ done: 1, skipped: 0, failed: 1, stopped: false });
 	});
 
 	test('counts a row as skipped when the task returns a reason', async () => {
 		const fake = fakeBrowser();
-		const result = await runBrowserRows(fake.browser, [1, 2], async (_openPage, item) => (item === 2 ? 'Cookie tidak di simpan' : undefined));
+		const result = await runFast(fake.browser, [1, 2], async (_openPage, item) => (item === 2 ? 'Cookie tidak di simpan' : undefined));
 		expect(result).toEqual({ done: 1, skipped: 1, failed: 0, stopped: false });
 	});
 
 	test('counts a row as skipped even when its reason is empty', async () => {
 		const fake = fakeBrowser();
 		const reports: RowOutcome[] = [];
-		const result = await runBrowserRows(
+		const result = await runFast(
 			fake.browser,
 			[1],
 			async () => '',
@@ -152,7 +154,7 @@ describe('runBrowserRows', () => {
 	test('waits for an async onRow before starting the next row', async () => {
 		const fake = fakeBrowser();
 		const events: string[] = [];
-		await runBrowserRows(
+		await runFast(
 			fake.browser,
 			[1, 2],
 			async (_openPage, item) => void events.push(`task ${item}`),
@@ -167,7 +169,7 @@ describe('runBrowserRows', () => {
 	test('reports each failure message to the caller', async () => {
 		const fake = fakeBrowser();
 		const failures: string[] = [];
-		await runBrowserRows(
+		await runFast(
 			fake.browser,
 			[1],
 			async () => {
@@ -181,7 +183,7 @@ describe('runBrowserRows', () => {
 	test('reports every row once, with the reason for a skip and the message for a failure', async () => {
 		const fake = fakeBrowser();
 		const reports: [RowOutcome, number][] = [];
-		const result = await runBrowserRows(
+		const result = await runFast(
 			fake.browser,
 			[1, 2, 3],
 			async (openPage, item) => {
@@ -202,7 +204,7 @@ describe('runBrowserRows', () => {
 	test('reports a context that cannot be closed after the row it belongs to', async () => {
 		const fake = fakeBrowser({ failCloseAt: 0 });
 		const reports: [RowOutcome, number][] = [];
-		const result = await runBrowserRows(
+		const result = await runFast(
 			fake.browser,
 			[1, 2],
 			async (openPage) => void (await openPage()),
@@ -213,5 +215,39 @@ describe('runBrowserRows', () => {
 			[{ status: 'failed', message: 'Sesi akun gagal dibersihkan, proses dihentikan' }, 1],
 		]);
 		expect(result).toEqual({ done: 1, skipped: 0, failed: 0, stopped: true });
+	});
+
+	test('applies interRowDelay between rows but not after the last row', async () => {
+		const fake = fakeBrowser();
+		const start = Date.now();
+		await runBrowserRows(
+			fake.browser,
+			[1, 2],
+			async () => {},
+			() => {},
+			{ min: 30, max: 50 },
+		);
+		const elapsed = Date.now() - start;
+		expect(elapsed).toBeGreaterThanOrEqual(25);
+		expect(elapsed).toBeLessThan(120);
+	});
+
+	test('does not wait for interRowDelay when browser disconnects', async () => {
+		const fake = fakeBrowser();
+		const start = Date.now();
+		await runBrowserRows(
+			fake.browser,
+			[1, 2],
+			async (_openPage, item) => {
+				if (item === 1) {
+					fake.browser.connected = false;
+					throw new Error('Connection closed');
+				}
+			},
+			() => {},
+			{ min: 200, max: 300 },
+		);
+		const elapsed = Date.now() - start;
+		expect(elapsed).toBeLessThan(100);
 	});
 });
