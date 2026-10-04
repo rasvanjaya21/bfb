@@ -61,10 +61,10 @@ Aturannya:
 
 ## 5. Update docs
 
-- **Untuk developer:** `README.md` (instalasi, pemakaian, bagian "Agent Tooling") dan `CONTRIBUTING.md`.
+- **Untuk developer:** `README.md` (hanya instalasi dan pemakaian untuk pemakai paket, karena ikut dipublikasikan ke npm) dan `CONTRIBUTING.md` (setup developer, bagian "Agent Tooling").
 - **Untuk AI agent:** `AGENTS.md`, supaya struktur, perintah, alur runtime, konvensi, dan tooling agent sesuai kenyataan.
 - **`docs/` (mirror dokumentasi resmi):** bandingkan versi di header tiap file dengan `.bumrc` dan `bun.lock`. Kalau ada yang berbeda, jalankan `bun run docs`. Jangan edit file di `docs/` dengan tangan.
-- Jaga pasangan server gitmcp di `.mcp.json` dan file di `docs/` tetap 1:1. Kalau server ditambah atau dihapus, perbarui juga `docs.ts` dan instruksi `agy mcp add` di `README.md`.
+- Jaga pasangan server gitmcp di `.mcp.json` dan file di `docs/` tetap 1:1. Kalau server ditambah atau dihapus, perbarui juga `docs.ts` dan instruksi `agy mcp add` di `CONTRIBUTING.md`.
 
 ## 6. Update skills
 
