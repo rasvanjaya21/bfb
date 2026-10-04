@@ -134,7 +134,7 @@ export { showResult };
 - `bun test`, di `tests/unit/` (logika murni, tanpa I/O), `tests/integration/` (file system, beberapa modul dengan fake), `tests/endpoint/` (kontrak API aktivasi); nama file `NNN-nama.test.ts`, nomor mulai `001` di setiap folder, tanpa jaringan dan tanpa akun sungguhan: folder temp + `process.chdir`, `fetch` palsu, stream palsu, browser palsu.
 - Test yang bergantung pada mode file POSIX di-skip di Windows.
 - Alur browser di `core/` hanya bisa dicek manual terhadap Facebook; logika keputusannya ada di `libs/` supaya bisa dites.
-- CI (`ci.yml`): type-check, lint, check, test, build, `bun publish --dry-run` di ubuntu/macos/windows dengan Bun dari `.bumrc`.
+- CI (`ci.yml`): type-check, lint, check, test, build, `bun pm pack --dry-run` di ubuntu/macos/windows dengan Bun dari `.bumrc`.
 
 ## Boundaries
 
