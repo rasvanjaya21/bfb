@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-commit
 
-Tahap **COMMIT** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`). Dijalankan di akhir siklus setelah repo dirapikan oleh `/bfb-prepare` kedua.
+Tahap **COMMIT** dalam siklus bfb (`/bfb-prepare` → `/bfb-observe` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`). Dijalankan di akhir siklus setelah repo dirapikan oleh `/bfb-prepare` kedua.
 
 Instruksi dari user:
 

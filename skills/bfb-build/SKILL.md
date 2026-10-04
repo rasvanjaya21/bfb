@@ -6,7 +6,9 @@ version: 1.0.0
 
 # /bfb-build
 
-Tahap **BUILD** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
+Tahap **BUILD** dalam siklus bfb (`/bfb-prepare` → `/bfb-observe` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
+
+Kode browser di `core/` meniru `architecture/OBSERVE.md`: selector diambil persis dari peta kondisinya (lalu dites di `tests/unit/011-facebook-selectors.test.ts`), setiap kondisi yang tercatat ditangani, dan tidak ada selector yang ditebak. Kondisi yang ditemukan saat build tapi belum ada di peta dicatat ke `OBSERVE.md` dulu.
 
 ## Mode
 

@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-prepare
 
-Tahap **PREPARE** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`). Dijalankan di awal siklus sebelum merancang spec, dan di akhir siklus setelah ship untuk merapikan repo sebelum commit.
+Tahap **PREPARE** dalam siklus bfb (`/bfb-prepare` → `/bfb-observe` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`). Dijalankan di awal siklus sebelum merancang spec, dan di akhir siklus setelah ship untuk merapikan repo sebelum commit.
 
 Instruksi dari user:
 
@@ -37,6 +37,8 @@ Kedua agent tidak bisa membaca percakapan satu sama lain. Satu-satunya jalur ser
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Claude Code | `~/.claude/projects/-home-pinc-Developer-bfb/memory/`, dengan indeks di `MEMORY.md` dan satu fakta per file                                                                                                 |
 | Antigravity | Knowledge Items di `~/.gemini/antigravity-cli/knowledge/` (`index.md`, `archive/`), plus artefak per percakapan di `~/.gemini/antigravity-cli/brain/<conversation-id>/` untuk sesi terbaru di workspace ini |
+
+Isi `brain/<conversation-id>/` sebagian besar ada di `.system_generated/logs/transcript.jsonl` (satu step per baris, `type` `USER_INPUT` atau `PLANNER_RESPONSE`). Jangan lewati folder `.system_generated/`. Cari sesi bfb sejak prepare terakhir lewat `sqlite3 ~/.gemini/antigravity-cli/conversation_summaries.db "select conversation_id, last_modified_time, title from conversation_summaries where workspace_uris like '%bfb%' order by last_modified_time desc"`. Lalu baca pesan user (koreksi, preferensi) dan kesimpulan akhir model (fakta repo) dengan `jq`.
 
 Aturannya:
 

@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-spec
 
-Tahap **DEFINE** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
+Tahap **DEFINE** dalam siklus bfb (`/bfb-prepare` → `/bfb-observe` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
 
 Baca `AGENTS.md` dan `TODO.md` dulu, lalu pahami apa yang ingin dibangun. Tanyakan:
 
@@ -21,6 +21,7 @@ Hal khusus bfb yang wajib dijawab spec bila relevan:
 - Kolom CSV baru di `datas/accounts.csv` / `datas/contents.csv` dan perubahan interface di `src/types/global.ts` (CSV dipisah titik koma).
 - Platform dan kombinasi `ROUTE`/`TYPE` yang didukung; yang belum didukung harus ditolak sebelum browser dibuka.
 - Cara memverifikasi tanpa akun sungguhan: bagian mana yang bisa dites dengan `bun test`, bagian mana yang hanya bisa dicek manual lewat browser.
+- Alur browser: setiap langkah, kondisi, dan selector di spec harus berasal dari peta kondisi di `architecture/OBSERVE.md`. Ini berlaku juga untuk fix dan update fitur. Kalau alurnya, atau bagian yang diubah, belum diobservasi (atau observasinya sudah lama), hentikan dan minta user menjalankan `/bfb-observe` dulu.
 - Dampak ke data sensitif (`credentials/`, cookie, token) dan ke menu (`src/commands/menu.ts`).
 
 Simpan spec di `architecture/SPEC.md` dan konfirmasi ke user sebelum lanjut ke `/bfb-plan`.

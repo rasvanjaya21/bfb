@@ -6,9 +6,9 @@ version: 1.0.0
 
 # /bfb-plan
 
-Tahap **PLAN** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
+Tahap **PLAN** dalam siklus bfb (`/bfb-prepare` → `/bfb-observe` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
 
-Baca `architecture/SPEC.md` bila ada, `AGENTS.md`, dan kode yang relevan (mulai dari `graphify query`, bukan grep). Lalu:
+Baca `architecture/SPEC.md` bila ada, `architecture/OBSERVE.md` untuk alur browser (setiap kondisi di peta kondisinya harus punya task yang menanganinya), `AGENTS.md`, dan kode yang relevan (mulai dari `graphify query`, bukan grep). Lalu:
 
 1. Masuk plan mode: hanya membaca, tanpa mengubah kode.
 2. Petakan dependensi antar komponen (`commands/` → `core/` → `libs/`).
