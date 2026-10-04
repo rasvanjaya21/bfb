@@ -1,3 +1,4 @@
+import { bypass } from '@/commands/bypass';
 import { showHelp } from '@/commands/help';
 import { menu } from '@/commands/menu';
 import { showVersion } from '@/commands/version';
@@ -8,10 +9,14 @@ async function index(): Promise<void> {
 
 	if (parsed.command === 'version') return showVersion();
 	if (parsed.command === 'help') return showHelp();
-	if (parsed.command === 'unknown') {
-		console.log(`Flag tidak dikenal: '${parsed.flag}'`);
+	if (parsed.command === 'unknown' || parsed.command === 'invalid') {
+		console.log(parsed.command === 'unknown' ? `Flag tidak dikenal: '${parsed.flag}'` : parsed.message);
 		console.log("Coba 'bfb help' untuk panduan pemakaian");
 		process.exitCode = 1;
+		return;
+	}
+	if (parsed.command === 'bypass') {
+		if (!(await bypass(parsed.menu, parsed.explicit))) process.exitCode = 1;
 		return;
 	}
 
