@@ -2,7 +2,11 @@
 
 Ditulis lewat `/bfb-ship` pada 2026-10-05 untuk perubahan yang belum di-commit sejak `8666fe3` (fix alur posting dari run 180 konten, skill `bfb-observe`, fitur CLI `help`/`-b`/`-e`), di atas 16 commit lokal yang belum di-push sejak `v0.5.2` (`4938a24`). Tiga spesialis berjalan paralel: `code-reviewer`, `security-auditor`, `test-engineer`.
 
-## Keputusan: **NO-GO**
+## Keputusan: **GO** (diperbarui 2026-10-05)
+
+Awalnya **NO-GO** (lihat di bawah). Semua blocker sudah selesai atau diterima: B2 diterima lewat keputusan user 3b, B3 dan B4 diperbaiki, dan B1 selesai (33 commit dibuat lewat `/bfb-commit`, di-push, dan `ci.yml` hijau di ubuntu/macOS/Windows menurut konfirmasi user). Tidak ada kode yang berubah sejak review dan ship, jadi `/bfb-ship` tidak dijalankan ulang. Rilis (`bun run release`, versi berikutnya) sepenuhnya keputusan user.
+
+### Keputusan awal: NO-GO
 
 Kode lulus semua gerbang lokal, tapi belum bisa dirilis: ada empat blocker dan belum ada CI untuk satu pun dari perubahan ini.
 
@@ -67,7 +71,7 @@ Jawaban user atas daftar keputusan diterapkan dan diverifikasi: `bun run test:co
 
 | Item                                   | Status                                                                                                                                                                                                                                                |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B1 commit, push, CI                    | **Masih terbuka**: user menjalankan `/bfb-prepare`, `/bfb-commit`, dan push sendiri.                                                                                                                                                                  |
+| B1 commit, push, CI                    | **Selesai**: 33 commit (`ab2302e`..`a992037`), di-push, dan `ci.yml` hijau (konfirmasi user).                                                                                                                                                         |
 | B2 cakupan persetujuan privasi         | **Diterima (keputusan 3b)**: semua switch yang OFF tetap dinyalakan, termasuk switch yang mungkin ditambahkan Facebook nanti; dicatat di AGENTS.md. Tombol "Tutup" (`consentDone`) sekarang dibatasi ke `role="main"` yang memuat "Anda sudah siap!". |
 | B3 probe caption                       | **Diperbaiki**: berhenti di baris baru, spasi ganda/tab, dan tanda kutip; melewati baris kosong di awal; memotong 30 karakter utuh. Test `unit/011` ditulis merah dulu.                                                                               |
 | B4 `basic-ftp`                         | **Diperbaiki (1a)**: override `^6.2.2`; API yang dipakai `get-uri` dicek masih ada; `bun audit --prod` kini hanya `extract-zip` (diterima).                                                                                                           |
@@ -79,4 +83,4 @@ Jawaban user atas daftar keputusan diterapkan dan diverifikasi: `bun run test:co
 | `SESI ... selesai`                     | **Selesai (19)**.                                                                                                                                                                                                                                     |
 | Popup baru "Akun Meta Anda sudah siap" | **Diperbaiki** saat run (NO 191): ditutup lewat X, hanya di dialog berjudul itu; NO 191 terposting ulang.                                                                                                                                             |
 
-Keputusan tetap **NO-GO** sampai B1 selesai dan `ci.yml` hijau; lalu jalankan `/bfb-ship` lagi.
+Dengan B1 selesai, keputusan menjadi **GO** (lihat bagian atas).
