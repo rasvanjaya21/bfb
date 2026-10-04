@@ -99,7 +99,7 @@ bun run build
 ## 9. Graphify update dan label
 
 1. Jalankan `graphify update .` untuk mengekstrak ulang kode ke `graphify-out/graph.json`. Perintah ini mengembalikan nama komunitas ke nama default.
-2. Beri label komunitas dengan `graphify label . --backend=claude-cli`, yang memakai Claude CLI untuk menamai setiap komunitas dan menulis ulang `GRAPH_REPORT.md` serta `graph.json`. Jangan menulis label dengan tangan.
+2. Beri label komunitas dengan `graphify label . --backend=claude-cli` (atau `--backend=gemini` jika `GOOGLE_API_KEY` terpasang), yang memakai LLM untuk menamai setiap komunitas dan menulis ulang `GRAPH_REPORT.md` serta `graph.json`. Jangan menulis label dengan tangan.
 3. Pastikan nama komunitas di `GRAPH_REPORT.md` bukan lagi `Community N` atau sekadar nama file. Kalau masih ada, jalankan lagi dengan `--missing-only`.
 4. Jalankan `bun run format` sesudahnya, supaya output graphify ikut dirapikan.
 
