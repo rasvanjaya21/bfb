@@ -48,4 +48,4 @@ jobs:
               run: bun run build
 
             - name: Check package contents
-              run: bun publish --dry-run
+              run: bun pm pack --dry-run
