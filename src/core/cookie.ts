@@ -110,13 +110,40 @@ async function syncCookies(openPage: OpenPage, readlineInterface: readline.Inter
 
 		if (isCookiesExpired) {
 			const typePasswordSelector = facebookSelector('forgottenPassword');
+			const passVisible = await page
+				.locator(typePasswordSelector)
+				.setTimeout(3000)
+				.waitHandle()
+				.catch(() => null);
+
+			if (!passVisible) {
+				const retryTrigger = await page
+					.locator(loginSelector)
+					.waitHandle()
+					.catch(() => null);
+				if (retryTrigger) await humanClick(page, retryTrigger);
+			}
+
 			await page.locator(typePasswordSelector).wait();
+			const passwordInput = await page
+				.locator('input[type="password"]')
+				.waitHandle()
+				.catch(() => null);
+			if (passwordInput) await humanClick(page, passwordInput);
 			await ensurePasswordFocus(page);
 			await humanType(page, account.PASSWORD);
 		} else {
 			await page.keyboard.press('Tab');
 			await humanType(page, account.UID);
-			await page.keyboard.press('Tab');
+			const passwordInput = await page
+				.locator('input[type="password"]')
+				.waitHandle()
+				.catch(() => null);
+			if (passwordInput) {
+				await humanClick(page, passwordInput);
+			} else {
+				await page.keyboard.press('Tab');
+			}
 			await ensurePasswordFocus(page);
 			await humanType(page, account.PASSWORD);
 		}
