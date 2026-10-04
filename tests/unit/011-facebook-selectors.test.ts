@@ -44,10 +44,11 @@ describe('facebookSelector', () => {
 		expect(selector).toContain('not(@aria-disabled="true")');
 	});
 
-	test('loginContinue includes English and Indonesian phrases', () => {
+	test('loginContinue includes English and Indonesian phrases and targets clickable elements', () => {
 		const selector = facebookSelector('loginContinue');
 		expect(selector).toContain('Continue');
 		expect(selector).toContain('Lanjutkan');
+		expect(selector).toContain('role="button"');
 	});
 
 	test('loginFresh includes English and Indonesian phrases', () => {
