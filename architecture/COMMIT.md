@@ -1,28 +1,28 @@
 # Commit log
 
-Ditulis lewat `/bfb-commit` pada 2026-10-04, setelah implementasi siklus penuh fitur Human Behavior Emulation dan `/bfb-prepare`. Semua perubahan di-commit dalam **8 commit**, dipecah per area dan niat, tanpa trailer co-author. Belum di-push.
+Ditulis lewat `/bfb-commit` pada 2026-10-04, setelah perbaikan sinkronisasi login manual Facebook, pencegahan pencurian fokus jendela di GNOME Wayland, dan prioritasi Gemini untuk labeling graphify. Semua perubahan di-commit dalam **8 commit**, dipecah per area dan niat, tanpa trailer co-author. Belum di-push.
 
-| Hash         | Pesan                                                                                           | File                                                                                                             |
-| :----------- | :---------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| `0682f4b`    | `feat(lib): add human click, type, and random delay helpers`                                    | `src/libs/random-delay.ts`, `src/libs/human-type.ts`, `src/libs/human-click.ts`                                  |
-| `ddbd819`    | `feat(lib): add inter-row delay to browser row runner`                                          | `src/libs/run-browser-rows.ts`                                                                                   |
-| `2836ad7`    | `feat(core): integrate human behavior emulation in post feed and cookie sync`                   | `src/core/facebook.ts`, `src/core/cookie.ts`                                                                     |
-| `b230f2a`    | `test(unit): add unit tests for human emulation helpers`                                        | `tests/unit/012-random-delay.test.ts`, `tests/unit/013-human-type.test.ts`, `tests/unit/014-human-click.test.ts` |
-| `9fde409`    | `test(integration): add inter-row delay test cases for browser row runner`                      | `tests/integration/005-run-browser-rows.test.ts`                                                                 |
-| `a7e5708`    | `docs(agents): document human emulation conventions and update covered files todo`              | `AGENTS.md`, `TODO.md`                                                                                           |
-| `1d79d82`    | `chore(graph): update knowledge graph`                                                          | `graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`, `graphify-out/graph.json`                             |
-| (commit ini) | `docs(architecture): record spec, plan, build, test, review, ship, prepare, and commit reports` | `architecture/SPEC.md`, `PLAN.md`, `BUILD.md`, `TEST.md`, `REVIEW.md`, `SHIP.md`, `PREPARE.md`, `COMMIT.md`      |
+| Hash         | Pesan                                                                      | File                                                                                  |
+| :----------- | :------------------------------------------------------------------------- | :------------------------------------------------------------------------------------ |
+| `d2ee872`    | `feat(lib): launch chrome with fixed window size instead of maximized`      | `src/libs/launch-browser.ts`                                                          |
+| `1078af1`    | `fix(lib): target clickable button container in login continue selector`    | `src/libs/facebook-selectors.ts`                                                      |
+| `1d72f40`    | `test(unit): assert clickable element target in login continue selector`   | `tests/unit/011-facebook-selectors.test.ts`                                           |
+| `c535c0c`    | `fix(core): retry bootloader login trigger and ensure password field click` | `src/core/cookie.ts`                                                                  |
+| `622fb9d`    | `feat(skill): prioritize gemini backend for graphify labeling`             | `skills/bfb-prepare/SKILL.md`                                                         |
+| `546950f`    | `docs(agents): prioritize gemini backend for graphify labeling`            | `AGENTS.md`                                                                           |
+| `4c3daff`    | `chore(graph): update knowledge graph and community labels via gemini`     | `graphify-out/GRAPH_REPORT.md`, `graphify-out/graph.html`, `graphify-out/graph.json` |
+| (commit ini) | `docs(architecture): update prepare report and commit log`                 | `architecture/PREPARE.md`, `architecture/COMMIT.md`                                   |
 
 ## Alasan pengelompokan
 
-- `lib` baru sendiri: pembantu delay acak (`random-delay.ts`), ketikan berirama manusiawi (`human-type.ts`), dan pergerakan/klik kursor interpolasi bertahap (`human-click.ts`).
-- `lib` runner sendiri: penambahan dukungan cooldown jeda antar baris akun (`interRowDelay`) pada modul runner browser context.
-- `core` sendiri: penerapan emulasi interaksi manusiawi pada alur posting feed Facebook (`facebook.ts`) dan sinkronisasi login akun (`cookie.ts`).
-- `test(unit)` sendiri: pengujian unit untuk modul helper baru dengan cakupan 100% lines & functions.
-- `test(integration)` sendiri: pengujian skenario jeda cooldown akun dan proteksi disconnect pada runner baris.
-- `docs(agents)` sendiri: pembaruan konvensi agen di `AGENTS.md` serta pembaruan rasio file yang tercakup dalam laporan test coverage di `TODO.md`.
-- `chore(graph)` sendiri: ekstraksi ulang kode ke knowledge graph (924 node, 1342 edge) dan pelabelan ulang 59 komunitas via claude-cli.
-- `architecture/` terakhir: seluruh artefak siklus bfb (`SPEC.md`, `PLAN.md`, `BUILD.md`, `TEST.md`, `REVIEW.md`, `SHIP.md`, `PREPARE.md`, `COMMIT.md`).
+- `feat(lib)`: penggantian flag `--start-maximized` menjadi `--window-size=1280,900` pada konfigurasi peluncuran Chromium untuk mencegah pencurian fokus jendela di Linux GNOME.
+- `fix(lib)`: penyesuaian XPath selector `loginContinue` agar menargetkan container clickable (`role="button"` atau `button`) alih-alih `span`.
+- `test(unit)`: pembaruan unit test selector Facebook untuk memverifikasi penargetan elemen clickable pada selector `loginContinue`.
+- `fix(core)`: penambahan mekanisme retry klik jika dialog bootloader terlambat muncul serta penekanan eksplisit pada input password sebelum pengetikan.
+- `feat(skill)`: konfigurasi prioritas backend `gemini` untuk pelabelan komunitas pada workflow `/bfb-prepare`.
+- `docs(agents)`: pembaruan dokumentasi alur `graphify label` di `AGENTS.md` agar memprioritaskan `--backend=gemini`.
+- `chore(graph)`: regenerasi knowledge graph (924 node, 1345 edge) dan pelabelan ulang 58 komunitas melalui Gemini backend.
+- `docs(architecture)`: pembaruan laporan prepare dan riwayat commit log sesi ini.
 
 ## Tidak di-commit
 
