@@ -104,7 +104,7 @@ async function menu(): Promise<void> {
 		} else if (choice === '1') {
 			if (isLocked) await showAndLog('Fitur masih terkunci, setup terlebih dahulu', 'terkunci');
 			else {
-				const { error } = await runTask('Rawat facebook', () => facebook(log, action), true);
+				const { error } = await runTask('Rawat facebook', () => facebook(readlineInterface, log, action), true);
 				if (error !== undefined) await log(action, 'gagal', error);
 			}
 		} else if (choice === '2' || choice === '3' || choice === '4' || choice === '98') {
