@@ -6,6 +6,8 @@ version: 1.0.0
 
 # /bfb-prepare
 
+Tahap **PREPARE** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`). Dijalankan di awal siklus sebelum merancang spec, dan di akhir siklus setelah ship untuk merapikan repo sebelum commit.
+
 Instruksi dari user:
 
 - Update temuan dan hapus yang sudah selesai di `TODO.md`.

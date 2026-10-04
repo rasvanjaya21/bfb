@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-build
 
-Tahap **BUILD** dalam siklus bfb (`/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship`).
+Tahap **BUILD** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
 
 ## Mode
 

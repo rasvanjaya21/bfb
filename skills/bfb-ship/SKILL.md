@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-ship
 
-Tahap **SHIP** dalam siklus bfb (`/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship`).
+Tahap **SHIP** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
 
 Ini orkestrator fan-out. Tiga spesialis berjalan paralel terhadap perubahan saat ini, lalu agent utama menggabungkan laporan mereka menjadi satu keputusan.
 

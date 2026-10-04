@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-plan
 
-Tahap **PLAN** dalam siklus bfb (`/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship`).
+Tahap **PLAN** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
 
 Baca `architecture/SPEC.md` bila ada, `AGENTS.md`, dan kode yang relevan (mulai dari `graphify query`, bukan grep). Lalu:
 

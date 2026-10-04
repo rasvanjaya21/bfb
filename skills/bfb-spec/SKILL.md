@@ -6,7 +6,7 @@ version: 1.0.0
 
 # /bfb-spec
 
-Tahap **DEFINE** dalam siklus bfb (`/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship`).
+Tahap **DEFINE** dalam siklus bfb (`/bfb-prepare` → `/bfb-spec` → `/bfb-plan` → `/bfb-build` → `/bfb-test` → `/bfb-review` → `/bfb-ship` → `/bfb-prepare` → `/bfb-commit`).
 
 Baca `AGENTS.md` dan `TODO.md` dulu, lalu pahami apa yang ingin dibangun. Tanyakan:
 
