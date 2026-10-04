@@ -1,18 +1,20 @@
 # Commit log
 
-Ditulis lewat `/bfb-commit` pada 2026-10-04, setelah `/bfb-prepare`. Semua perubahan sejak `5f02b28` di-commit dalam **4 commit**, dipecah per area, tanpa trailer co-author. Belum di-push, bersama 3 commit perbaikan CI sebelumnya (`cc5bc17`, `5c8b245`, `5f02b28`).
+Ditulis lewat `/bfb-commit` pada 2026-10-04, setelah rilis v0.5.0 dan `/bfb-prepare`. Semua perubahan sejak `bf1abd5` di-commit dalam **5 commit**, dipecah per area, tanpa trailer co-author. Belum di-push.
 
-| Hash         | Pesan                                                                      | File                                                       |
-| ------------ | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `7ed0192`    | `feat(skill): require green ci before release and update stale references` | `skills/bfb-ship/SKILL.md`, `skills/bfb-test/SKILL.md`     |
-| `8202aef`    | `docs(agents): add push protection note and ci runner findings`            | `AGENTS.md`, `TODO.md`                                     |
-| `3aac0bc`    | `chore(graph): update knowledge graph`                                     | `graphify-out/GRAPH_REPORT.md`, `graph.html`, `graph.json` |
-| (commit ini) | `docs(architecture): update prepare and commit log`                        | `architecture/PREPARE.md`, `COMMIT.md`                     |
+| Hash         | Pesan                                                                           | File                                                       |
+| ------------ | ------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `7fa2479`    | `docs(project): restore package readme and move agent tooling to contributing`  | `README.md`, `CONTRIBUTING.md`                             |
+| `9043846`    | `feat(skill): point prepare docs step to contributing for agent tooling`        | `skills/bfb-prepare/SKILL.md`                              |
+| `f0be418`    | `docs(agents): add operator notes from readme and remove resolved release todo` | `AGENTS.md`, `TODO.md`                                     |
+| `633c1cd`    | `chore(graph): update knowledge graph`                                          | `graphify-out/GRAPH_REPORT.md`, `graph.html`, `graph.json` |
+| (commit ini) | `docs(architecture): update prepare and commit log`                             | `architecture/PREPARE.md`, `COMMIT.md`                     |
 
 ## Alasan pengelompokan
 
-- Dua skill satu commit: keduanya koreksi bagian bfb yang usang dari prepare yang sama (syarat CI hijau, klaim versi bumpp, `bun pm pack`, rujukan bagian TODO).
-- `AGENTS.md` dan `TODO.md` satu commit: keduanya mencatat hasil push dan CI run 2026-10-04 (catatan push protection karena `docs/`, peringatan Node 20 dan Ubuntu 26).
+- `README.md` dan `CONTRIBUTING.md` satu commit: satu pemindahan. "Agent Tooling" keluar dari README (dikembalikan ke isi v0.4.0) dan masuk ke CONTRIBUTING, jadi memisahkannya akan membuat instruksi itu hilang di antara dua commit.
+- Skill sendiri: rujukan langkah 5 `bfb-prepare` mengikuti pemindahan di atas.
+- `AGENTS.md` dan `TODO.md` satu commit: catatan operator dari README lama, rujukan ke `CONTRIBUTING.md`, dan item `release.yml` yang ditutup setelah rilis v0.5.0.
 - Artefak graph sendiri karena generated.
 - `architecture/` terakhir karena `COMMIT.md` ikut di commit itu.
 
